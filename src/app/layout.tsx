@@ -3,9 +3,14 @@ import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
 const description = "Inteligencia para transformar el territorio.";
+const publicUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://atiy.vercel.app");
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(publicUrl),
   title: { default: "ATIY", template: "%s · ATIY" },
   description,
   applicationName: "ATIY",
