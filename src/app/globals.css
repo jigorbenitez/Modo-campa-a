@@ -16,12 +16,55 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Segoe UI", Arial, sans-serif;
-  transition: background-color 180ms ease, color 180ms ease;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 button, a { -webkit-tap-highlight-color: transparent; }
-button, a, input, select { transition-duration: 180ms; }
+button, a, input, select { transition-duration: 200ms; }
+button, [role="button"], a {
+  border-radius: var(--radius-sm);
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
 main { animation: page-enter 220ms ease-out; }
-::selection { background: #b8eccf; color: #10271b; }
+::selection { background: var(--brand-accent); color: var(--brand-primary); }
+
+.atiy-logo-crop {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.atiy-logo-crop > img {
+  position: absolute;
+  inset: 0;
+}
+
+.atiy-spinner {
+  border-color: color-mix(in srgb, var(--brand-accent) 20%, transparent);
+  border-top-color: var(--brand-accent);
+}
+
+.premium-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.premium-button {
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgb(10 29 61 / 14%);
+}
+
+.premium-button:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 12px 32px rgb(10 29 61 / 20%);
+  transform: translateY(-1px);
+}
 
 @keyframes page-enter {
   from { opacity: 0; transform: translateY(3px); }

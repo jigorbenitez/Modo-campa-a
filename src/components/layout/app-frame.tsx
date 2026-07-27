@@ -8,6 +8,7 @@ import { Sidebar } from "./sidebar";
 import { ThemeToggle } from "./theme-toggle";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { ModuleTour } from "@/components/tours/module-tour";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 const immersiveRoutes = new Set(["/demo", "/presentacion", "/ejecutivo"]);
 
@@ -29,17 +30,16 @@ export function AppFrame({ children }: { children: ReactNode }) {
       <ServiceWorkerRegister />
       <ModuleTour />
       <Sidebar />
-      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md sm:px-6 lg:ml-64 lg:px-10">
-        <Link href="/" className="flex items-center gap-2 font-black lg:hidden">
-          <span className="grid size-8 place-items-center rounded-lg bg-[var(--accent)] text-xs text-white">MC</span>
-          Modo Campaña
+      <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/92 px-4 backdrop-blur-xl sm:px-6 lg:ml-64 lg:px-10">
+        <Link href="/" className="atiy-logo-crop h-12 w-28 lg:hidden" aria-label="ATIY — Inicio">
+          <BrandLogo priority />
         </Link>
         <div className="hidden items-center gap-2 text-sm text-[var(--muted)] lg:flex">
-          <span className="size-2 rounded-full bg-emerald-500" />
-          Espacio de planificación
+          <span className="size-2 rounded-full bg-[var(--brand-accent)]" />
+          Inteligencia para transformar el territorio
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/recorrido" className="hidden h-10 items-center rounded-xl bg-[var(--accent)] px-4 text-xs font-extrabold text-white sm:flex">
+          <Link href="/recorrido" className="premium-button hidden h-10 items-center px-4 text-xs font-extrabold sm:flex">
             Iniciar recorrida
           </Link>
           <ThemeToggle />

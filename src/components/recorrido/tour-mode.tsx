@@ -114,7 +114,7 @@ export function TourMode() {
   if (stage === "summary" && savedActivity) return <TourSummary activity={savedActivity} />;
 
   return (
-    <div className={stage === "running" ? "min-h-[calc(100vh-4rem)] bg-[#eef3ef] pb-44 text-[#102119] dark:bg-[#0d1712] dark:text-[#f4f7f4]" : undefined}>
+    <div className={stage === "running" ? "min-h-[calc(100vh-4rem)] bg-[var(--background)] pb-44 text-[var(--foreground)]" : undefined}>
       {stage === "setup" ? (
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:py-12">
           <header className="max-w-2xl">
@@ -142,21 +142,21 @@ export function TourMode() {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={beginTour} className="mt-6 h-14 w-full rounded-2xl bg-[var(--accent)] text-base font-black text-white shadow-lg shadow-emerald-900/15 active:scale-[0.99]">
+            <button type="button" onClick={beginTour} className="premium-button mt-6 h-14 w-full text-base font-black active:scale-[0.99]">
               Iniciar recorrido
             </button>
           </section>
         </div>
       ) : (
         <>
-          <header className="sticky top-16 z-30 border-b border-black/5 bg-[#eef3ef]/90 px-4 py-3 backdrop-blur-xl dark:bg-[#0d1712]/90 lg:top-0">
+          <header className="sticky top-18 z-30 border-b border-[var(--border)] bg-[var(--background)]/90 px-4 py-3 backdrop-blur-xl lg:top-0">
             <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-black">{neighborhood?.name}</p>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-black/45 dark:text-white/45">Actividad en curso</p>
               </div>
               <div className="font-mono text-2xl font-black tabular-nums">{stopwatch.formatted}</div>
-              <button type="button" onClick={finishTour} className="h-10 rounded-xl bg-[#d84b4b] px-4 text-xs font-black text-white">Finalizar</button>
+              <button type="button" onClick={finishTour} className="h-10 rounded-xl bg-[var(--danger)] px-4 text-xs font-black text-white">Finalizar</button>
             </div>
           </header>
 
@@ -167,15 +167,15 @@ export function TourMode() {
               <StatusItem label="Batería" value={battery ? `${battery.level}%${battery.charging ? " ⚡" : ""}` : "No disponible"} />
             </div>
 
-            <section className="mt-5 rounded-[1.75rem] bg-[#102119] p-5 text-white shadow-xl">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-300">Registro vivo</p>
+            <section className="mt-5 rounded-[1.75rem] bg-[var(--brand-primary)] p-5 text-white shadow-xl">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--brand-accent)]">Registro vivo</p>
               <div className="mt-3 flex items-end justify-between">
                 <div>
                   <p className="text-4xl font-black">{captures.length}</p>
                   <p className="mt-1 text-xs text-white/55">aportes incorporados</p>
                 </div>
                 <div className="flex -space-x-2">
-                  {captures.slice(0, 4).map((capture) => <span key={capture.id} className="grid size-9 place-items-center rounded-full border-2 border-[#102119] bg-emerald-400 text-sm text-emerald-950">{captureLabels[capture.kind].slice(0, 1)}</span>)}
+                  {captures.slice(0, 4).map((capture) => <span key={capture.id} className="grid size-9 place-items-center rounded-full border-2 border-[var(--brand-primary)] bg-[var(--brand-accent)] text-sm font-black text-[var(--brand-primary)]">{captureLabels[capture.kind].slice(0, 1)}</span>)}
                 </div>
               </div>
             </section>

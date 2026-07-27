@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 const steps = [
   {
     eyebrow: "Paso 1 · La plataforma",
     title: "Un municipio, conectado.",
-    description: "Modo Campaña reúne territorio, actividad e historia institucional para que el equipo pueda decidir con contexto.",
+    description: "ATIY reúne territorio, actividad e historia institucional para que el equipo pueda decidir con contexto.",
     accent: "Panorama general",
     facts: ["Villa del Encuentro", "4 barrios activos", "26 instituciones"],
   },
@@ -64,14 +65,13 @@ export function GuidedDemo() {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0b1711] text-white">
-      <div className="absolute -left-24 top-1/4 size-72 rounded-full bg-emerald-400/10 blur-3xl" />
-      <div className="absolute -right-20 bottom-0 size-96 rounded-full bg-cyan-300/8 blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden bg-[var(--brand-primary)] text-white">
+      <div className="absolute -left-24 top-1/4 size-72 rounded-full bg-[var(--brand-accent)]/10 blur-3xl" />
+      <div className="absolute -right-20 bottom-0 size-96 rounded-full bg-[var(--brand-accent)]/8 blur-3xl" />
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 text-sm font-black">
-            <span className="grid size-9 place-items-center rounded-xl bg-emerald-400 text-xs text-emerald-950">MC</span>
-            Modo Campaña
+          <Link href="/" className="atiy-logo-crop h-14 w-40" aria-label="ATIY — Inicio">
+            <BrandLogo surface="dark" priority />
           </Link>
           <Link href="/" className="text-xs font-bold text-white/55 transition hover:text-white">Salir de la demo</Link>
         </header>
@@ -79,7 +79,7 @@ export function GuidedDemo() {
         <div className="flex flex-1 items-center py-10">
           <div className="grid w-full gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
             <section>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">{current.eyebrow}</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">{current.eyebrow}</p>
               <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-[-0.045em] sm:text-6xl">{current.title}</h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-white/60 sm:text-lg">{current.description}</p>
               <div className="mt-8 flex flex-wrap gap-2">
@@ -90,11 +90,11 @@ export function GuidedDemo() {
             <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-white/45">{current.accent}</p>
-                <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-[10px] font-black text-emerald-300">EN VIVO</span>
+                <span className="rounded-full bg-[var(--brand-accent)]/15 px-3 py-1 text-[10px] font-black text-[var(--brand-accent)]">EN VIVO</span>
               </div>
-              <div className="mt-6 h-56 rounded-3xl bg-[radial-gradient(circle_at_30%_30%,rgba(52,211,153,.28),transparent_28%),linear-gradient(145deg,#15291f,#0d1b14)] p-5">
+              <div className="mt-6 h-56 rounded-3xl bg-[var(--brand-dark-background)] p-5">
                 <div className="grid h-full grid-cols-4 gap-2 opacity-80">
-                  {[72, 44, 86, 58, 64, 92, 39, 76].map((height, index) => <div key={index} className="flex items-end"><span className="w-full rounded-xl bg-emerald-300/20" style={{ height: `${height}%` }} /></div>)}
+                  {[72, 44, 86, 58, 64, 92, 39, 76].map((height, index) => <div key={index} className="flex items-end"><span className="w-full rounded-xl bg-[var(--brand-accent)]/20" style={{ height: `${height}%` }} /></div>)}
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -106,14 +106,14 @@ export function GuidedDemo() {
 
         <footer>
           <div className="mb-5 flex gap-1.5">
-            {steps.map((item, index) => <button key={item.title} type="button" onClick={() => setStep(index)} className={`h-1.5 flex-1 rounded-full transition ${index <= step ? "bg-emerald-400" : "bg-white/10"}`} aria-label={`Ir al paso ${index + 1}`} />)}
+            {steps.map((item, index) => <button key={item.title} type="button" onClick={() => setStep(index)} className={`h-1.5 flex-1 rounded-full transition ${index <= step ? "bg-[var(--brand-accent)]" : "bg-white/10"}`} aria-label={`Ir al paso ${index + 1}`} />)}
           </div>
           <div className="flex items-center justify-between">
             <button type="button" disabled={step === 0} onClick={() => setStep((value) => value - 1)} className="h-12 rounded-2xl px-5 text-sm font-bold text-white/55 disabled:opacity-0">Anterior</button>
             {step < steps.length - 1 ? (
-              <button type="button" onClick={() => setStep((value) => value + 1)} className="h-12 rounded-2xl bg-emerald-400 px-6 text-sm font-black text-emerald-950">Continuar →</button>
+              <button type="button" onClick={() => setStep((value) => value + 1)} className="h-12 rounded-2xl bg-[var(--brand-accent)] px-6 text-sm font-black text-[var(--brand-primary)]">Continuar →</button>
             ) : (
-              <div className="flex gap-2"><Link href="/" className="grid h-12 place-items-center rounded-2xl border border-white/15 px-5 text-sm font-black">Explorar</Link><Link href="/recorrido" className="grid h-12 place-items-center rounded-2xl bg-emerald-400 px-5 text-sm font-black text-emerald-950">Iniciar recorrido</Link></div>
+              <div className="flex gap-2"><Link href="/" className="grid h-12 place-items-center rounded-2xl border border-white/15 px-5 text-sm font-black">Explorar</Link><Link href="/recorrido" className="grid h-12 place-items-center rounded-2xl bg-[var(--brand-accent)] px-5 text-sm font-black text-[var(--brand-primary)]">Iniciar recorrido</Link></div>
             )}
           </div>
         </footer>

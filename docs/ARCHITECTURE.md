@@ -1,4 +1,4 @@
-# Arquitectura de Modo Campaña
+﻿# Arquitectura de ATIY
 
 La aplicación usa Next.js con App Router, TypeScript estricto y Tailwind CSS.
 
@@ -14,3 +14,4 @@ La aplicación usa Next.js con App Router, TypeScript estricto y Tailwind CSS.
 
 La capa visual no depende de un proveedor de datos. La autenticación y Supabase
 podrán agregarse después mediante servicios en `src/lib`, sin acoplar las páginas.
+

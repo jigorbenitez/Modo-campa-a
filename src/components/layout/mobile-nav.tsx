@@ -12,7 +12,7 @@ export function MobileNav() {
       {navigation.slice(0, 5).map((item) => {
         const active = pathname === item.href;
         return (
-          <Link key={item.href} href={item.href} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold text-[var(--sidebar-muted)]", active && "bg-white/10 text-emerald-300")}>
+          <Link key={item.href} href={item.href} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold text-[var(--sidebar-muted)]", active && "bg-[var(--brand-accent)] text-[var(--brand-primary)]")}>
             <span className="text-base" aria-hidden="true">{item.icon}</span>
             <span className="max-w-full truncate">{item.shortLabel}</span>
           </Link>

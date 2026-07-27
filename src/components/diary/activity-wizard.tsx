@@ -270,11 +270,11 @@ export function ActivityWizard({
             {step === 0 ? "Cancelar" : "Atrás"}
           </button>
           {step < steps.length - 1 ? (
-            <button type="button" disabled={!canContinue} onClick={() => setStep((current) => current + 1)} className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">
+            <button type="button" disabled={!canContinue} onClick={() => setStep((current) => current + 1)} className="premium-button px-5 py-3 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-40">
               Continuar
             </button>
           ) : (
-            <button type="button" onClick={save} className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-extrabold text-white">
+            <button type="button" onClick={save} className="premium-button px-5 py-3 text-sm font-extrabold">
               Guardar actividad
             </button>
           )}

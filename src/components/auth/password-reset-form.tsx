@@ -23,7 +23,7 @@ export function PasswordResetForm() {
     <form onSubmit={submit} className="space-y-4">
       <AuthField label="Correo electrónico" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
       {message && <p role="status" className="rounded-xl bg-[var(--surface-muted)] p-3 text-xs leading-5">{message}</p>}
-      <button className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-extrabold text-white">Enviar enlace seguro</button>
+      <button className="premium-button w-full px-4 py-3 text-sm font-extrabold">Enviar enlace seguro</button>
     </form>
   );
 }

@@ -99,7 +99,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
                 aria-pressed={type === filter.id}
                 className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-extrabold ${
                   type === filter.id
-                    ? "bg-[var(--accent)] text-white"
+                    ? "bg-[var(--primary)] text-white"
                     : "bg-[var(--surface-muted)] text-[var(--muted)]"
                 }`}
               >

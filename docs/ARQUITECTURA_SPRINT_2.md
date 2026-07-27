@@ -1,8 +1,8 @@
-# Arquitectura Sprint 2 — Núcleo de Modo Campaña
+﻿# Arquitectura Sprint 2 — Núcleo de ATIY
 
 ## 1. Filosofía del producto
 
-Modo Campaña se modela como un sistema operativo para campañas electorales y
+ATIY se modela como un sistema operativo para campañas electorales y
 gestión pública. La interfaz actual es una de sus posibles superficies, pero el
 activo central es el dominio: información municipal consistente, trazable y
 reutilizable por personas, automatizaciones y futuros agentes.
@@ -185,3 +185,4 @@ confundirse con datos productivos ni convertirse en dependencias del dominio.
 Este sprint no modifica rutas, componentes, navegación, estilos ni PWA. La capa
 nueva es aditiva y todavía no está conectada a la interfaz. Esto permite validar
 el diseño del dominio sin introducir regresiones funcionales.
+

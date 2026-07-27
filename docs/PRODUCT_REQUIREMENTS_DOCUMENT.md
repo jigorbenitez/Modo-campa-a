@@ -1,16 +1,16 @@
-# Product Requirements Document — Modo Campaña
+﻿# Product Requirements Document — ATIY
 
 **Estado:** Propuesta de producto  
 **Versión del documento:** 1.0  
 **Horizonte:** cinco años  
 **Alcance actual:** definición estratégica posterior al Sprint 3  
-**Decisión central:** Modo Campaña es un sistema operativo de estrategia, territorio y gestión pública; no una colección de herramientas políticas aisladas.
+**Decisión central:** ATIY es un sistema operativo de estrategia, territorio y gestión pública; no una colección de herramientas políticas aisladas.
 
 ---
 
 ## Resumen ejecutivo
 
-Modo Campaña organiza conocimiento municipal disperso y lo convierte en contexto
+ATIY organiza conocimiento municipal disperso y lo convierte en contexto
 operativo reutilizable. Conecta territorio, problemas, propuestas, normativa,
 agenda, compromisos, equipo y comunicación alrededor de una entidad común: el
 municipio.
@@ -55,7 +55,7 @@ mensajería y memoria individual. Esa fragmentación produce:
 - reuniones dedicadas a reconstruir información en lugar de decidir;
 - pérdida de continuidad entre campaña, transición y gestión.
 
-Modo Campaña crea un espacio compartido donde la información conserva origen,
+ATIY crea un espacio compartido donde la información conserva origen,
 relaciones, estado, responsables y evolución.
 
 ## 1.2 Por qué existe
@@ -74,7 +74,7 @@ trabajo más clara, trazable y acumulativa.
 
 ## 1.3 Diferenciación
 
-Modo Campaña se diferencia de:
+ATIY se diferencia de:
 
 - **un CRM tradicional**, porque el centro no es el contacto comercial sino el
   contexto territorial y de gestión;
@@ -1381,3 +1381,4 @@ Antes de comenzar V1, Product Management debe validar:
 
 Estas respuestas determinan alcance, modelo comercial, seguridad y arquitectura
 de datos. Implementarlas por suposición sería más costoso que validarlas ahora.
+

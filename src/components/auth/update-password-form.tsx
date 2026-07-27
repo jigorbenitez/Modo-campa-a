@@ -28,7 +28,7 @@ export function UpdatePasswordForm() {
       <AuthField label="Nueva contraseña" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} />
       <AuthField label="Confirmar contraseña" type="password" autoComplete="new-password" minLength={8} required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
       {message && <p role="status" className="rounded-xl bg-[var(--surface-muted)] p-3 text-xs">{message}</p>}
-      <button className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-extrabold text-white">Actualizar contraseña</button>
+      <button className="premium-button w-full px-4 py-3 text-sm font-extrabold">Actualizar contraseña</button>
     </form>
   );
 }

@@ -1,8 +1,8 @@
-# Sprint 6 — Mapa Vivo
+﻿# Sprint 6 — Mapa Vivo
 
 ## Objetivo
 
-Mapa Vivo es el Centro de Operaciones Territorial de Modo Campaña. Su función
+Mapa Vivo es el Centro de Operaciones Territorial de ATIY. Su función
 no es mostrar puntos sobre un mapa, sino ofrecer una puerta de entrada
 geoespacial a actividades, problemas, compromisos, propuestas, documentos,
 instituciones y evidencia.
@@ -286,3 +286,4 @@ Se agregó `/territorio` y una entrada de navegación. No se eliminaron rutas,
 entidades ni componentes existentes. Los barrios y actividades anteriores
 siguen siendo la fuente conceptual; Mapa Vivo agrega una proyección GIS
 especializada.
+

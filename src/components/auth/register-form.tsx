@@ -46,7 +46,7 @@ export function RegisterForm() {
       <AuthField label="Correo electrónico" type="email" autoComplete="email" required value={form.email} onChange={(event) => update("email", event.target.value)} />
       <AuthField label="Contraseña" type="password" autoComplete="new-password" required minLength={8} value={form.password} onChange={(event) => update("password", event.target.value)} />
       {message && <p role="status" className="rounded-xl bg-[var(--surface-muted)] p-3 text-xs leading-5">{message}</p>}
-      <button disabled={loading} className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-extrabold text-white disabled:opacity-50">
+      <button disabled={loading} className="premium-button w-full px-4 py-3 text-sm font-extrabold disabled:opacity-50">
         {loading ? "Creando cuenta…" : "Crear espacio de trabajo"}
       </button>
       <p className="text-[11px] leading-5 text-[var(--muted)]">OAuth con Google y Microsoft queda preparado como evolución futura, pero no está habilitado.</p>

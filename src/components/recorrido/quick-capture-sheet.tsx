@@ -74,7 +74,7 @@ export function QuickCaptureSheet({
           type="button"
           disabled={!isVoice && !value.trim()}
           onClick={() => onSave(isVoice ? "Nota de voz pendiente de grabación" : value.trim())}
-          className="mt-4 h-13 w-full rounded-2xl bg-[var(--accent)] px-5 text-sm font-extrabold text-white disabled:opacity-40"
+          className="premium-button mt-4 h-13 w-full px-5 text-sm font-extrabold disabled:opacity-40"
         >
           Agregar ahora
         </button>

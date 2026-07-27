@@ -32,7 +32,7 @@ export function LoginForm() {
       <AuthField label="Correo electrónico" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
       <AuthField label="Contraseña" type="password" autoComplete="current-password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} />
       {message && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 dark:bg-rose-950 dark:text-rose-200">{message}</p>}
-      <button disabled={loading} className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-extrabold text-white disabled:opacity-50">
+      <button disabled={loading} className="premium-button w-full px-4 py-3 text-sm font-extrabold disabled:opacity-50">
         {loading ? "Ingresando…" : isSupabaseConfigured() ? "Iniciar sesión" : "Continuar en modo demo"}
       </button>
     </form>

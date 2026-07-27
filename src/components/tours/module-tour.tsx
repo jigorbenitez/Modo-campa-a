@@ -53,7 +53,7 @@ export function ModuleTour() {
           <p className="text-xs font-extrabold">Por qué sirve</p>
           <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{moduleInfo.benefit}</p>
         </div>
-        <button type="button" onClick={close} className="mt-5 h-12 w-full rounded-2xl bg-[var(--accent)] text-sm font-black text-white">Entendido</button>
+        <button type="button" onClick={close} className="premium-button mt-5 h-12 w-full text-sm font-black">Entendido</button>
         <button type="button" onClick={disable} className="mt-2 h-10 w-full text-xs font-bold text-[var(--muted)]">No mostrar estas ayudas</button>
       </section>
     </div>

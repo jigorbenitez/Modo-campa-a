@@ -1,4 +1,4 @@
-const CACHE_NAME = "modo-campana-v2";
+const CACHE_NAME = "atiy-v3";
 const APP_SHELL = ["/", "/offline", "/recorrido", "/demo", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

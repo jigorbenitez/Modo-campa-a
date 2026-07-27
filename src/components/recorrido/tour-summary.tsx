@@ -44,7 +44,7 @@ export function TourSummary({ activity }: { activity: SavedTourActivity }) {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/diario" className="grid h-13 place-items-center rounded-2xl bg-[var(--accent)] text-sm font-extrabold text-white">Ver en el Diario</Link>
+          <Link href="/diario" className="premium-button grid h-13 place-items-center text-sm font-extrabold">Ver en el Diario</Link>
           <Link href="/recorrido" className="grid h-13 place-items-center rounded-2xl border border-[var(--border)] text-sm font-extrabold">Nuevo recorrido</Link>
         </div>
       </div>

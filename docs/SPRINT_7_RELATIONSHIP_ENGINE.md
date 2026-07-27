@@ -1,8 +1,8 @@
-# Sprint 7 — Motor de Relaciones y Memoria Institucional
+﻿# Sprint 7 — Motor de Relaciones y Memoria Institucional
 
 ## Objetivo
 
-El Motor de Relaciones transforma las entidades independientes de Modo Campaña
+El Motor de Relaciones transforma las entidades independientes de ATIY
 en una red navegable de conocimiento. Cada entidad puede responder:
 
 > ¿Con qué otras cosas está relacionada y por qué?
@@ -308,3 +308,4 @@ Una visualización gráfica futura deberá conservar esta alternativa textual.
 Se agregó `/relaciones`, `Institucion`, `Persona` y la proyección de
 conocimiento. No se modificaron rutas o componentes existentes. El motor utiliza
 datos mock y queda desacoplado de la interfaz, Supabase e IA.
+

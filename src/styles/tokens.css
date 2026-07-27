@@ -1,29 +1,63 @@
 :root {
-  --background: #f4f6f2;
-  --foreground: #152019;
+  /* Identidad oficial ATIY */
+  --brand-primary: #0a1d3d;
+  --brand-accent: #00bbd4;
+  --brand-background: #f8fafc;
+  --brand-dark-background: #081426;
+  --brand-text: #0f172a;
+
+  /* Tokens semánticos */
+  --background: var(--brand-background);
+  --foreground: var(--brand-text);
   --surface: #ffffff;
-  --surface-muted: #eef2ed;
-  --border: #dfe5de;
-  --muted: #67736b;
-  --accent: #147a46;
-  --accent-strong: #0b5b32;
-  --accent-soft: #dff5e8;
-  --sidebar: #13251b;
-  --sidebar-muted: #91a298;
-  --shadow: 0 14px 40px rgb(29 49 37 / 7%);
+  --surface-muted: #f1f5f9;
+  --surface-elevated: #ffffff;
+  --border: #dce4ee;
+  --border-strong: #cbd5e1;
+  --muted: #526174;
+  --accent: #007f91;
+  --accent-strong: #006879;
+  --accent-soft: #d9f8fc;
+  --accent-contrast: var(--brand-primary);
+  --primary: var(--brand-primary);
+  --primary-hover: #12305f;
+  --primary-soft: #e9eef6;
+  --sidebar: var(--brand-primary);
+  --sidebar-muted: #a9b8cc;
+  --success: #087f5b;
+  --warning: #b45309;
+  --danger: #c2414b;
+  --focus-ring: var(--brand-accent);
+  --shadow-sm: 0 2px 10px rgb(10 29 61 / 6%);
+  --shadow: 0 18px 50px rgb(10 29 61 / 8%);
+  --shadow-lg: 0 28px 80px rgb(10 29 61 / 14%);
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
 }
 
 .dark {
-  --background: #0d1410;
-  --foreground: #ecf2ee;
-  --surface: #152019;
-  --surface-muted: #1b2921;
-  --border: #29382f;
-  --muted: #9aaba0;
-  --accent: #55cf8d;
-  --accent-strong: #79e2a9;
-  --accent-soft: #193b29;
-  --sidebar: #09100c;
-  --sidebar-muted: #85958b;
-  --shadow: 0 18px 48px rgb(0 0 0 / 22%);
+  --background: var(--brand-dark-background);
+  --foreground: #f8fafc;
+  --surface: #0d203a;
+  --surface-muted: #122944;
+  --surface-elevated: #142c49;
+  --border: #263c59;
+  --border-strong: #38506d;
+  --muted: #a7b6ca;
+  --accent: #43d3e7;
+  --accent-strong: #72e1ef;
+  --accent-soft: #0b3a4b;
+  --accent-contrast: var(--brand-primary);
+  --primary: #102b55;
+  --primary-hover: #173968;
+  --primary-soft: #132b49;
+  --sidebar: #061122;
+  --sidebar-muted: #9dafc4;
+  --success: #45d3a3;
+  --warning: #f4b860;
+  --danger: #fb7185;
+  --shadow-sm: 0 2px 12px rgb(0 0 0 / 18%);
+  --shadow: 0 22px 56px rgb(0 0 0 / 24%);
+  --shadow-lg: 0 32px 90px rgb(0 0 0 / 36%);
 }

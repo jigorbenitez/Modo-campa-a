@@ -18,6 +18,7 @@ const TerritoryMap = dynamic(
     ssr: false,
     loading: () => (
       <div className="grid h-full place-items-center bg-[var(--surface-muted)] text-sm font-bold text-[var(--muted)]">
+        <span className="atiy-spinner mr-2 inline-block size-5 animate-spin rounded-full border-2" />
         Preparando el territorio…
       </div>
     ),

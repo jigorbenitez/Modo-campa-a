@@ -37,7 +37,7 @@ export function CampaignDiary() {
                 Cada actividad conserva lo ocurrido, quiénes participaron y qué problemas, oportunidades o compromisos surgieron.
               </p>
             </div>
-            <button type="button" onClick={() => setWizardOpen(true)} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-sm font-extrabold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-[var(--accent-strong)]">
+            <button type="button" onClick={() => setWizardOpen(true)} className="premium-button inline-flex h-12 items-center justify-center gap-2 px-5 text-sm font-extrabold">
               <span className="text-lg">+</span> Nueva actividad
             </button>
           </div>
