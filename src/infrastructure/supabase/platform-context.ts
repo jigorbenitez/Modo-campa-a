@@ -41,10 +41,10 @@ export interface AdminOverview {
 
 const demoUser: Usuario = {
   id: "usuario-demo-administrador",
-  municipioId: "municipio-villa-del-encuentro",
-  firstName: "Administración",
+  municipioId: "municipio-san-fernando",
+  firstName: "AdministraciÃ³n",
   lastName: "Demo",
-  email: "admin@villa-del-encuentro.demo",
+  email: "admin@san-fernando.demo",
   role: "administrator",
   status: "active",
   joinedAt: "2026-07-01T12:00:00.000Z",
@@ -68,7 +68,7 @@ export async function getPlatformContext(): Promise<PlatformContext | null> {
   if (!isSupabaseConfigured()) {
     return {
       user: demoUser,
-      municipalityName: "Villa del Encuentro",
+      municipalityName: "San Fernando",
       configured: false,
     };
   }
@@ -137,14 +137,14 @@ export async function getAdminOverview(
         {
           id: "usuario-demo-territorio",
           name: "Equipo Territorial",
-          email: "territorio@villa-del-encuentro.demo",
+          email: "territorio@san-fernando.demo",
           role: "territorial_manager",
           status: "active",
         },
         {
           id: "usuario-demo-consultor",
-          name: "Consultoría Institucional",
-          email: "consultoria@villa-del-encuentro.demo",
+          name: "ConsultorÃ­a Institucional",
+          email: "consultoria@san-fernando.demo",
           role: "consultant",
           status: "invited",
         },

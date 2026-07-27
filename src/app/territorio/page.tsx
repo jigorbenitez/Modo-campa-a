@@ -4,7 +4,7 @@ import { ContextSyncPulse } from "@/components/beta/context-sync-pulse";
 
 export const metadata: Metadata = {
   title: "Territorio",
-  description: "Centro de operaciones territorial de Villa del Encuentro.",
+  description: "Centro de operaciones territorial del Municipio de San Fernando.",
 };
 
 export default function TerritoryPage() {

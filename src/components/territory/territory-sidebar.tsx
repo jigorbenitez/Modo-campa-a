@@ -61,6 +61,11 @@ function FeatureDetails({ feature, onClose }: { feature: TerritoryFeature; onClo
             {new Intl.DateTimeFormat("es-AR", { dateStyle: "medium" }).format(new Date(feature.occurredAt))}
           </span>
         </div>
+        <dl className="mt-4 grid gap-2 text-xs text-[var(--muted)]">
+          <div className="flex justify-between gap-3"><dt>Localidad</dt><dd className="font-bold text-[var(--foreground)]">{feature.localidad}</dd></div>
+          <div className="flex justify-between gap-3"><dt>Fuente</dt><dd className="text-right font-bold text-[var(--foreground)]">{feature.source}</dd></div>
+          <div className="flex justify-between gap-3"><dt>Actualización</dt><dd className="font-bold text-[var(--foreground)]">{new Intl.DateTimeFormat("es-AR").format(new Date(feature.updatedAt))}</dd></div>
+        </dl>
       </div>
 
       <div className="space-y-6 p-5">
@@ -129,6 +134,14 @@ function NeighborhoodDetails({
     ["Propuestas", context.proposals],
     ["Documentos", context.documents],
     ["Publicaciones", context.publications],
+    ["Escuelas", context.schools],
+    ["Jardines", context.kindergartens],
+    ["Clubes", context.clubs],
+    ["Plazas", context.squares],
+    ["Centros de salud", context.healthCenters],
+    ["Instituciones", context.institutions],
+    ["Actividades", context.activities],
+    ["Fotografías", context.photos],
   ] as const;
 
   return (
@@ -200,21 +213,23 @@ export function TerritorySidebar({
   selectedNeighborhood,
   onSelectNeighborhood,
   onSelectFeature,
-  onClear,
+  onClearFeature,
+  onClearAll,
 }: {
   neighborhoods: TerritoryNeighborhood[];
   selectedFeature?: TerritoryFeature;
   selectedNeighborhood?: NeighborhoodContextView;
   onSelectNeighborhood: (id: string) => void;
   onSelectFeature: (feature: TerritoryFeature) => void;
-  onClear: () => void;
+  onClearFeature: () => void;
+  onClearAll: () => void;
 }) {
   return (
     <aside className="h-full overflow-y-auto bg-[var(--surface)]">
       {selectedFeature ? (
-        <FeatureDetails feature={selectedFeature} onClose={onClear} />
+        <FeatureDetails feature={selectedFeature} onClose={onClearFeature} />
       ) : selectedNeighborhood ? (
-        <NeighborhoodDetails context={selectedNeighborhood} onClose={onClear} onSelectFeature={onSelectFeature} />
+        <NeighborhoodDetails context={selectedNeighborhood} onClose={onClearAll} onSelectFeature={onSelectFeature} />
       ) : (
         <TerritoryOverview neighborhoods={neighborhoods} onSelect={onSelectNeighborhood} />
       )}

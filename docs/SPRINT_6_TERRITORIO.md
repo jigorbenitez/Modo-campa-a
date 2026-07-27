@@ -1,4 +1,4 @@
-﻿# Sprint 6 — Mapa Vivo
+# Sprint 6 — Mapa Vivo
 
 ## Objetivo
 
@@ -7,7 +7,7 @@ no es mostrar puntos sobre un mapa, sino ofrecer una puerta de entrada
 geoespacial a actividades, problemas, compromisos, propuestas, documentos,
 instituciones y evidencia.
 
-El módulo utiliza datos mock de Villa del Encuentro. No implementa todavía
+El módulo utiliza datos mock de San Fernando. No implementa todavía
 persistencia, PostGIS, geolocalización, clustering, mapas offline ni IA.
 
 ## Arquitectura
@@ -286,4 +286,3 @@ Se agregó `/territorio` y una entrada de navegación. No se eliminaron rutas,
 entidades ni componentes existentes. Los barrios y actividades anteriores
 siguen siendo la fuente conceptual; Mapa Vivo agrega una proyección GIS
 especializada.
-

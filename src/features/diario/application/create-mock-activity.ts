@@ -7,7 +7,7 @@ import type {
 import type { MediaAsset } from "@/domain/shared/types";
 import type { ActivityCreationResult, ActivityDraft, ActivityRecord } from "../domain/activity-record";
 
-const municipioId = "municipio-villa-del-encuentro";
+const municipioId = "municipio-san-fernando";
 
 function createId(prefix: string, index = 0) {
   return `${prefix}-${Date.now()}-${index}`;
@@ -26,10 +26,10 @@ export function createMockActivity(
     municipioId,
     barrioId: draft.barrioIds[0],
     title,
-    description: `Detectado durante la actividad “${draft.title}”.`,
+    description: `Detectado durante la actividad â€œ${draft.title}â€.`,
     category: "A clasificar",
     severity: "medium",
-    impact: "Pendiente de evaluación por el equipo.",
+    impact: "Pendiente de evaluaciÃ³n por el equipo.",
     priority: "medium",
     evidence: [],
     origin: "territorial_tour",
@@ -44,8 +44,8 @@ export function createMockActivity(
     id: createId("oportunidad", index),
     municipioId,
     title,
-    description: `Oportunidad registrada durante la actividad “${draft.title}”.`,
-    category: "Articulación territorial",
+    description: `Oportunidad registrada durante la actividad â€œ${draft.title}â€.`,
+    category: "ArticulaciÃ³n territorial",
     status: "detected",
     statusHistory: [{ to: "detected", changedAt: now }],
     priority: "medium",
@@ -60,7 +60,7 @@ export function createMockActivity(
     id: createId("compromiso", index),
     municipioId,
     title,
-    description: `Compromiso asumido durante la actividad “${draft.title}”.`,
+    description: `Compromiso asumido durante la actividad â€œ${draft.title}â€.`,
     status: "open",
     priority: draft.priority === "critical" ? "urgent" : draft.priority,
     assignedMemberIds: [],
@@ -117,7 +117,7 @@ export function createMockActivity(
   const record: ActivityRecord = {
     activity,
     barrioNames,
-    organizerName: "Coordinación general",
+    organizerName: "CoordinaciÃ³n general",
     participantNames: draft.participants,
     problems,
     opportunities,

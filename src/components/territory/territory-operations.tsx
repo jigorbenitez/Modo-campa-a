@@ -1,16 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TerritoryFeature, TerritoryLayerId } from "@/features/territorio-map";
-import { TerritoryViewService } from "@/features/territorio-map";
-import { mockTerritorySnapshot } from "@/mock";
+import { sanitizeTerritorySelection, TerritoryViewService } from "@/features/territorio-map";
+import { mockTerritorySnapshot, territoryCategories } from "@/mock";
 import { FloatingMetrics } from "./floating-metrics";
 import { LayerControl } from "./layer-control";
 import { MapLegend } from "./map-legend";
 import { MapToolbar } from "./map-toolbar";
 import { TimelineSlider } from "./timeline-slider";
 import { TerritorySidebar } from "./territory-sidebar";
+import { TerritorySearch } from "./territory-search";
 
 const TerritoryMap = dynamic(
   () => import("./territory-map").then((module) => module.TerritoryMap),
@@ -41,17 +42,60 @@ export function TerritoryOperations() {
   const [selectedFeature, setSelectedFeature] = useState<TerritoryFeature>();
   const [presentationMode, setPresentationMode] = useState(false);
   const [resetToken, setResetToken] = useState(0);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
 
   const periodId = mockTerritorySnapshot.periods[periodIndex]?.id ?? "today";
+  const safeSelection = useMemo(() => {
+    const cutoff = mockTerritorySnapshot.periods[periodIndex]?.cutoff ?? "9999-12-31";
+    return sanitizeTerritorySelection(
+      { neighborhoodId: selectedNeighborhoodId, featureId: selectedFeature?.id },
+      mockTerritorySnapshot.features,
+      new Set(mockTerritorySnapshot.neighborhoods.map((item) => item.id)),
+      enabledLayers,
+      cutoff,
+    );
+  }, [enabledLayers, periodIndex, selectedFeature?.id, selectedNeighborhoodId]);
+  const safeSelectedFeature = useMemo(
+    () => mockTerritorySnapshot.features.find((item) => item.id === safeSelection.featureId),
+    [safeSelection.featureId],
+  );
+  const searchResults = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase("es-AR");
+    return mockTerritorySnapshot.features.filter((feature) => {
+      const matchesTerm =
+        !term ||
+        `${feature.title} ${feature.description} ${feature.subtype ?? ""} ${feature.localidad}`
+          .toLocaleLowerCase("es-AR")
+          .includes(term);
+      const matchesCategory =
+        category === "all" || feature.subtype === category || feature.kind === category;
+      return enabledLayers.has(feature.layerId) && matchesTerm && matchesCategory;
+    });
+  }, [category, enabledLayers, search]);
   const view = useMemo(
     () =>
       viewService.project(mockTerritorySnapshot, {
         periodId,
         enabledLayers,
-        selectedNeighborhoodId,
+        selectedNeighborhoodId: safeSelection.neighborhoodId,
+        search,
+        category,
       }),
-    [enabledLayers, periodId, selectedNeighborhoodId],
+    [category, enabledLayers, periodId, safeSelection.neighborhoodId, search],
   );
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedFeature(undefined);
+        setSelectedNeighborhoodId(undefined);
+        setResetToken((value) => value + 1);
+      }
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, []);
 
   function toggleLayer(id: TerritoryLayerId) {
     setEnabledLayers((current) => {
@@ -87,6 +131,11 @@ export function TerritoryOperations() {
     setResetToken((value) => value + 1);
   }
 
+  function clearMarkerSelection() {
+    setSelectedFeature(undefined);
+    setResetToken((value) => value + 1);
+  }
+
   return (
     <div className={presentationMode ? "bg-[var(--background)]" : undefined}>
       {!presentationMode && (
@@ -98,10 +147,10 @@ export function TerritoryOperations() {
               </p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">Mapa Vivo</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                Una lectura conectada de la actividad, los pendientes y las instituciones de Villa del Encuentro.
+                Una lectura conectada de la base territorial y las instituciones de San Fernando.
               </p>
             </div>
-            <MapToolbar presentationMode={presentationMode} onTogglePresentation={() => setPresentationMode(true)} onReset={resetMap} />
+            <MapToolbar presentationMode={presentationMode} onTogglePresentation={() => setPresentationMode(true)} onReset={resetMap} onClearSelection={clearMarkerSelection} hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId)} />
           </div>
         </header>
       )}
@@ -131,10 +180,11 @@ export function TerritoryOperations() {
                 ]}
                 view={view}
                 layers={mockTerritorySnapshot.layers}
-                selectedFeature={selectedFeature}
+                selectedFeature={safeSelectedFeature}
                 onSelectFeature={selectFeature}
                 onSelectNeighborhood={selectNeighborhood}
                 resetToken={resetToken}
+                onClearSelection={clearMarkerSelection}
               />
 
               <div className="pointer-events-none absolute inset-x-3 top-3 z-[500] sm:inset-x-4 sm:top-4">
@@ -143,17 +193,23 @@ export function TerritoryOperations() {
                 </div>
               </div>
 
+              {!presentationMode && <div className="absolute left-3 top-[9.4rem] z-[510] w-[calc(100%-8rem)] sm:left-4 sm:w-96 lg:top-32">
+                <TerritorySearch query={search} category={category} categories={territoryCategories} results={searchResults} onQueryChange={setSearch} onCategoryChange={setCategory} onSelect={selectFeature} />
+              </div>}
+
               <div className="absolute right-3 top-[9.4rem] z-[500] sm:right-4 lg:top-32">
                 <MapToolbar
                   presentationMode={presentationMode}
                   onTogglePresentation={() => setPresentationMode((value) => !value)}
                   onReset={resetMap}
+                  onClearSelection={clearMarkerSelection}
+                  hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId)}
                 />
               </div>
 
               {!presentationMode && (
                 <>
-                  <div className="absolute left-4 top-32 z-[500] hidden w-48 lg:block">
+                  <div className="absolute left-4 top-64 z-[500] hidden w-48 lg:block">
                     <LayerControl layers={mockTerritorySnapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
                   </div>
                   <div className="absolute bottom-4 left-1/2 z-[500] hidden w-[min(34rem,65%)] -translate-x-1/2 lg:block">
@@ -170,11 +226,12 @@ export function TerritoryOperations() {
               <div className="max-h-[70vh] border-t border-[var(--border)] lg:max-h-none lg:border-l lg:border-t-0">
                 <TerritorySidebar
                   neighborhoods={mockTerritorySnapshot.neighborhoods}
-                  selectedFeature={selectedFeature}
+                  selectedFeature={safeSelectedFeature}
                   selectedNeighborhood={view.selectedNeighborhood}
                   onSelectNeighborhood={selectNeighborhood}
                   onSelectFeature={selectFeature}
-                  onClear={resetMap}
+                  onClearFeature={clearMarkerSelection}
+                  onClearAll={resetMap}
                 />
               </div>
             )}

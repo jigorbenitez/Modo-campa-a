@@ -12,7 +12,7 @@ const TerritoryMap = dynamic(
   () => import("@/components/territory/territory-map").then((module) => module.TerritoryMap),
   {
     ssr: false,
-    loading: () => <div className="grid h-full place-items-center bg-[var(--brand-dark-background)] text-sm font-bold text-white/55"><span className="atiy-spinner mr-2 inline-block size-5 animate-spin rounded-full border-2" />Preparando territorio…</div>,
+    loading: () => <div className="grid h-full place-items-center bg-[var(--brand-dark-background)] text-sm font-bold text-white/55"><span className="atiy-spinner mr-2 inline-block size-5 animate-spin rounded-full border-2" />Preparando territorioâ€¦</div>,
   },
 );
 
@@ -39,7 +39,7 @@ export function ExecutivePresentation() {
       <header className="flex h-20 items-center justify-between border-b border-white/8 px-5 sm:px-8">
         <div className="flex items-center gap-3">
           <BrandMark className="size-11 rounded-xl" priority />
-          <div><p className="text-sm font-black">Villa del Encuentro</p><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">Estado municipal · Hoy</p></div>
+          <div><p className="text-sm font-black">San Fernando</p><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">Estado municipal Â· Hoy</p></div>
         </div>
         <Link href="/" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/60 transition hover:text-white">Salir</Link>
       </header>
@@ -51,8 +51,9 @@ export function ExecutivePresentation() {
             view={view}
             layers={mockTerritorySnapshot.layers}
             onSelectFeature={() => undefined}
-            onSelectNeighborhood={() => undefined}
-            resetToken={0}
+          onSelectNeighborhood={() => undefined}
+          onClearSelection={() => undefined}
+          resetToken={0}
           />
           <div className="pointer-events-none absolute inset-x-4 top-4 z-[500] grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
@@ -70,9 +71,9 @@ export function ExecutivePresentation() {
 
           <div className="absolute inset-x-4 bottom-4 z-[500] rounded-2xl border border-white/10 bg-[var(--brand-primary)]/90 p-4 backdrop-blur-xl">
             <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/40">
-              <span>Evolución territorial</span><span>{period.label}</span>
+              <span>EvoluciÃ³n territorial</span><span>{period.label}</span>
             </div>
-            <input aria-label="Período de presentación" type="range" min={0} max={mockTerritorySnapshot.periods.length - 1} value={periodIndex} onChange={(event) => setPeriodIndex(Number(event.target.value))} className="mt-3 w-full accent-[var(--brand-accent)]" />
+            <input aria-label="PerÃ­odo de presentaciÃ³n" type="range" min={0} max={mockTerritorySnapshot.periods.length - 1} value={periodIndex} onChange={(event) => setPeriodIndex(Number(event.target.value))} className="mt-3 w-full accent-[var(--brand-accent)]" />
             <div className="mt-1 flex justify-between text-[9px] font-bold text-white/35">{mockTerritorySnapshot.periods.map((item) => <span key={item.id}>{item.label}</span>)}</div>
           </div>
         </section>
@@ -80,13 +81,13 @@ export function ExecutivePresentation() {
         <aside className="p-5 sm:p-7">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--brand-accent)]">Dashboard ejecutivo</p>
           <h1 className="mt-3 text-3xl font-black tracking-[-0.04em]">Municipio activo, contexto ordenado.</h1>
-          <p className="mt-3 text-sm leading-6 text-white/50">La cobertura territorial es estable. Los Aromos concentra la mayor necesidad de seguimiento.</p>
+          <p className="mt-3 text-sm leading-6 text-white/50">La cobertura territorial es estable. San Jorge concentra la mayor necesidad de seguimiento.</p>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
             <Metric label="Instituciones" value={institutions.toString()} note="red identificada" />
             <Metric label="Personas" value={people.toString()} note="con contexto" />
             <Metric label="Estado general" value="Estable" note="con 1 prioridad" compact />
-            <Metric label="Cobertura" value="64%" note="últimos 30 días" />
+            <Metric label="Cobertura" value="64%" note="Ãºltimos 30 dÃ­as" />
           </div>
 
           <section className="mt-7">

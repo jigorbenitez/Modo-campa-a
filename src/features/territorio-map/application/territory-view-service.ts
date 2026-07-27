@@ -20,7 +20,18 @@ export class TerritoryViewService {
       const layerEnabled = filters.enabledLayers.has(feature.layerId);
       const withinNeighborhood =
         !filters.selectedNeighborhoodId || feature.barrioId === filters.selectedNeighborhoodId;
-      return withinTime && layerEnabled && withinNeighborhood;
+      const search = filters.search?.trim().toLocaleLowerCase("es-AR");
+      const matchesSearch =
+        !search ||
+        `${feature.title} ${feature.description} ${feature.subtype ?? ""} ${feature.localidad}`
+          .toLocaleLowerCase("es-AR")
+          .includes(search);
+      const matchesCategory =
+        !filters.category ||
+        filters.category === "all" ||
+        feature.subtype === filters.category ||
+        feature.kind === filters.category;
+      return withinTime && layerEnabled && withinNeighborhood && matchesSearch && matchesCategory;
     });
     const allFeaturesAtCutoff = snapshot.features.filter(
       (feature) => feature.occurredAt.slice(0, 10) <= period.cutoff,
@@ -111,8 +122,26 @@ export class TerritoryViewService {
         (total, feature) => total + feature.publications.length,
         0,
       ),
+      schools: this.countSubtype(related, ["Escuela"]),
+      kindergartens: this.countSubtype(related, ["Jardín"]),
+      clubs: this.countSubtype(related, ["Club", "Polideportivo"]),
+      squares: this.countSubtype(related, ["Plaza", "Espacio verde"]),
+      healthCenters: this.countSubtype(related, ["CAPS", "Hospital", "Clínica", "Centro de salud"]),
+      institutions: related.filter((feature) => feature.kind === "institution").length,
+      activities: related.filter((feature) => feature.kind === "activity").length,
+      photos: related.reduce((total, feature) => total + feature.photos.length, 0),
+      latestTours: related
+        .filter((feature) => feature.kind === "activity")
+        .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+        .slice(0, 3),
       features: related.sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
     };
+  }
+
+  private countSubtype(features: TerritoryFeature[], subtypes: string[]): number {
+    return features.filter(
+      (feature) => feature.kind === "institution" && feature.subtype && subtypes.includes(feature.subtype),
+    ).length;
   }
 
   private buildHeatPoints(

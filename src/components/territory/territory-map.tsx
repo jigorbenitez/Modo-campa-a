@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Circle, MapContainer, Polygon, TileLayer, useMap } from "react-leaflet";
+import { Circle, MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type {
   TerritoryFeature,
   TerritoryLayer,
@@ -16,27 +16,51 @@ import {
 
 function MapFocus({
   feature,
-  neighborhoodCenter,
-  defaultCenter,
+  neighborhoodLatitude,
+  neighborhoodLongitude,
+  defaultLatitude,
+  defaultLongitude,
   resetToken,
 }: {
   feature?: TerritoryFeature;
-  neighborhoodCenter?: [number, number];
-  defaultCenter: [number, number];
+  neighborhoodLatitude?: number;
+  neighborhoodLongitude?: number;
+  defaultLatitude: number;
+  defaultLongitude: number;
   resetToken: number;
 }) {
   const map = useMap();
 
   useEffect(() => {
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.boxZoom.enable();
+    map.keyboard.enable();
+    map.closePopup();
     if (feature) {
       map.flyTo([feature.point.latitude, feature.point.longitude], 15, { duration: 0.6 });
-    } else if (neighborhoodCenter) {
-      map.flyTo(neighborhoodCenter, 14, { duration: 0.6 });
+    } else if (neighborhoodLatitude !== undefined && neighborhoodLongitude !== undefined) {
+      map.flyTo([neighborhoodLatitude, neighborhoodLongitude], 14, { duration: 0.6 });
     } else {
-      map.flyTo(defaultCenter, 13, { duration: 0.6 });
+      map.flyTo([defaultLatitude, defaultLongitude], 13, { duration: 0.6 });
     }
-  }, [defaultCenter, feature, map, neighborhoodCenter, resetToken]);
+  }, [
+    defaultLatitude,
+    defaultLongitude,
+    feature,
+    map,
+    neighborhoodLatitude,
+    neighborhoodLongitude,
+    resetToken,
+  ]);
 
+  return null;
+}
+
+function MapDismissSelection({ onClearSelection }: { onClearSelection: () => void }) {
+  useMapEvents({ click: onClearSelection });
   return null;
 }
 
@@ -48,6 +72,7 @@ export function TerritoryMap({
   onSelectFeature,
   onSelectNeighborhood,
   resetToken,
+  onClearSelection,
 }: {
   center: [number, number];
   view: TerritoryView;
@@ -56,6 +81,7 @@ export function TerritoryMap({
   onSelectFeature: (feature: TerritoryFeature) => void;
   onSelectNeighborhood: (id: string) => void;
   resetToken: number;
+  onClearSelection: () => void;
 }) {
   const layerColors = new Map(layers.map((layer) => [layer.id, layer.color]));
 
@@ -66,6 +92,11 @@ export function TerritoryMap({
       minZoom={11}
       maxZoom={18}
       scrollWheelZoom
+      dragging
+      doubleClickZoom
+      touchZoom
+      boxZoom
+      keyboard
       className="territory-map h-full w-full bg-[#dfe7df]"
       zoomControl
     >
@@ -117,17 +148,13 @@ export function TerritoryMap({
 
       <MapFocus
         feature={selectedFeature}
-        defaultCenter={center}
+        defaultLatitude={center[0]}
+        defaultLongitude={center[1]}
         resetToken={resetToken}
-        neighborhoodCenter={
-          view.selectedNeighborhood
-            ? [
-                view.selectedNeighborhood.neighborhood.center.latitude,
-                view.selectedNeighborhood.neighborhood.center.longitude,
-              ]
-            : undefined
-        }
+        neighborhoodLatitude={view.selectedNeighborhood?.neighborhood.center.latitude}
+        neighborhoodLongitude={view.selectedNeighborhood?.neighborhood.center.longitude}
       />
+      <MapDismissSelection onClearSelection={onClearSelection} />
     </MapContainer>
   );
 }

@@ -1,13 +1,13 @@
 import type { Municipio } from "@/domain/entities";
 
 export const mockMunicipio: Municipio = {
-  id: "municipio-villa-del-encuentro",
-  name: "Villa del Encuentro",
+  id: "municipio-san-fernando",
+  name: "San Fernando",
   province: "Buenos Aires",
   country: "Argentina",
-  population: 84200,
-  areaKm2: 118,
-  neighborhoodIds: ["barrio-centro", "barrio-estacion"],
+  population: 171616,
+  areaKm2: 924,
+  neighborhoodIds: ["barrio-san-fernando-centro", "barrio-victoria", "barrio-virreyes", "barrio-san-jorge", "barrio-villa-hall", "barrio-islas"],
   departmentIds: ["secretaria-obras-servicios", "secretaria-desarrollo-humano"],
   documentIds: ["documento-ordenanza-espacios-verdes"],
   indicators: [],
@@ -16,7 +16,7 @@ export const mockMunicipio: Municipio = {
     locale: "es-AR",
     currency: "ARS",
     enabledModules: ["dashboard", "territory", "proposals", "agenda", "documents"],
-    branding: { primaryColor: "#147a46", secondaryColor: "#13251b" },
+    branding: { primaryColor: "#0A1D3D", secondaryColor: "#00BBD4" },
   },
   active: true,
   audit: {

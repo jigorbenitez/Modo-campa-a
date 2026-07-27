@@ -1,4 +1,4 @@
-﻿# Sprint 7 — Motor de Relaciones y Memoria Institucional
+# Sprint 7 — Motor de Relaciones y Memoria Institucional
 
 ## Objetivo
 
@@ -79,7 +79,7 @@ Ejemplos:
 
 - una actividad ocurrió en Centro;
 - una institución se encuentra en Estación;
-- una propuesta está vinculada con Los Aromos.
+- una propuesta está vinculada con San Jorge.
 
 ### Participación
 
@@ -168,7 +168,7 @@ finalidad, acceso, conservación y auditoría.
 
 ## Mock data
 
-La memoria de Villa del Encuentro incluye:
+La memoria de San Fernando incluye:
 
 - tres barrios;
 - siete actividades;
@@ -308,4 +308,3 @@ Una visualización gráfica futura deberá conservar esta alternativa textual.
 Se agregó `/relaciones`, `Institucion`, `Persona` y la proyección de
 conocimiento. No se modificaron rutas o componentes existentes. El motor utiliza
 datos mock y queda desacoplado de la interfaz, Supabase e IA.
-

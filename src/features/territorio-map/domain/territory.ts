@@ -44,8 +44,11 @@ export interface TerritoryFeature {
   description: string;
   point: GeoPoint;
   barrioId: string;
+  localidad: string;
   occurredAt: ISODateTime;
   status: string;
+  updatedAt: ISODateTime;
+  source: string;
   priority?: "low" | "medium" | "high" | "critical";
   participants: string[];
   problems: TerritoryRelatedItem[];
@@ -68,12 +71,15 @@ export interface TerritoryNeighborhood {
   id: string;
   municipioId: string;
   name: string;
+  locality: string;
   description: string;
   center: GeoPoint;
   boundary: GeoPoint[];
   population: number;
   generalStatus: "stable" | "attention" | "priority";
   indicators: TerritoryIndicator[];
+  updatedAt: ISODateTime;
+  source: string;
 }
 
 export interface TerritoryPeriod {
@@ -96,6 +102,8 @@ export interface TerritoryFilters {
   periodId: string;
   enabledLayers: Set<TerritoryLayerId>;
   selectedNeighborhoodId?: string;
+  search?: string;
+  category?: string;
 }
 
 export interface TerritoryStatsView {
@@ -115,6 +123,15 @@ export interface NeighborhoodContextView {
   proposals: number;
   documents: number;
   publications: number;
+  schools: number;
+  kindergartens: number;
+  clubs: number;
+  squares: number;
+  healthCenters: number;
+  institutions: number;
+  activities: number;
+  photos: number;
+  latestTours: TerritoryFeature[];
   features: TerritoryFeature[];
 }
 

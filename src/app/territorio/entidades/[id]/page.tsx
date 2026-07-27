@@ -16,6 +16,6 @@ export default async function TerritorialEntityPage({
 }) {
   const { id } = await params;
   const repository = new EmptyTerritorialEntityRepository();
-  const entity = await repository.findById("municipio-villa-del-encuentro", id);
+  const entity = await repository.findById("municipio-san-fernando", id);
   return <TerritorialEntityDetail entity={entity} />;
 }

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Base territorial de lugares, servicios e instituciones de ATIY.",
 };
 
-const municipalityId = "municipio-villa-del-encuentro";
+const municipalityId = "municipio-san-fernando";
 
 export default async function TerritorialDirectoryPage() {
   const repository = new EmptyTerritorialEntityRepository();
