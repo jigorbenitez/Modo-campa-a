@@ -3,7 +3,8 @@ import type { NavItem } from "@/types/navigation";
 export const navigation: NavItem[] = [
   { href: "/", label: "Resumen", shortLabel: "Inicio", icon: "⌂" },
   { href: "/recorrido", label: "Modo Recorrida", shortLabel: "Recorrida", icon: "◎" },
-  { href: "/territorio", label: "Territorio", shortLabel: "Mapa", icon: "◉" },
+  { href: "/territorio", label: "Mapa Vivo", shortLabel: "Mapa", icon: "◉" },
+  { href: "/territorio/entidades", label: "Territorio", shortLabel: "Base", icon: "⌖" },
   { href: "/diario", label: "Diario de Campaña", shortLabel: "Diario", icon: "◫" },
   { href: "/relaciones", label: "Relaciones", shortLabel: "Memoria", icon: "⎔" },
   { href: "/inteligencia", label: "Centro de Inteligencia", shortLabel: "Contexto", icon: "◎" },

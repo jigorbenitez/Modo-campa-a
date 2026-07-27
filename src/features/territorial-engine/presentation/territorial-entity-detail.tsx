@@ -1,0 +1,76 @@
+import Link from "next/link";
+import type { TerritorialEntity } from "../domain";
+import { territorialTypeLabels } from "./territorial-presentation-config";
+
+const placeholderSections = [
+  ["Documentos", "Los documentos relacionados aparecerán aquí."],
+  ["Relaciones", "Personas, actividades y compromisos se conectarán sin modificar este agregado."],
+  ["Actividad futura", "La cronología se completará al vincular operaciones del equipo."],
+  ["Fotografías", "La evidencia visual conservará su origen y permisos."],
+];
+
+export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity | null }) {
+  if (!entity) {
+    return (
+      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-3xl place-items-center px-4 py-12 text-center">
+        <section>
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-xl text-[var(--accent)]">⌖</span>
+          <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Ficha territorial</p>
+          <h1 className="mt-2 text-3xl font-black tracking-tight">Entidad aún no disponible</h1>
+          <p className="mt-4 text-sm leading-6 text-[var(--muted)]">La pantalla está preparada para mostrar contexto completo cuando se incorporen los primeros registros.</p>
+          <Link href="/territorio/entidades" className="premium-button mt-6 inline-flex h-11 items-center px-5 text-sm font-extrabold">Volver a Territorio</Link>
+        </section>
+      </div>
+    );
+  }
+
+  const location = [entity.address?.formatted, entity.neighborhoodName, entity.localityName].filter(Boolean).join(" · ");
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
+      <Link href="/territorio/entidades" className="text-xs font-extrabold text-[var(--accent)]">← Territorio</Link>
+      <header className="mt-6 border-b border-[var(--border)] pb-8">
+        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">{territorialTypeLabels[entity.type]}</p>
+        <h1 className="mt-3 text-4xl font-black tracking-[-0.04em]">{entity.name}</h1>
+        <p className="mt-3 text-sm text-[var(--muted)]">{location || "Ubicación pendiente"}</p>
+      </header>
+
+      <div className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="space-y-5">
+          <DetailSection title="Información">
+            <p>{entity.description || "Sin descripción."}</p>
+            <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+              <DetailValue label="Categoría" value={entity.category} />
+              <DetailValue label="Subcategoría" value={entity.subcategory ?? "Sin definir"} />
+              <DetailValue label="Teléfono" value={entity.phone ?? "Sin registrar"} />
+              <DetailValue label="Email" value={entity.email ?? "Sin registrar"} />
+              <DetailValue label="Sitio web" value={entity.website ?? "Sin registrar"} />
+              <DetailValue label="Estado" value={entity.status} />
+            </dl>
+          </DetailSection>
+          <DetailSection title="Notas">
+            <p>{entity.notes.length ? entity.notes.join(" · ") : "Todavía no hay notas incorporadas."}</p>
+          </DetailSection>
+        </div>
+        <div className="space-y-5">
+          <DetailSection title="Ubicación">
+            <p>{location || "Dirección no disponible."}</p>
+            <p className="mt-3 text-xs">{entity.latitude === undefined ? "Coordenadas pendientes." : `${entity.latitude}, ${entity.longitude}`}</p>
+            <Link href="/territorio" className="mt-4 inline-flex text-xs font-extrabold text-[var(--accent)]">Abrir en Mapa Vivo →</Link>
+          </DetailSection>
+          {placeholderSections.map(([title, description]) => (
+            <DetailSection key={title} title={title}><p>{description}</p></DetailSection>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]"><h2 className="text-lg font-black">{title}</h2><div className="mt-4 text-sm leading-6 text-[var(--muted)]">{children}</div></section>;
+}
+
+function DetailValue({ label, value }: { label: string; value: string }) {
+  return <div><dt className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted)]">{label}</dt><dd className="mt-1 font-bold text-[var(--foreground)]">{value}</dd></div>;
+}
