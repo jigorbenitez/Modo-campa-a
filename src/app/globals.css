@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Segoe UI", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Segoe UI", Arial, sans-serif;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+button, a, input, select { transition-duration: 180ms; }
+main { animation: page-enter 220ms ease-out; }
+::selection { background: #b8eccf; color: #10271b; }
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.territory-map .leaflet-control-zoom a {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+}
+.territory-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  color: var(--muted);
+  font-size: 9px;
+}
+.territory-map .leaflet-control-attribution a { color: var(--accent); }
+.territory-div-icon { background: transparent; border: 0; }
+.territory-marker {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 3px solid white;
+  border-radius: 10px 10px 10px 2px;
+  box-shadow: 0 6px 16px rgb(10 25 16 / 28%);
+  color: white;
+  font: 800 11px/1 "Segoe UI", sans-serif;
+  transform: rotate(-8deg);
+}
+.territory-marker > span { transform: rotate(8deg); }

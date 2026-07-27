@@ -1,0 +1,50 @@
+export const BETA_ACTIVITY_STORAGE_KEY = "modo-campana:beta-activities";
+export const BETA_ACTIVITY_EVENT = "modo-campana:activity-saved";
+
+export type CaptureKind =
+  | "photo"
+  | "video"
+  | "voice"
+  | "observation"
+  | "problem"
+  | "opportunity"
+  | "commitment"
+  | "institution"
+  | "person"
+  | "location";
+
+export interface TourCapture {
+  id: string;
+  kind: CaptureKind;
+  label: string;
+  createdAt: string;
+}
+
+export interface SavedTourActivity {
+  id: string;
+  municipalityId: string;
+  neighborhoodId: string;
+  neighborhoodName: string;
+  title: string;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  captures: TourCapture[];
+  summary: string;
+  syncStatus: "pending" | "synced";
+}
+
+export function readSavedTourActivities(): SavedTourActivity[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(BETA_ACTIVITY_STORAGE_KEY) ?? "[]") as SavedTourActivity[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveTourActivity(activity: SavedTourActivity) {
+  const current = readSavedTourActivities();
+  localStorage.setItem(BETA_ACTIVITY_STORAGE_KEY, JSON.stringify([activity, ...current].slice(0, 20)));
+  window.dispatchEvent(new CustomEvent(BETA_ACTIVITY_EVENT, { detail: activity }));
+}
