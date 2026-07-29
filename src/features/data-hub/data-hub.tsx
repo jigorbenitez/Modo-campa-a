@@ -2,34 +2,30 @@
 
 import { useState } from "react";
 import { sanFernandoPublicDatasets } from "./catalog";
-import type { DatasetSync, PublicDataset } from "./domain";
+import type { PublicDataset } from "./domain";
 import { TerritorialDataCoverageService } from "./coverage-service";
 import { mockTerritorySnapshot } from "@/mock";
+import { DataSyncPanel } from "@/features/data-sync";
 
 const statusLabel = { verified: "Verificado", pending: "Pendiente", update_available: "Actualización", rejected: "Rechazado" };
 
-export function DataHub({ municipalityId }: { municipalityId: string }) {
+function activeMunicipalityBounds(): [number, number, number, number] | undefined {
+  const points = mockTerritorySnapshot.municipalityBoundaries.flat();
+  if (!points.length) return undefined;
+  const longitudes = points.map((point) => point.longitude);
+  const latitudes = points.map((point) => point.latitude);
+  return [Math.min(...longitudes), Math.min(...latitudes), Math.max(...longitudes), Math.max(...latitudes)];
+}
+
+export function DataHub({ municipalityId, municipalityName = "Municipio" }: { municipalityId: string; municipalityName?: string }) {
   const datasets = sanFernandoPublicDatasets.filter((dataset) => dataset.municipalityId === municipalityId);
   const [selected, setSelected] = useState<PublicDataset | undefined>(datasets[0]);
-  const [syncs, setSyncs] = useState<DatasetSync[]>([]);
   const coverage = new TerritorialDataCoverageService().calculate(mockTerritorySnapshot);
-
-  function checkUpdates() {
-    const checkedAt = new Date().toISOString();
-    setSyncs(datasets.map((dataset) => ({
-      id: `${dataset.id}-${checkedAt}`,
-      datasetId: dataset.id,
-      checkedAt,
-      result: "unchanged",
-      note: "Consulta registrada. No se acepta ninguna versión sin comparación y validación humana.",
-    })));
-  }
 
   return (
     <section className="mt-8 border-t border-[var(--border)] pt-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">DataHub</p><h2 className="mt-2 text-2xl font-black">Fuentes públicas y versiones</h2><p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">Catálogo trazable por municipio. Los datos oficiales permanecen separados de las observaciones propias.</p></div>
-        <button type="button" onClick={checkUpdates} className="rounded-xl bg-[var(--primary)] px-4 py-3 text-xs font-extrabold text-white">Buscar actualizaciones</button>
       </div>
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
@@ -44,7 +40,6 @@ export function DataHub({ municipalityId }: { municipalityId: string }) {
           {selected && <><p className="text-[10px] font-extrabold uppercase text-[var(--muted)]">Ficha de procedencia</p><h3 className="mt-2 font-black">{selected.name}</h3><dl className="mt-4 space-y-3 text-xs"><Row label="Versión" value={selected.version} /><Row label="Licencia" value={selected.license} /><Row label="Validación" value={selected.validation} /><Row label="Separación" value={selected.provenance} /></dl><a href={selected.sourceUrl} target="_blank" rel="noreferrer" className="mt-5 inline-block text-xs font-extrabold text-[var(--accent-strong)]">Abrir fuente pública ↗</a></>}
         </aside>
       </div>
-      {syncs.length > 0 && <div className="mt-4 rounded-2xl border border-[var(--border)] p-4"><p className="text-xs font-black">Historial de sincronización</p><p className="mt-2 text-xs text-[var(--muted)]">{syncs.length} fuentes revisadas · sin cambios aceptados automáticamente.</p></div>}
       <section className="mt-6">
         <h3 className="text-sm font-black">Cobertura automática de los registros aceptados</h3>
         <p className="mt-1 text-xs text-[var(--muted)]">Mide calidad y trazabilidad de lo cargado; no inventa el tamaño del universo municipal.</p>
@@ -52,7 +47,12 @@ export function DataHub({ municipalityId }: { municipalityId: string }) {
           {coverage.map((item) => <article key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"><div className="flex items-end justify-between"><p className="text-xs font-bold">{item.label}</p><strong className="text-xl">{item.percentage}%</strong></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]"><div className="h-full bg-[var(--accent)]" style={{ width: `${item.percentage}%` }} /></div><p className="mt-2 text-[10px] text-[var(--muted)]">{item.completeRecords}/{item.loadedRecords} registros completos. {item.explanation}</p></article>)}
         </div>
       </section>
-      <p className="mt-4 text-xs text-[var(--muted)]">Formatos admitidos: CSV, GeoJSON, JSON y XLSX. Shapefile queda disponible mediante el puerto de importación para una conversión geoespacial validada.</p>
+      <p className="mt-4 text-xs text-[var(--muted)]">Formatos reales: GeoJSON, CSV, Shapefile, GeoPackage, KML y respuestas OSM/Overpass.</p>
+      <DataSyncPanel
+        municipalityId={municipalityId}
+        municipalityName={municipalityName}
+        bounds={municipalityName === "San Fernando" ? activeMunicipalityBounds() : undefined}
+      />
     </section>
   );
 }

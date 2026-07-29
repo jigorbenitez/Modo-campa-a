@@ -149,7 +149,7 @@ export function AdminPanel({
           </section>
         </div>
       </div>
-      <DataHub municipalityId={context.user.municipioId} />
+      <DataHub municipalityId={context.user.municipioId} municipalityName={context.municipalityName} />
       <section className="mt-8 border-t border-[var(--border)] pt-2">
         <TerritorialDataExchange />
       </section>
