@@ -5,7 +5,7 @@ export const navigation: NavItem[] = [
   { href: "/recorrido", label: "Modo Recorrida", shortLabel: "Recorrida", icon: "◎" },
   { href: "/territorio", label: "Mapa Vivo", shortLabel: "Mapa", icon: "◉" },
   { href: "/territorio/entidades", label: "Territorio", shortLabel: "Base", icon: "⌖" },
-  { href: "/diario", label: "Diario de Campaña", shortLabel: "Diario", icon: "◫" },
+  { href: "/diario", label: "Mi Diario", shortLabel: "Diario", icon: "◫" },
   { href: "/relaciones", label: "Relaciones", shortLabel: "Memoria", icon: "⎔" },
   { href: "/inteligencia", label: "Centro de Inteligencia", shortLabel: "Contexto", icon: "◎" },
   { href: "/presupuesto", label: "Presupuesto", shortLabel: "Fondos", icon: "$" },

@@ -21,13 +21,13 @@ const captureLabels: Record<CaptureKind, string> = {
   photo: "Foto",
   video: "Video",
   voice: "Nota de voz",
-  observation: "ObservaciÃ³n",
+  observation: "Observación",
   problem: "Problema",
   opportunity: "Oportunidad",
   commitment: "Compromiso",
-  institution: "InstituciÃ³n",
+  institution: "Institución",
   person: "Persona",
-  location: "UbicaciÃ³n",
+  location: "Ubicación",
 };
 
 export function TourMode() {
@@ -65,12 +65,12 @@ export function TourMode() {
     }
     if (kind === "location") {
       if (!navigator.geolocation) {
-        addCapture(kind, "UbicaciÃ³n no disponible en este dispositivo");
+        addCapture(kind, "Ubicación no disponible en este dispositivo");
         return;
       }
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => addCapture(kind, `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`),
-        () => addCapture(kind, "UbicaciÃ³n pendiente de autorizaciÃ³n"),
+        () => addCapture(kind, "Ubicación pendiente de autorización"),
         { enableHighAccuracy: true, timeout: 8000 },
       );
       return;
@@ -120,7 +120,7 @@ export function TourMode() {
           <header className="max-w-2xl">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Trabajo en territorio</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-0.04em] sm:text-5xl">Modo Recorrida</h1>
-            <p className="mt-4 text-base leading-7 text-[var(--muted)]">RegistrÃ¡ lo que ocurre mientras caminÃ¡s. Cada aporte se conecta a una Actividad y queda listo para el resto de la plataforma.</p>
+            <p className="mt-4 text-base leading-7 text-[var(--muted)]">Registrá lo que ocurre mientras caminás. Cada aporte se conecta a una Actividad y queda listo para el resto de la plataforma.</p>
           </header>
 
           <section className="mt-8 rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)] sm:p-7">
@@ -132,9 +132,9 @@ export function TourMode() {
             </label>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {[
-                ["Actividad automÃ¡tica", "Se crea al comenzar"],
-                ["Uso sin conexiÃ³n", "Guarda en el dispositivo"],
-                ["Captura rÃ¡pida", "Pensada para una mano"],
+                ["Actividad automática", "Se crea al comenzar"],
+                ["Uso sin conexión", "Guarda en el dispositivo"],
+                ["Captura rápida", "Pensada para una mano"],
               ].map(([title, text]) => (
                 <div key={title} className="rounded-2xl bg-[var(--surface-muted)] p-4">
                   <p className="text-sm font-extrabold">{title}</p>
@@ -163,8 +163,8 @@ export function TourMode() {
           <main className="mx-auto max-w-5xl px-4 py-5">
             <div className="grid grid-cols-3 gap-2">
               <StatusItem label={online ? "Online" : "Offline"} value={online ? "Conectado" : "En cola"} tone={online ? "good" : "warning"} />
-              <StatusItem label="SincronizaciÃ³n" value={online ? "Al dÃ­a" : "Pendiente"} tone={online ? "good" : "warning"} />
-              <StatusItem label="BaterÃ­a" value={battery ? `${battery.level}%${battery.charging ? " âš¡" : ""}` : "No disponible"} />
+              <StatusItem label="Sincronización" value={online ? "Al día" : "Pendiente"} tone={online ? "good" : "warning"} />
+              <StatusItem label="Batería" value={battery ? `${battery.level}%${battery.charging ? " ⚡" : ""}` : "No disponible"} />
             </div>
 
             <section className="mt-5 rounded-[1.75rem] bg-[var(--brand-primary)] p-5 text-white shadow-xl">
@@ -182,12 +182,12 @@ export function TourMode() {
 
             <section className="mt-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-black">Ãšltimos registros</h2>
+                <h2 className="text-sm font-black">Últimos registros</h2>
                 <span className="text-[10px] font-bold uppercase text-black/45 dark:text-white/45">Guardado inmediato</span>
               </div>
               <div className="mt-3 space-y-2">
                 {captures.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-black/10 p-8 text-center text-sm text-black/45 dark:border-white/10 dark:text-white/45">UsÃ¡ el panel inferior para registrar el primer aporte.</div>
+                  <div className="rounded-2xl border border-dashed border-black/10 p-8 text-center text-sm text-black/45 dark:border-white/10 dark:text-white/45">Usá el panel inferior para registrar el primer aporte.</div>
                 ) : captures.map((capture) => (
                   <article key={capture.id} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-white/5">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-sm font-black text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-300">{captureLabels[capture.kind].slice(0, 1)}</span>
@@ -199,7 +199,7 @@ export function TourMode() {
             </section>
           </main>
 
-          <input ref={fileInput} className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("photo", file.name || "FotografÃ­a capturada"); event.currentTarget.value = ""; }} />
+          <input ref={fileInput} className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("photo", file.name || "Fotografía capturada"); event.currentTarget.value = ""; }} />
           <input ref={videoInput} className="hidden" type="file" accept="video/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("video", file.name || "Video capturado"); event.currentTarget.value = ""; }} />
           <CaptureDock onCapture={handleAction} />
           <QuickCaptureSheet kind={activeCapture} onClose={() => setActiveCapture(undefined)} onSave={(label) => activeCapture && addCapture(activeCapture, label)} />

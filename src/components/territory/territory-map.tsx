@@ -5,6 +5,7 @@ import { Circle, MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "
 import type {
   TerritoryFeature,
   TerritoryLayer,
+  TerritoryNeighborhood,
   TerritoryView,
 } from "@/features/territorio-map";
 import {
@@ -18,6 +19,8 @@ function MapFocus({
   feature,
   neighborhoodLatitude,
   neighborhoodLongitude,
+  neighborhood,
+  municipalityBoundaries,
   defaultLatitude,
   defaultLongitude,
   resetToken,
@@ -25,6 +28,8 @@ function MapFocus({
   feature?: TerritoryFeature;
   neighborhoodLatitude?: number;
   neighborhoodLongitude?: number;
+  neighborhood?: TerritoryNeighborhood;
+  municipalityBoundaries: TerritoryNeighborhood["boundaries"];
   defaultLatitude: number;
   defaultLongitude: number;
   resetToken: number;
@@ -41,8 +46,22 @@ function MapFocus({
     map.closePopup();
     if (feature) {
       map.flyTo([feature.point.latitude, feature.point.longitude], 15, { duration: 0.6 });
+    } else if (neighborhood?.boundaries.length) {
+      map.fitBounds(
+        neighborhood.boundaries.flatMap((ring) =>
+          ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+        ),
+        { animate: true, duration: 0.6, padding: [28, 28], maxZoom: 15 },
+      );
     } else if (neighborhoodLatitude !== undefined && neighborhoodLongitude !== undefined) {
       map.flyTo([neighborhoodLatitude, neighborhoodLongitude], 14, { duration: 0.6 });
+    } else if (municipalityBoundaries.length) {
+      map.fitBounds(
+        municipalityBoundaries.flatMap((ring) =>
+          ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+        ),
+        { animate: true, duration: 0.6, padding: [20, 20], maxZoom: 12 },
+      );
     } else {
       map.flyTo([defaultLatitude, defaultLongitude], 13, { duration: 0.6 });
     }
@@ -51,6 +70,8 @@ function MapFocus({
     defaultLongitude,
     feature,
     map,
+    municipalityBoundaries,
+    neighborhood,
     neighborhoodLatitude,
     neighborhoodLongitude,
     resetToken,
@@ -73,6 +94,7 @@ export function TerritoryMap({
   onSelectNeighborhood,
   resetToken,
   onClearSelection,
+  municipalityBoundaries,
 }: {
   center: [number, number];
   view: TerritoryView;
@@ -82,6 +104,7 @@ export function TerritoryMap({
   onSelectNeighborhood: (id: string) => void;
   resetToken: number;
   onClearSelection: () => void;
+  municipalityBoundaries: TerritoryNeighborhood["boundaries"];
 }) {
   const layerColors = new Map(layers.map((layer) => [layer.id, layer.color]));
 
@@ -89,7 +112,7 @@ export function TerritoryMap({
     <MapContainer
       center={center}
       zoom={13}
-      minZoom={11}
+      minZoom={8}
       maxZoom={18}
       scrollWheelZoom
       dragging
@@ -105,10 +128,26 @@ export function TerritoryMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
+      <Polygon
+        positions={municipalityBoundaries.map((ring) =>
+          ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+        )}
+        interactive={false}
+        pathOptions={{
+          color: "var(--accent)",
+          fillColor: "var(--accent)",
+          fillOpacity: 0.015,
+          weight: 2,
+          dashArray: "6 6",
+        }}
+      />
+
       {view.visibleNeighborhoods.map((neighborhood) => (
         <Polygon
           key={neighborhood.id}
-          positions={neighborhood.boundary.map((point) => [point.latitude, point.longitude])}
+          positions={neighborhood.boundaries.map((ring) =>
+            ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+          )}
           pathOptions={{
             color: layerColors.get("neighborhoods"),
             fillColor: layerColors.get("neighborhoods"),
@@ -153,6 +192,8 @@ export function TerritoryMap({
         resetToken={resetToken}
         neighborhoodLatitude={view.selectedNeighborhood?.neighborhood.center.latitude}
         neighborhoodLongitude={view.selectedNeighborhood?.neighborhood.center.longitude}
+        neighborhood={view.selectedNeighborhood?.neighborhood}
+        municipalityBoundaries={municipalityBoundaries}
       />
       <MapDismissSelection onClearSelection={onClearSelection} />
     </MapContainer>

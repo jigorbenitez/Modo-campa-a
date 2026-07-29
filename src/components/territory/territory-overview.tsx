@@ -31,7 +31,7 @@ export function TerritoryOverview({
             <span>
               <span className="block text-sm font-extrabold">{neighborhood.name}</span>
               <span className="mt-1 block text-xs text-[var(--muted)]">
-                {neighborhood.population.toLocaleString("es-AR")} habitantes
+                {neighborhood.level === "locality" ? "Localidad" : "Barrio"} · límite verificado
               </span>
             </span>
             <span className="rounded-full bg-[var(--surface)] px-2 py-1 text-[10px] font-bold text-[var(--muted)]">

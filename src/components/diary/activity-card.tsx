@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { ActivityRecord } from "@/features/diario";
 import { ActivityDetails } from "./activity-details";
 import { ActivitySummary } from "./activity-summary";
@@ -27,7 +28,19 @@ const priorityStyles = {
   critical: "bg-rose-500",
 };
 
-export function ActivityCard({ record, defaultOpen = false }: { record: ActivityRecord; defaultOpen?: boolean }) {
+export function ActivityCard({
+  record,
+  defaultOpen = false,
+  onEdit,
+  onDelete,
+  onDuplicate,
+}: {
+  record: ActivityRecord;
+  defaultOpen?: boolean;
+  onEdit?: (record: ActivityRecord) => void;
+  onDelete?: (record: ActivityRecord) => void;
+  onDuplicate?: (record: ActivityRecord) => void;
+}) {
   const [expanded, setExpanded] = useState(defaultOpen);
   const { activity } = record;
 
@@ -70,6 +83,15 @@ export function ActivityCard({ record, defaultOpen = false }: { record: Activity
           </div>
         </div>
       </button>
+      {(onEdit || onDelete || onDuplicate) && (
+        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] px-4 py-3 sm:px-6">
+          <button type="button" onClick={() => setExpanded(true)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Abrir</button>
+          {onEdit && <button type="button" onClick={() => onEdit(record)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Editar</button>}
+          {onDuplicate && <button type="button" onClick={() => onDuplicate(record)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Duplicar</button>}
+          <Link href={`/territorio?activity=${encodeURIComponent(activity.id)}`} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Ver ubicación</Link>
+          {onDelete && <button type="button" onClick={() => onDelete(record)} className="ml-auto rounded-lg px-3 py-2 text-xs font-extrabold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">Eliminar</button>}
+        </div>
+      )}
       {expanded && <ActivityDetails record={record} />}
     </article>
   );

@@ -75,6 +75,8 @@ export interface TerritoryNeighborhood {
   description: string;
   center: GeoPoint;
   boundary: GeoPoint[];
+  boundaries: GeoPoint[][];
+  level: "locality" | "neighborhood";
   population: number;
   generalStatus: "stable" | "attention" | "priority";
   indicators: TerritoryIndicator[];
@@ -92,6 +94,7 @@ export interface TerritorySnapshot {
   municipioId: string;
   municipalityName: string;
   center: GeoPoint;
+  municipalityBoundaries: GeoPoint[][];
   layers: TerritoryLayer[];
   neighborhoods: TerritoryNeighborhood[];
   features: TerritoryFeature[];

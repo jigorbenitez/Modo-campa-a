@@ -1,48 +1,48 @@
-# Sprint 5 â€” Diario de CampaÃ±a
+# Sprint 5 — Diario de Campaña
 
 ## Objetivo
 
-El Diario de CampaÃ±a implementa el primer flujo vertical completo de Modo
-CampaÃ±a. Permite registrar una acciÃ³n del equipo, capturar su contexto y sus
-resultados, y verla inmediatamente dentro de una cronologÃ­a expandible.
+El Diario de Campaña implementa el primer flujo vertical completo de Modo
+Campaña. Permite registrar una acción del equipo, capturar su contexto y sus
+resultados, y verla inmediatamente dentro de una cronología expandible.
 
-En este sprint se utilizan Ãºnicamente datos mock y estado de sesiÃ³n. No existe
-persistencia, autenticaciÃ³n, integraciÃ³n externa ni inteligencia artificial.
+En este sprint se utilizan únicamente datos mock y estado de sesión. No existe
+persistencia, autenticación, integración externa ni inteligencia artificial.
 
-## Por quÃ© Actividad pasa a ser el eje operativo
+## Por qué Actividad pasa a ser el eje operativo
 
-Problemas, propuestas, documentos y compromisos explican quÃ© sabe o quÃ© decide
-la organizaciÃ³n, pero no siempre conservan el momento en que ese conocimiento
-apareciÃ³. `Actividad` aporta ese origen operativo.
+Problemas, propuestas, documentos y compromisos explican qué sabe o qué decide
+la organización, pero no siempre conservan el momento en que ese conocimiento
+apareció. `Actividad` aporta ese origen operativo.
 
 Una actividad responde:
 
-- quÃ© hizo el equipo;
-- cuÃ¡ndo y dÃ³nde ocurriÃ³;
-- quiÃ©nes participaron;
-- quÃ© se observÃ³;
-- quÃ© problemas u oportunidades surgieron;
-- quÃ© compromisos fueron asumidos;
-- quÃ© evidencia quedÃ³ adjunta.
+- qué hizo el equipo;
+- cuándo y dónde ocurrió;
+- quiénes participaron;
+- qué se observó;
+- qué problemas u oportunidades surgieron;
+- qué compromisos fueron asumidos;
+- qué evidencia quedó adjunta.
 
 Esto permite reconstruir el trabajo sin depender de memoria individual ni
-duplicar informaciÃ³n en mÃºltiples mÃ³dulos.
+duplicar información en múltiples módulos.
 
-## DecisiÃ³n de arquitectura
+## Decisión de arquitectura
 
 `Actividad` se incorpora como un nuevo agregado sin reemplazar `Evento` ni
 `Recorrida`.
 
-- `Evento` representa agenda y planificaciÃ³n temporal.
+- `Evento` representa agenda y planificación temporal.
 - `Recorrida` representa una actividad territorial especializada.
 - `Actividad` representa el registro operativo transversal y conecta los
   resultados generados.
 
 Una actividad puede relacionarse con un evento planificado o una recorrida
 territorial mediante `eventIds` y `tourIds`. Esta estrategia mantiene
-compatibilidad con los sprints anteriores y permite una migraciÃ³n gradual.
+compatibilidad con los sprints anteriores y permite una migración gradual.
 
-TambiÃ©n se incorpora `Oportunidad`, porque una posibilidad detectada no es un
+También se incorpora `Oportunidad`, porque una posibilidad detectada no es un
 problema ni una propuesta madura. Puede validarse, descartarse o convertirse en
 una propuesta posteriormente.
 
@@ -51,34 +51,34 @@ una propuesta posteriormente.
 La entidad incluye:
 
 - identidad y `municipioId`;
-- tipo, tÃ­tulo y descripciÃ³n;
+- tipo, título y descripción;
 - fecha y horario;
 - estado e historial;
-- barrios y ubicaciÃ³n;
-- organizaciÃ³n y participantes;
+- barrios y ubicación;
+- organización y participantes;
 - observaciones;
-- fotografÃ­as, videos y archivos;
+- fotografías, videos y archivos;
 - etiquetas y prioridad;
 - relaciones con problemas, oportunidades, compromisos, propuestas, documentos,
   publicaciones, equipo, agenda y recorridas;
-- metadatos de auditorÃ­a.
+- metadatos de auditoría.
 
 Todas las relaciones se almacenan por identificador. El modelo de lectura
-`ActivityRecord` reÃºne temporalmente la informaciÃ³n necesaria para mostrar el
-contexto completo sin introducir grafos de dominio difÃ­ciles de persistir.
+`ActivityRecord` reúne temporalmente la información necesaria para mostrar el
+contexto completo sin introducir grafos de dominio difíciles de persistir.
 
 ## Flujo implementado
 
 El asistente divide la captura en seis pasos:
 
-1. datos bÃ¡sicos de la actividad;
-2. barrios, ubicaciÃ³n y etiquetas;
+1. datos básicos de la actividad;
+2. barrios, ubicación y etiquetas;
 3. observaciones y participantes;
 4. problemas, oportunidades y compromisos;
-5. archivos y fotografÃ­as;
-6. revisiÃ³n y guardado.
+5. archivos y fotografías;
+6. revisión y guardado.
 
-La interfaz evita un formulario extenso, ofrece controles tÃ¡ctiles y permite
+La interfaz evita un formulario extenso, ofrece controles táctiles y permite
 quitar elementos antes de guardar. Al completar el flujo se crean en memoria:
 
 - la actividad;
@@ -87,16 +87,16 @@ quitar elementos antes de guardar. Al completar el flujo se crean en memoria:
 - compromisos;
 - referencias entre estas entidades.
 
-La nueva actividad aparece al inicio del Diario y se abre automÃ¡ticamente.
+La nueva actividad aparece al inicio del Diario y se abre automáticamente.
 
 ## Componentes reutilizables
 
 - `ActivityCard`: resumen expandible.
-- `ActivityTimeline`: orden cronolÃ³gico.
+- `ActivityTimeline`: orden cronológico.
 - `ActivityDetails`: contexto completo de una actividad.
 - `ActivityWizard`: flujo asistido de captura.
 - `ActivitySummary`: recuento contextual de resultados.
-- `ParticipantBadge`: representaciÃ³n compacta de participantes.
+- `ParticipantBadge`: representación compacta de participantes.
 - `AttachmentGallery`: evidencia adjunta.
 - `LinkedEntitiesPanel`: problemas, oportunidades, compromisos, propuestas,
   documentos y publicaciones relacionados.
@@ -109,15 +109,15 @@ proveedores de datos.
 El diario contiene cinco actividades realistas de San Fernando:
 
 - recorrida por un centro comercial;
-- reuniÃ³n por iluminaciÃ³n barrial;
+- reunión por iluminación barrial;
 - visita a un club;
 - charla en una universidad;
 - encuentro con comerciantes.
 
 Cada actividad posee relaciones diferentes para validar el comportamiento de
-la interfaz con informaciÃ³n completa y parcial.
+la interfaz con información completa y parcial.
 
-## EvoluciÃ³n hacia persistencia
+## Evolución hacia persistencia
 
 Cuando se incorpore Supabase, el guardado debe realizarse mediante un caso de
 uso transaccional:
@@ -127,10 +127,10 @@ uso transaccional:
 3. crear problemas, oportunidades y compromisos;
 4. vincular entidades;
 5. almacenar archivos;
-6. registrar auditorÃ­a;
+6. registrar auditoría;
 7. publicar un evento de dominio.
 
-Si una parte falla, la operaciÃ³n debe revertirse o quedar marcada como
+Si una parte falla, la operación debe revertirse o quedar marcada como
 incompleta para reintento. El componente `ActivityWizard` no debe llamar al
 cliente de Supabase directamente.
 
@@ -138,16 +138,16 @@ cliente de Supabase directamente.
 
 El modelo habilita:
 
-- preparaciÃ³n y cierre de reuniones;
-- captura offline con sincronizaciÃ³n posterior;
-- generaciÃ³n de briefs;
+- preparación y cierre de reuniones;
+- captura offline con sincronización posterior;
+- generación de briefs;
 - reglas de inteligencia basadas en frecuencia y resultados;
 - trazabilidad entre actividad y propuesta;
 - seguimiento de compromisos;
-- bÃºsqueda por participantes, territorio o etiquetas;
-- resÃºmenes asistidos con fuentes, cuando se incorpore IA;
-- mÃ©tricas de operaciÃ³n sin depender de resultados polÃ­ticos.
+- búsqueda por participantes, territorio o etiquetas;
+- resúmenes asistidos con fuentes, cuando se incorpore IA;
+- métricas de operación sin depender de resultados políticos.
 
 La actividad no debe convertirse en un contenedor ilimitado. Las entidades
 relacionadas conservan su propio ciclo de vida y responsabilidad. El Diario es
-la cronologÃ­a que las conecta, no su reemplazo.
+la cronología que las conecta, no su reemplazo.

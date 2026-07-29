@@ -6,12 +6,14 @@ import { createMockActivity } from "@/features/diario";
 
 const steps = ["Actividad", "Territorio", "Contexto", "Hallazgos", "Archivos", "Resumen"];
 const barrios = [
-  { id: "barrio-san-fernando-centro", name: "Centro" },
-  { id: "barrio-victoria", name: "EstaciÃ³n" },
+  { id: "localidad-san-fernando", name: "San Fernando" },
+  { id: "localidad-victoria", name: "Victoria" },
+  { id: "localidad-virreyes", name: "Virreyes" },
+  { id: "barrio-infico", name: "Barrio Infico" },
 ];
 const activityTypes: Array<[ActivityDraft["type"], string]> = [
   ["walk", "Caminata"],
-  ["meeting", "ReuniÃ³n"],
+  ["meeting", "Reunión"],
   ["visit", "Visita"],
   ["talk", "Charla"],
   ["event", "Evento"],
@@ -20,27 +22,51 @@ const activityTypes: Array<[ActivityDraft["type"], string]> = [
   ["club", "Club"],
   ["business", "Comercio"],
   ["ngo", "ONG"],
-  ["institution", "InstituciÃ³n"],
+  ["institution", "Institución"],
 ];
 
-const initialDraft: ActivityDraft = {
-  type: "walk",
-  title: "",
-  description: "",
-  date: "2026-07-26",
-  startTime: "10:00",
-  endTime: "",
-  priority: "medium",
-  barrioIds: [],
-  location: "San Fernando",
-  observations: [],
-  participants: [],
-  problems: [],
-  opportunities: [],
-  commitments: [],
-  attachments: [],
-  tags: [],
-};
+function emptyDraft(): ActivityDraft {
+  return {
+    type: "walk",
+    title: "",
+    description: "",
+    date: new Date().toISOString().slice(0, 10),
+    startTime: new Date().toTimeString().slice(0, 5),
+    endTime: "",
+    priority: "medium",
+    barrioIds: [],
+    location: "San Fernando",
+    observations: [],
+    participants: [],
+    problems: [],
+    opportunities: [],
+    commitments: [],
+    attachments: [],
+    tags: [],
+  };
+}
+
+function draftFromRecord(record?: ActivityRecord): ActivityDraft {
+  if (!record) return emptyDraft();
+  return {
+    type: record.activity.type,
+    title: record.activity.title,
+    description: record.activity.description,
+    date: record.activity.date,
+    startTime: record.activity.startTime,
+    endTime: record.activity.endTime ?? "",
+    priority: record.activity.priority,
+    barrioIds: record.activity.barrioIds,
+    location: record.activity.location?.locality ?? "",
+    observations: record.activity.observations,
+    participants: record.participantNames,
+    problems: record.problems.map((item) => item.title),
+    opportunities: record.opportunities.map((item) => item.title),
+    commitments: record.commitments.map((item) => item.title),
+    attachments: [],
+    tags: record.activity.tags,
+  };
+}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--muted)]">{children}</span>;
@@ -90,7 +116,7 @@ function ListInput({
         <div className="mt-2 flex flex-wrap gap-2">
           {items.map((item, index) => (
             <button key={`${item}-${index}`} type="button" onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))} className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-bold text-[var(--accent-strong)]" title="Quitar">
-              {item} Ã—
+              {item} ×
             </button>
           ))}
         </div>
@@ -103,13 +129,15 @@ export function ActivityWizard({
   open,
   onClose,
   onComplete,
+  initialRecord,
 }: {
   open: boolean;
   onClose: () => void;
   onComplete: (record: ActivityRecord) => void;
+  initialRecord?: ActivityRecord;
 }) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<ActivityDraft>(initialDraft);
+  const [draft, setDraft] = useState<ActivityDraft>(() => draftFromRecord(initialRecord));
 
   if (!open) return null;
 
@@ -126,7 +154,7 @@ export function ActivityWizard({
       .map((barrio) => barrio.name);
     const result = createMockActivity(draft, selectedNames);
     onComplete(result.record);
-    setDraft(initialDraft);
+    setDraft(emptyDraft());
     setStep(0);
     onClose();
   }
@@ -140,9 +168,9 @@ export function ActivityWizard({
               <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent)]">
                 Paso {step + 1} de {steps.length}
               </p>
-              <h2 id="wizard-title" className="mt-1 text-lg font-extrabold">Nueva actividad Â· {steps[step]}</h2>
+              <h2 id="wizard-title" className="mt-1 text-lg font-extrabold">{initialRecord ? "Editar actividad" : "Nueva actividad"} · {steps[step]}</h2>
             </div>
-            <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-xl border border-[var(--border)] text-xl" aria-label="Cerrar asistente">Ã—</button>
+            <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-xl border border-[var(--border)] text-xl" aria-label="Cerrar asistente">×</button>
           </div>
           <div className="mt-4 grid grid-cols-6 gap-1.5" aria-label="Progreso">
             {steps.map((label, index) => (
@@ -165,18 +193,18 @@ export function ActivityWizard({
                 </div>
               </div>
               <label>
-                <FieldLabel>TÃ­tulo</FieldLabel>
+                <FieldLabel>Título</FieldLabel>
                 <input autoFocus value={draft.title} onChange={(event) => update("title", event.target.value)} placeholder="Ej. Recorrida por el corredor comercial" className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
               </label>
               <label>
-                <FieldLabel>DescripciÃ³n breve</FieldLabel>
-                <textarea value={draft.description} onChange={(event) => update("description", event.target.value)} placeholder="Â¿CuÃ¡l fue el objetivo de la actividad?" rows={3} className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
+                <FieldLabel>Descripción breve</FieldLabel>
+                <textarea value={draft.description} onChange={(event) => update("description", event.target.value)} placeholder="¿Cuál fue el objetivo de la actividad?" rows={3} className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
               </label>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <label><FieldLabel>Fecha</FieldLabel><input type="date" value={draft.date} onChange={(event) => update("date", event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm" /></label>
                 <label><FieldLabel>Inicio</FieldLabel><input type="time" value={draft.startTime} onChange={(event) => update("startTime", event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm" /></label>
                 <label><FieldLabel>Fin</FieldLabel><input type="time" value={draft.endTime} onChange={(event) => update("endTime", event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm" /></label>
-                <label><FieldLabel>Prioridad</FieldLabel><select value={draft.priority} onChange={(event) => update("priority", event.target.value as ActivityDraft["priority"])} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm"><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option><option value="critical">CrÃ­tica</option></select></label>
+                <label><FieldLabel>Prioridad</FieldLabel><select value={draft.priority} onChange={(event) => update("priority", event.target.value as ActivityDraft["priority"])} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm"><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option><option value="critical">Crítica</option></select></label>
               </div>
             </div>
           )}
@@ -198,8 +226,8 @@ export function ActivityWizard({
                 </div>
               </div>
               <label>
-                <FieldLabel>UbicaciÃ³n o punto de encuentro</FieldLabel>
-                <input value={draft.location} onChange={(event) => update("location", event.target.value)} placeholder="DirecciÃ³n, instituciÃ³n o referencia" className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
+                <FieldLabel>Ubicación o punto de encuentro</FieldLabel>
+                <input value={draft.location} onChange={(event) => update("location", event.target.value)} placeholder="Dirección, institución o referencia" className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
               </label>
               <ListInput label="Etiquetas" placeholder="Ej. comercio, movilidad" items={draft.tags} onChange={(items) => update("tags", items)} />
             </div>
@@ -207,19 +235,19 @@ export function ActivityWizard({
 
           {step === 2 && (
             <div className="space-y-6">
-              <ListInput label="Observaciones" placeholder="Registrar una observaciÃ³n" items={draft.observations} onChange={(items) => update("observations", items)} />
-              <ListInput label="Participantes" placeholder="Persona, equipo u organizaciÃ³n" items={draft.participants} onChange={(items) => update("participants", items)} />
+              <ListInput label="Observaciones" placeholder="Registrar una observación" items={draft.observations} onChange={(items) => update("observations", items)} />
+              <ListInput label="Participantes" placeholder="Persona, equipo u organización" items={draft.participants} onChange={(items) => update("participants", items)} />
               <div className="rounded-2xl bg-[var(--accent-soft)] p-4 text-sm leading-6 text-[var(--accent-strong)]">
-                RegistrÃ¡ hechos breves y verificables. La clasificaciÃ³n detallada puede completarse despuÃ©s.
+                Registrá hechos breves y verificables. La clasificación detallada puede completarse después.
               </div>
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-6">
-              <ListInput label="Problemas detectados" placeholder="Â¿QuÃ© situaciÃ³n requiere atenciÃ³n?" items={draft.problems} onChange={(items) => update("problems", items)} />
-              <ListInput label="Oportunidades" placeholder="Â¿QuÃ© posibilidad surgiÃ³?" items={draft.opportunities} onChange={(items) => update("opportunities", items)} />
-              <ListInput label="Compromisos" placeholder="Â¿QuÃ© quedÃ³ por hacer?" items={draft.commitments} onChange={(items) => update("commitments", items)} />
+              <ListInput label="Problemas detectados" placeholder="¿Qué situación requiere atención?" items={draft.problems} onChange={(items) => update("problems", items)} />
+              <ListInput label="Oportunidades" placeholder="¿Qué posibilidad surgió?" items={draft.opportunities} onChange={(items) => update("opportunities", items)} />
+              <ListInput label="Compromisos" placeholder="¿Qué quedó por hacer?" items={draft.commitments} onChange={(items) => update("commitments", items)} />
             </div>
           )}
 
@@ -229,7 +257,7 @@ export function ActivityWizard({
               <label className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-6 text-center transition hover:border-[var(--accent)]">
                 <span className="grid size-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-xl font-black text-[var(--accent-strong)]">+</span>
                 <span className="mt-3 text-sm font-extrabold">Seleccionar archivos</span>
-                <span className="mt-1 text-xs text-[var(--muted)]">ImÃ¡genes o videos desde el dispositivo</span>
+                <span className="mt-1 text-xs text-[var(--muted)]">Imágenes o videos desde el dispositivo</span>
                 <input type="file" accept="image/*,video/*" multiple className="sr-only" onChange={(event) => update("attachments", [...draft.attachments, ...Array.from(event.target.files ?? [])])} />
               </label>
               {draft.attachments.length > 0 && (
@@ -250,9 +278,9 @@ export function ActivityWizard({
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">{activityTypes.find(([value]) => value === draft.type)?.[1]}</p>
                 <h3 className="mt-2 text-xl font-extrabold">{draft.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.description || "Sin descripciÃ³n adicional."}</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.description || "Sin descripción adicional."}</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
-                  <span>{draft.date}</span><span>Â·</span><span>{draft.startTime}{draft.endTime ? `â€“${draft.endTime}` : ""}</span><span>Â·</span><span>{barrios.filter((item) => draft.barrioIds.includes(item.id)).map((item) => item.name).join(", ") || "Sin barrio"}</span>
+                  <span>{draft.date}</span><span>·</span><span>{draft.startTime}{draft.endTime ? `–${draft.endTime}` : ""}</span><span>·</span><span>{barrios.filter((item) => draft.barrioIds.includes(item.id)).map((item) => item.name).join(", ") || "Sin barrio"}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -260,14 +288,14 @@ export function ActivityWizard({
                   <div key={label} className="rounded-xl bg-[var(--surface-muted)] p-3"><p className="text-xl font-extrabold">{value}</p><p className="text-[10px] font-bold uppercase text-[var(--muted)]">{label}</p></div>
                 ))}
               </div>
-              <p className="text-xs leading-5 text-[var(--muted)]">En esta etapa los datos se guardan sÃ³lo durante la sesiÃ³n y se incorporan inmediatamente al Diario.</p>
+              <p className="text-xs leading-5 text-[var(--muted)]">Los cambios se guardan en este dispositivo y actualizan inmediatamente Mi Diario y el mapa.</p>
             </div>
           )}
         </div>
 
         <footer className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-4 py-4 sm:px-6">
           <button type="button" onClick={() => step === 0 ? onClose() : setStep((current) => current - 1)} className="rounded-xl px-4 py-3 text-sm font-extrabold text-[var(--muted)]">
-            {step === 0 ? "Cancelar" : "AtrÃ¡s"}
+            {step === 0 ? "Cancelar" : "Atrás"}
           </button>
           {step < steps.length - 1 ? (
             <button type="button" disabled={!canContinue} onClick={() => setStep((current) => current + 1)} className="premium-button px-5 py-3 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-40">
@@ -275,7 +303,7 @@ export function ActivityWizard({
             </button>
           ) : (
             <button type="button" onClick={save} className="premium-button px-5 py-3 text-sm font-extrabold">
-              Guardar actividad
+              {initialRecord ? "Guardar cambios" : "Guardar actividad"}
             </button>
           )}
         </footer>

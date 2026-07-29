@@ -1,27 +1,112 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ActivityRecord } from "@/features/diario";
+import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { mockActivityRecords } from "@/mock";
 import { ActivityTimeline } from "./activity-timeline";
 import { ActivityWizard } from "./activity-wizard";
 
 export function CampaignDiary() {
-  const [records, setRecords] = useState<ActivityRecord[]>(mockActivityRecords);
+  const { records, replace } = useActivityJournal(mockActivityRecords);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [editing, setEditing] = useState<ActivityRecord>();
   const [newestId, setNewestId] = useState<string>();
+  const [query, setQuery] = useState("");
+  const [area, setArea] = useState("all");
+  const [institution, setInstitution] = useState("all");
+  const [type, setType] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [order, setOrder] = useState<"desc" | "asc">("desc");
 
-  function addRecord(record: ActivityRecord) {
-    setRecords((current) => [record, ...current]);
-    setNewestId(record.activity.id);
+  const areaOptions = useMemo(
+    () => [...new Set(records.flatMap((record) => record.barrioNames))].sort(),
+    [records],
+  );
+  const institutionOptions = useMemo(
+    () => [...new Set(records.map((record) => record.organizerName).filter(Boolean) as string[])].sort(),
+    [records],
+  );
+  const visibleRecords = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("es-AR");
+    return records
+      .filter((record) => {
+        const searchable = [
+          record.activity.title,
+          record.activity.description,
+          record.activity.observations.join(" "),
+          record.participantNames.join(" "),
+          record.barrioNames.join(" "),
+        ].join(" ").toLocaleLowerCase("es-AR");
+        return (
+          (!normalizedQuery || searchable.includes(normalizedQuery)) &&
+          (area === "all" || record.barrioNames.includes(area)) &&
+          (institution === "all" || record.organizerName === institution) &&
+          (type === "all" || record.activity.type === type) &&
+          (status === "all" || record.activity.status === status)
+        );
+      })
+      .sort((a, b) => {
+        const left = `${a.activity.date}T${a.activity.startTime}`;
+        const right = `${b.activity.date}T${b.activity.startTime}`;
+        return order === "desc" ? right.localeCompare(left) : left.localeCompare(right);
+      });
+  }, [area, institution, order, query, records, status, type]);
+
+  function completeRecord(record: ActivityRecord) {
+    if (editing) {
+      const now = new Date().toISOString();
+      const updated: ActivityRecord = {
+        ...record,
+        activity: {
+          ...record.activity,
+          id: editing.activity.id,
+          attachments: [...editing.activity.attachments, ...record.activity.attachments],
+          audit: {
+            ...editing.activity.audit,
+            updatedAt: now,
+            version: editing.activity.audit.version + 1,
+          },
+        },
+      };
+      replace(records.map((item) => item.activity.id === editing.activity.id ? updated : item));
+      setNewestId(updated.activity.id);
+    } else {
+      replace([record, ...records]);
+      setNewestId(record.activity.id);
+    }
+    setEditing(undefined);
+  }
+
+  function deleteRecord(record: ActivityRecord) {
+    const confirmed = window.confirm(
+      `¿Querés eliminar “${record.activity.title}”? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmed) return;
+    replace(records.filter((item) => item.activity.id !== record.activity.id));
+    if (newestId === record.activity.id) setNewestId(undefined);
+  }
+
+  function duplicateRecord(record: ActivityRecord) {
+    const now = new Date().toISOString();
+    const duplicate: ActivityRecord = {
+      ...structuredClone(record),
+      activity: {
+        ...structuredClone(record.activity),
+        id: `actividad-${Date.now()}`,
+        title: `${record.activity.title} (copia)`,
+        status: "draft",
+        statusHistory: [{ to: "draft", changedAt: now, reason: "Actividad duplicada" }],
+        audit: { createdAt: now, updatedAt: now, version: 1 },
+      },
+    };
+    replace([duplicate, ...records]);
+    setNewestId(duplicate.activity.id);
   }
 
   const linkedCount = records.reduce(
     (total, record) =>
-      total +
-      record.problems.length +
-      record.opportunities.length +
-      record.commitments.length,
+      total + record.problems.length + record.opportunities.length + record.commitments.length,
     0,
   );
 
@@ -31,37 +116,104 @@ export function CampaignDiary() {
         <header className="border-b border-[var(--border)] pb-8">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div className="max-w-2xl">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Registro operativo</p>
-              <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">Diario de Campaña</h1>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Registro operativo permanente</p>
+              <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">Mi Diario</h1>
               <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-                Cada actividad conserva lo ocurrido, quiénes participaron y qué problemas, oportunidades o compromisos surgieron.
+                Encontrá, revisá y administrá todas las actividades sin iniciar una nueva recorrida.
               </p>
             </div>
-            <button type="button" onClick={() => setWizardOpen(true)} className="premium-button inline-flex h-12 items-center justify-center gap-2 px-5 text-sm font-extrabold">
+            <button
+              type="button"
+              onClick={() => { setEditing(undefined); setWizardOpen(true); }}
+              className="premium-button inline-flex h-12 items-center justify-center gap-2 px-5 text-sm font-extrabold"
+            >
               <span className="text-lg">+</span> Nueva actividad
             </button>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold text-[var(--muted)]">
-            <span><strong className="mr-1 text-[var(--foreground)]">{records.length}</strong> actividades registradas</span>
+            <span><strong className="mr-1 text-[var(--foreground)]">{records.length}</strong> actividades</span>
             <span><strong className="mr-1 text-[var(--foreground)]">{linkedCount}</strong> hallazgos conectados</span>
-            <span><strong className="mr-1 text-[var(--foreground)]">{records.filter((record) => record.activity.attachments.length > 0).length}</strong> con evidencia adjunta</span>
+            <span><strong className="mr-1 text-[var(--foreground)]">{records.filter((record) => record.activity.attachments.length > 0).length}</strong> con evidencia</span>
           </div>
         </header>
+
+        <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_repeat(5,minmax(0,1fr))]">
+            <label className="md:col-span-2 xl:col-span-1">
+              <span className="sr-only">Buscar actividades</span>
+              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por título, texto o participante" className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none focus:border-[var(--accent)]" />
+            </label>
+            <FilterSelect label="Barrio" value={area} onChange={setArea} options={areaOptions} />
+            <FilterSelect label="Institución" value={institution} onChange={setInstitution} options={institutionOptions} />
+            <FilterSelect label="Tipo" value={type} onChange={setType} options={[...new Set(records.map((record) => record.activity.type))]} />
+            <FilterSelect label="Estado" value={status} onChange={setStatus} options={[...new Set(records.map((record) => record.activity.status))]} />
+            <label>
+              <span className="sr-only">Orden</span>
+              <select value={order} onChange={(event) => setOrder(event.target.value as "desc" | "asc")} className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-xs font-bold">
+                <option value="desc">Más recientes</option>
+                <option value="asc">Más antiguas</option>
+              </select>
+            </label>
+          </div>
+        </section>
 
         <section className="mt-8">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--muted)]">Cronología</p>
-              <h2 className="mt-1 text-xl font-extrabold">Actividad reciente</h2>
+              <h2 className="mt-1 text-xl font-extrabold">{visibleRecords.length} resultados</h2>
             </div>
-            <p className="hidden text-xs text-[var(--muted)] sm:block">Abrí una actividad para ver todo su contexto</p>
+            <p className="hidden text-xs text-[var(--muted)] sm:block">Abrí una actividad para consultar su contexto</p>
           </div>
-          <ActivityTimeline records={records} newestId={newestId} />
+          {visibleRecords.length ? (
+            <ActivityTimeline
+              records={visibleRecords}
+              newestId={newestId}
+              onEdit={(record) => { setEditing(record); setWizardOpen(true); }}
+              onDelete={deleteRecord}
+              onDuplicate={duplicateRecord}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-14 text-center">
+              <p className="text-base font-extrabold">No encontramos actividades</p>
+              <p className="mt-2 text-sm text-[var(--muted)]">Probá con otros filtros o registrá una nueva actividad.</p>
+            </div>
+          )}
         </section>
       </div>
 
-      <ActivityWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onComplete={addRecord} />
+      {wizardOpen && (
+        <ActivityWizard
+          key={editing?.activity.id ?? "new-activity"}
+          open
+          initialRecord={editing}
+          onClose={() => { setWizardOpen(false); setEditing(undefined); }}
+          onComplete={(record) => { completeRecord(record); setWizardOpen(false); }}
+        />
+      )}
     </>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <label>
+      <span className="sr-only">{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-xs font-bold">
+        <option value="all">{label}: todos</option>
+        {options.map((option) => <option key={option} value={option}>{option.replaceAll("_", " ")}</option>)}
+      </select>
+    </label>
   );
 }

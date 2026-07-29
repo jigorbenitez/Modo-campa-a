@@ -6,53 +6,53 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 
 const steps = [
   {
-    eyebrow: "Paso 1 Â· La plataforma",
+    eyebrow: "Paso 1 · La plataforma",
     title: "Un municipio, conectado.",
-    description: "ATIY reÃºne territorio, actividad e historia institucional para que el equipo pueda decidir con contexto.",
+    description: "ATIY reúne territorio, actividad e historia institucional para que el equipo pueda decidir con contexto.",
     accent: "Panorama general",
     facts: ["San Fernando", "4 barrios activos", "26 instituciones"],
   },
   {
-    eyebrow: "Paso 2 Â· Territorio",
+    eyebrow: "Paso 2 · Territorio",
     title: "El municipio se vuelve visible.",
-    description: "Cada actividad, problema y compromiso aparece vinculado al lugar donde ocurriÃ³ y a su evoluciÃ³n.",
+    description: "Cada actividad, problema y compromiso aparece vinculado al lugar donde ocurrió y a su evolución.",
     accent: "Mapa Vivo",
-    facts: ["4 capas activas", "12 problemas abiertos", "Ãšltima recorrida: ayer"],
+    facts: ["4 capas activas", "12 problemas abiertos", "Última recorrida: ayer"],
   },
   {
-    eyebrow: "Paso 3 Â· Diario",
+    eyebrow: "Paso 3 · Diario",
     title: "Cada actividad cuenta la historia completa.",
-    description: "Una recorrida conserva participantes, observaciones, evidencia y todos los compromisos que generÃ³.",
+    description: "Una recorrida conserva participantes, observaciones, evidencia y todos los compromisos que generó.",
     accent: "Registro operativo",
     facts: ["38 actividades", "9 esta semana", "74 aportes conectados"],
   },
   {
-    eyebrow: "Paso 4 Â· Relaciones",
-    title: "La informaciÃ³n deja de estar aislada.",
+    eyebrow: "Paso 4 · Relaciones",
+    title: "La información deja de estar aislada.",
     description: "Personas, instituciones, barrios y documentos se exploran como una memoria compartida.",
     accent: "Contexto cruzado",
     facts: ["118 conexiones", "26 instituciones", "43 personas"],
   },
   {
-    eyebrow: "Paso 5 Â· Inteligencia",
+    eyebrow: "Paso 5 · Inteligencia",
     title: "Los datos se convierten en prioridades.",
-    description: "Reglas transparentes detectan concentraciÃ³n de problemas, actividad antigua y compromisos vencidos.",
-    accent: "SeÃ±ales Ãºtiles",
+    description: "Reglas transparentes detectan concentración de problemas, actividad antigua y compromisos vencidos.",
+    accent: "Señales útiles",
     facts: ["5 prioridades", "3 alertas", "Sin IA generativa"],
   },
   {
-    eyebrow: "Paso 6 Â· Recorrido",
+    eyebrow: "Paso 6 · Recorrido",
     title: "Hecho para trabajar desde la calle.",
     description: "Con una sola mano, el equipo registra fotos, hallazgos, personas y acuerdos mientras avanza.",
-    accent: "Captura mÃ³vil",
+    accent: "Captura móvil",
     facts: ["Funciona offline", "Guardado inmediato", "Sin formularios largos"],
   },
   {
-    eyebrow: "Paso 7 Â· Listo",
+    eyebrow: "Paso 7 · Listo",
     title: "Una misma verdad para todo el equipo.",
-    description: "La demostraciÃ³n terminÃ³. PodÃ©s explorar la plataforma o iniciar un recorrido de prueba.",
+    description: "La demostración terminó. Podés explorar la plataforma o iniciar un recorrido de prueba.",
     accent: "San Fernando",
-    facts: ["Territorio", "Memoria", "AcciÃ³n"],
+    facts: ["Territorio", "Memoria", "Acción"],
   },
 ];
 
@@ -70,7 +70,7 @@ export function GuidedDemo() {
       <div className="absolute -right-20 bottom-0 size-96 rounded-full bg-[var(--brand-accent)]/8 blur-3xl" />
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between">
-          <Link href="/" className="atiy-logo-crop h-14 w-40" aria-label="ATIY â€” Inicio">
+          <Link href="/" className="atiy-logo-crop h-14 w-40" aria-label="ATIY — Inicio">
             <BrandLogo surface="dark" priority />
           </Link>
           <Link href="/" className="text-xs font-bold text-white/55 transition hover:text-white">Salir de la demo</Link>
@@ -111,7 +111,7 @@ export function GuidedDemo() {
           <div className="flex items-center justify-between">
             <button type="button" disabled={step === 0} onClick={() => setStep((value) => value - 1)} className="h-12 rounded-2xl px-5 text-sm font-bold text-white/55 disabled:opacity-0">Anterior</button>
             {step < steps.length - 1 ? (
-              <button type="button" onClick={() => setStep((value) => value + 1)} className="h-12 rounded-2xl bg-[var(--brand-accent)] px-6 text-sm font-black text-[var(--brand-primary)]">Continuar â†’</button>
+              <button type="button" onClick={() => setStep((value) => value + 1)} className="h-12 rounded-2xl bg-[var(--brand-accent)] px-6 text-sm font-black text-[var(--brand-primary)]">Continuar →</button>
             ) : (
               <div className="flex gap-2"><Link href="/" className="grid h-12 place-items-center rounded-2xl border border-white/15 px-5 text-sm font-black">Explorar</Link><Link href="/recorrido" className="grid h-12 place-items-center rounded-2xl bg-[var(--brand-accent)] px-5 text-sm font-black text-[var(--brand-primary)]">Iniciar recorrido</Link></div>
             )}

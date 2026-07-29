@@ -69,7 +69,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Memoria institucional</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">Explorador de Relaciones</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            NavegÃ¡ la red de actividades, territorio, personas, instituciones y decisiones sin perder el contexto.
+            Navegá la red de actividades, territorio, personas, instituciones y decisiones sin perder el contexto.
           </p>
         </div>
         <div className="flex gap-4 text-xs font-bold text-[var(--muted)]">
@@ -86,7 +86,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar en la memoriaâ€¦"
+              placeholder="Buscar en la memoria…"
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 text-sm outline-none focus:border-[var(--accent)]"
             />
           </label>
@@ -118,7 +118,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
               />
             ))}
             {nodes.length === 0 && (
-              <p className="p-4 text-center text-xs leading-5 text-[var(--muted)]">No hay entidades que coincidan con la bÃºsqueda.</p>
+              <p className="p-4 text-center text-xs leading-5 text-[var(--muted)]">No hay entidades que coincidan con la búsqueda.</p>
             )}
           </div>
         </aside>

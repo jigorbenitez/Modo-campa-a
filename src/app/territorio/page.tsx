@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { TerritoryOperations } from "@/components/territory/territory-operations";
 import { ContextSyncPulse } from "@/components/beta/context-sync-pulse";
 
@@ -8,5 +9,18 @@ export const metadata: Metadata = {
 };
 
 export default function TerritoryPage() {
-  return <><ContextSyncPulse module="territory" /><TerritoryOperations /></>;
+  return (
+    <>
+      <ContextSyncPulse module="territory" />
+      <Suspense
+        fallback={
+          <div className="grid min-h-[70vh] place-items-center text-sm font-bold text-[var(--muted)]">
+            Preparando el territorio…
+          </div>
+        }
+      >
+        <TerritoryOperations />
+      </Suspense>
+    </>
+  );
 }

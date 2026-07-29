@@ -2,8 +2,15 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import type { ActivityRecord } from "@/features/diario";
 import type { TerritoryFeature, TerritoryLayerId } from "@/features/territorio-map";
-import { sanitizeTerritorySelection, TerritoryViewService } from "@/features/territorio-map";
+import {
+  activityRecordToTerritoryFeature,
+  sanitizeTerritorySelection,
+  TerritoryViewService,
+} from "@/features/territorio-map";
+import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { mockTerritorySnapshot, territoryCategories } from "@/mock";
 import { FloatingMetrics } from "./floating-metrics";
 import { LayerControl } from "./layer-control";
@@ -27,8 +34,30 @@ const TerritoryMap = dynamic(
 );
 
 const viewService = new TerritoryViewService();
+const emptyActivityRecords: ActivityRecord[] = [];
 
 export function TerritoryOperations() {
+  const searchParams = useSearchParams();
+  const requestedActivityId = searchParams.get("activity");
+  const { records: journalRecords, hasStoredJournal } =
+    useActivityJournal(emptyActivityRecords);
+  const snapshot = useMemo(() => {
+    const journalFeatures = journalRecords
+      .map((record) =>
+        activityRecordToTerritoryFeature(record, mockTerritorySnapshot.neighborhoods),
+      )
+      .filter((feature): feature is TerritoryFeature => Boolean(feature));
+
+    return {
+      ...mockTerritorySnapshot,
+      features: [
+        ...mockTerritorySnapshot.features.filter(
+          (feature) => !hasStoredJournal || feature.layerId !== "activities",
+        ),
+        ...journalFeatures,
+      ],
+    };
+  }, [hasStoredJournal, journalRecords]);
   const [enabledLayers, setEnabledLayers] = useState<Set<TerritoryLayerId>>(
     () =>
       new Set(
@@ -44,25 +73,46 @@ export function TerritoryOperations() {
   const [resetToken, setResetToken] = useState(0);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [requestedSelectionDismissed, setRequestedSelectionDismissed] = useState(false);
 
-  const periodId = mockTerritorySnapshot.periods[periodIndex]?.id ?? "today";
+  const periodId = snapshot.periods[periodIndex]?.id ?? "today";
+  const requestedFeature = useMemo(
+    () =>
+      requestedSelectionDismissed || !requestedActivityId
+        ? undefined
+        : snapshot.features.find(
+            (feature) => feature.id === `journal-${requestedActivityId}`,
+          ),
+    [requestedActivityId, requestedSelectionDismissed, snapshot.features],
+  );
   const safeSelection = useMemo(() => {
-    const cutoff = mockTerritorySnapshot.periods[periodIndex]?.cutoff ?? "9999-12-31";
+    const cutoff = snapshot.periods[periodIndex]?.cutoff ?? "9999-12-31";
     return sanitizeTerritorySelection(
-      { neighborhoodId: selectedNeighborhoodId, featureId: selectedFeature?.id },
-      mockTerritorySnapshot.features,
-      new Set(mockTerritorySnapshot.neighborhoods.map((item) => item.id)),
+      {
+        neighborhoodId: selectedNeighborhoodId ?? requestedFeature?.barrioId,
+        featureId: selectedFeature?.id ?? requestedFeature?.id,
+      },
+      snapshot.features,
+      new Set(snapshot.neighborhoods.map((item) => item.id)),
       enabledLayers,
       cutoff,
     );
-  }, [enabledLayers, periodIndex, selectedFeature?.id, selectedNeighborhoodId]);
+  }, [
+    enabledLayers,
+    periodIndex,
+    requestedFeature?.barrioId,
+    requestedFeature?.id,
+    selectedFeature?.id,
+    selectedNeighborhoodId,
+    snapshot,
+  ]);
   const safeSelectedFeature = useMemo(
-    () => mockTerritorySnapshot.features.find((item) => item.id === safeSelection.featureId),
-    [safeSelection.featureId],
+    () => snapshot.features.find((item) => item.id === safeSelection.featureId),
+    [safeSelection.featureId, snapshot.features],
   );
   const searchResults = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("es-AR");
-    return mockTerritorySnapshot.features.filter((feature) => {
+    return snapshot.features.filter((feature) => {
       const matchesTerm =
         !term ||
         `${feature.title} ${feature.description} ${feature.subtype ?? ""} ${feature.localidad}`
@@ -72,22 +122,23 @@ export function TerritoryOperations() {
         category === "all" || feature.subtype === category || feature.kind === category;
       return enabledLayers.has(feature.layerId) && matchesTerm && matchesCategory;
     });
-  }, [category, enabledLayers, search]);
+  }, [category, enabledLayers, search, snapshot.features]);
   const view = useMemo(
     () =>
-      viewService.project(mockTerritorySnapshot, {
+      viewService.project(snapshot, {
         periodId,
         enabledLayers,
         selectedNeighborhoodId: safeSelection.neighborhoodId,
         search,
         category,
       }),
-    [category, enabledLayers, periodId, safeSelection.neighborhoodId, search],
+    [category, enabledLayers, periodId, safeSelection.neighborhoodId, search, snapshot],
   );
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        setRequestedSelectionDismissed(true);
         setSelectedFeature(undefined);
         setSelectedNeighborhoodId(undefined);
         setResetToken((value) => value + 1);
@@ -108,30 +159,34 @@ export function TerritoryOperations() {
   }
 
   function selectNeighborhood(id: string) {
+    setRequestedSelectionDismissed(true);
     setSelectedNeighborhoodId(id);
     setSelectedFeature(undefined);
   }
 
   function selectFeature(feature: TerritoryFeature) {
+    setRequestedSelectionDismissed(true);
     setSelectedFeature(feature);
     setSelectedNeighborhoodId(feature.barrioId);
   }
 
   function changePeriod(index: number) {
     setPeriodIndex(index);
-    const cutoff = mockTerritorySnapshot.periods[index]?.cutoff;
+    const cutoff = snapshot.periods[index]?.cutoff;
     if (selectedFeature && cutoff && selectedFeature.occurredAt.slice(0, 10) > cutoff) {
       setSelectedFeature(undefined);
     }
   }
 
   function resetMap() {
+    setRequestedSelectionDismissed(true);
     setSelectedFeature(undefined);
     setSelectedNeighborhoodId(undefined);
     setResetToken((value) => value + 1);
   }
 
   function clearMarkerSelection() {
+    setRequestedSelectionDismissed(true);
     setSelectedFeature(undefined);
     setResetToken((value) => value + 1);
   }
@@ -162,7 +217,7 @@ export function TerritoryOperations() {
       >
         {!presentationMode && (
           <div className="px-4 pb-3 lg:hidden">
-            <LayerControl layers={mockTerritorySnapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
+            <LayerControl layers={snapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
           </div>
         )}
 
@@ -174,17 +229,15 @@ export function TerritoryOperations() {
           <div className={`grid h-full ${presentationMode ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_360px]"}`}>
             <div className={`relative ${presentationMode ? "h-full" : "h-[68vh] min-h-[590px] lg:h-[calc(100vh-13rem)]"}`}>
               <TerritoryMap
-                center={[
-                  mockTerritorySnapshot.center.latitude,
-                  mockTerritorySnapshot.center.longitude,
-                ]}
+                center={[snapshot.center.latitude, snapshot.center.longitude]}
                 view={view}
-                layers={mockTerritorySnapshot.layers}
+                layers={snapshot.layers}
                 selectedFeature={safeSelectedFeature}
                 onSelectFeature={selectFeature}
                 onSelectNeighborhood={selectNeighborhood}
                 resetToken={resetToken}
                 onClearSelection={clearMarkerSelection}
+                municipalityBoundaries={snapshot.municipalityBoundaries}
               />
 
               <div className="pointer-events-none absolute inset-x-3 top-3 z-[500] sm:inset-x-4 sm:top-4">
@@ -210,13 +263,13 @@ export function TerritoryOperations() {
               {!presentationMode && (
                 <>
                   <div className="absolute left-4 top-64 z-[500] hidden w-48 lg:block">
-                    <LayerControl layers={mockTerritorySnapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
+                    <LayerControl layers={snapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
                   </div>
                   <div className="absolute bottom-4 left-1/2 z-[500] hidden w-[min(34rem,65%)] -translate-x-1/2 lg:block">
-                    <TimelineSlider periods={mockTerritorySnapshot.periods} value={periodIndex} onChange={changePeriod} />
+                    <TimelineSlider periods={snapshot.periods} value={periodIndex} onChange={changePeriod} />
                   </div>
                   <div className="absolute bottom-4 right-4 z-[500] hidden xl:block">
-                    <MapLegend layers={mockTerritorySnapshot.layers} enabled={enabledLayers} />
+                    <MapLegend layers={snapshot.layers} enabled={enabledLayers} />
                   </div>
                 </>
               )}
@@ -225,7 +278,7 @@ export function TerritoryOperations() {
             {!presentationMode && (
               <div className="max-h-[70vh] border-t border-[var(--border)] lg:max-h-none lg:border-l lg:border-t-0">
                 <TerritorySidebar
-                  neighborhoods={mockTerritorySnapshot.neighborhoods}
+                  neighborhoods={snapshot.neighborhoods}
                   selectedFeature={safeSelectedFeature}
                   selectedNeighborhood={view.selectedNeighborhood}
                   onSelectNeighborhood={selectNeighborhood}
@@ -240,7 +293,7 @@ export function TerritoryOperations() {
 
         {!presentationMode && (
           <div className="px-4 pt-3 lg:hidden">
-            <TimelineSlider periods={mockTerritorySnapshot.periods} value={periodIndex} onChange={changePeriod} />
+            <TimelineSlider periods={snapshot.periods} value={periodIndex} onChange={changePeriod} />
           </div>
         )}
       </div>

@@ -42,7 +42,7 @@ export interface AdminOverview {
 const demoUser: Usuario = {
   id: "usuario-demo-administrador",
   municipioId: "municipio-san-fernando",
-  firstName: "AdministraciÃ³n",
+  firstName: "Administración",
   lastName: "Demo",
   email: "admin@san-fernando.demo",
   role: "administrator",
@@ -143,7 +143,7 @@ export async function getAdminOverview(
         },
         {
           id: "usuario-demo-consultor",
-          name: "ConsultorÃ­a Institucional",
+          name: "Consultoría Institucional",
           email: "consultoria@san-fernando.demo",
           role: "consultant",
           status: "invited",
