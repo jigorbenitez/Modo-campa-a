@@ -1,4 +1,5 @@
 import { OperationalManager } from "@/components/management/operational-manager";
+import { TerritorialDataExchange } from "./territorial-data-exchange";
 
 const typeOptions = [
   ["hospital", "Hospital"],
@@ -20,6 +21,8 @@ const typeOptions = [
 
 export function TerritorialManager() {
   return (
+    <>
+    <TerritorialDataExchange />
     <OperationalManager
       storageKey="atiy:territorial-entities:v1"
       eyebrow="Motor territorial ATIY"
@@ -56,5 +59,6 @@ export function TerritorialManager() {
         { id: "description", label: "Descripción", type: "textarea" },
       ]}
     />
+    </>
   );
 }

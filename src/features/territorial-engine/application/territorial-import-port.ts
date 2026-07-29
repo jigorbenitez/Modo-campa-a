@@ -1,6 +1,6 @@
 import type { TerritorialEntity } from "../domain";
 
-export type TerritorialImportFormat = "csv" | "json" | "geojson";
+export type TerritorialImportFormat = "csv" | "xlsx" | "json" | "geojson";
 
 export interface TerritorialImportSource {
   format: TerritorialImportFormat;

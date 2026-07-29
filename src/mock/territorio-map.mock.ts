@@ -1,5 +1,6 @@
 import boundaryData from "@/data/san-fernando-boundaries.json";
 import circuitData from "@/data/san-fernando-electoral-circuits.json";
+import municipalityData from "@/data/san-fernando-municipality-from-circuits.json";
 import type {
   TerritoryCircuit,
   TerritoryFeature,
@@ -45,6 +46,9 @@ type CircuitFeature = {
 const circuitFeatures = (
   circuitData as unknown as { features: CircuitFeature[] }
 ).features;
+const municipalityFeature = (municipalityData as unknown as {
+  features: Array<{ geometry: { type: "MultiPolygon"; coordinates: Coordinate[][][] } }>;
+}).features[0];
 
 function ringsFor(id: string): Coordinate[][] {
   const feature = boundaries.find((item) => item.properties.id === id);
@@ -357,7 +361,9 @@ export const mockTerritorySnapshot: TerritorySnapshot = {
   municipioId,
   municipalityName: "San Fernando",
   center: { latitude: -34.4431, longitude: -58.5579 },
-  municipalityBoundaries: toPoints(ringsFor("municipio-san-fernando")),
+  municipalityBoundaries: toPoints(
+    municipalityFeature.geometry.coordinates.map((polygon) => polygon[0]),
+  ),
   layers: territoryLayers,
   neighborhoods: territoryNeighborhoods,
   circuits: territoryElectoralCircuits,

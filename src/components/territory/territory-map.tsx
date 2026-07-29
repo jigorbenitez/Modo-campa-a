@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import L from "leaflet";
 import { Circle, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import type {
   TerritoryCircuit,
@@ -102,6 +103,111 @@ function MapInteraction({ tool, onClearSelection, onPoint }: { tool: GisTool; on
 
 function ZoomObserver({ onChange }: { onChange: (zoom: number) => void }) {
   const map = useMapEvents({ zoomend: () => onChange(map.getZoom()) });
+  return null;
+}
+
+function ProfessionalMapControls() {
+  const map = useMap();
+
+  useEffect(() => {
+    const scale = L.control.scale({ imperial: false, metric: true, position: "bottomleft", maxWidth: 130 }).addTo(map);
+    const history: Array<{ center: L.LatLng; zoom: number }> = [];
+    let restoring = false;
+
+    const InfoControl = L.Control.extend({
+      onAdd() {
+        const container = L.DomUtil.create("div", "leaflet-bar atiy-map-status");
+        container.setAttribute("aria-live", "polite");
+        container.innerHTML = `<span data-coordinates>—</span><strong data-zoom>Zoom ${map.getZoom()}</strong>`;
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+      },
+    });
+    const info = new InfoControl({ position: "bottomright" }).addTo(map);
+    const infoContainer = info.getContainer();
+
+    const NavigationControl = L.Control.extend({
+      onAdd() {
+        const container = L.DomUtil.create("div", "leaflet-bar atiy-map-navigation");
+        container.innerHTML = `<button type="button" data-history title="Vista anterior" aria-label="Vista anterior">↶</button><button type="button" data-location title="Mi ubicación" aria-label="Mi ubicación">◎</button><span title="Norte" aria-label="Norte">N</span>`;
+        L.DomEvent.disableClickPropagation(container);
+        container.querySelector("[data-history]")?.addEventListener("click", () => {
+          if (history.length < 2) return;
+          history.pop();
+          const previous = history.at(-1);
+          if (!previous) return;
+          restoring = true;
+          map.flyTo(previous.center, previous.zoom, { duration: 0.45 });
+        });
+        container.querySelector("[data-location]")?.addEventListener("click", () => {
+          navigator.geolocation?.getCurrentPosition(
+            ({ coords }) => map.flyTo([coords.latitude, coords.longitude], 16, { duration: 0.55 }),
+            () => undefined,
+            { enableHighAccuracy: true, timeout: 10000 },
+          );
+        });
+        return container;
+      },
+    });
+    const navigation = new NavigationControl({ position: "topleft" }).addTo(map);
+    const MiniMapControl = L.Control.extend({
+      onAdd() {
+        const container = L.DomUtil.create("div", "atiy-mini-map");
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+      },
+    });
+    const miniControl = new MiniMapControl({ position: "bottomleft" }).addTo(map);
+    const miniContainer = miniControl.getContainer()!;
+    const miniMap = L.map(miniContainer, { attributionControl: false, zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false });
+    miniMap.setView(map.getCenter(), Math.max(7, map.getZoom() - 4));
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { opacity: 0.55 }).addTo(miniMap);
+    let viewport = L.rectangle(map.getBounds(), { color: "#00BBD4", weight: 2, fillOpacity: 0.04 }).addTo(miniMap);
+
+    function updateZoom() {
+      const element = infoContainer?.querySelector("[data-zoom]");
+      if (element) element.textContent = `Zoom ${map.getZoom()}`;
+    }
+    function updateCoordinates(event: L.LeafletMouseEvent) {
+      const element = infoContainer?.querySelector("[data-coordinates]");
+      if (element) element.textContent = `${event.latlng.lat.toFixed(5)}, ${event.latlng.lng.toFixed(5)}`;
+    }
+    function recordView() {
+      if (restoring) {
+        restoring = false;
+        return;
+      }
+      const current = { center: map.getCenter(), zoom: map.getZoom() };
+      const latest = history.at(-1);
+      if (!latest || latest.zoom !== current.zoom || latest.center.distanceTo(current.center) > 20) {
+        history.push(current);
+        if (history.length > 20) history.shift();
+      }
+    }
+    function syncMiniMap() {
+      miniMap.setView(map.getCenter(), Math.max(7, map.getZoom() - 4), { animate: false });
+      viewport.remove();
+      viewport = L.rectangle(map.getBounds(), { color: "#00BBD4", weight: 2, fillOpacity: 0.04 }).addTo(miniMap);
+    }
+    history.push({ center: map.getCenter(), zoom: map.getZoom() });
+    map.on("mousemove", updateCoordinates);
+    map.on("zoomend", updateZoom);
+    map.on("moveend", recordView);
+    map.on("moveend", syncMiniMap);
+
+    return () => {
+      map.off("mousemove", updateCoordinates);
+      map.off("zoomend", updateZoom);
+      map.off("moveend", recordView);
+      map.off("moveend", syncMiniMap);
+      miniMap.remove();
+      miniControl.remove();
+      scale.remove();
+      info.remove();
+      navigation.remove();
+    };
+  }, [map]);
+
   return null;
 }
 
@@ -266,6 +372,7 @@ export function TerritoryMap({
         else setToolPoints((items) => [...items, point]);
       }} />
       <ZoomObserver onChange={setZoom} />
+      <ProfessionalMapControls />
     </MapContainer>
   );
 }

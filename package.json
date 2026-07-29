@@ -8,12 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/check-utf8.mjs && node --test --experimental-strip-types tests/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:municipality": "node scripts/generate-municipality-boundary.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@types/leaflet": "^1.9.21",
+    "fflate": "^0.8.3",
     "leaflet": "^1.9.4",
     "next": "16.2.12",
     "react": "19.2.4",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "polygon-clipping": "^0.15.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

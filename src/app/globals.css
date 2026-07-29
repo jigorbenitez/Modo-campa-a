@@ -119,6 +119,55 @@ main { animation: page-enter 220ms ease-out; }
 
 .atiy-territory-label::before { display: none; }
 
+.atiy-map-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+  padding: 5px 8px;
+  color: var(--foreground);
+  font-size: 9px;
+  backdrop-filter: blur(10px);
+}
+
+.atiy-map-navigation {
+  display: flex;
+  overflow: hidden;
+  border-color: var(--border) !important;
+  border-radius: 11px !important;
+}
+
+.atiy-map-navigation button,
+.atiy-map-navigation span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-weight: 900;
+}
+
+.atiy-map-navigation span { color: var(--accent-strong); }
+
+.atiy-mini-map {
+  width: 142px;
+  height: 92px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--surface) 90%, transparent);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(8 20 38 / 18%);
+}
+
+@media (max-width: 640px) {
+  .atiy-mini-map { display: none; }
+  .atiy-map-status [data-coordinates] { display: none; }
+}
+
 @media print {
   nav, header, .leaflet-control-container, button { display: none !important; }
   .territory-map { height: 92vh !important; }
