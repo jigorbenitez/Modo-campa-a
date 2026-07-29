@@ -8,6 +8,7 @@ export type TerritoryLayerId =
   | "documents"
   | "institutions"
   | "neighborhoods"
+  | "circuits"
   | "photos"
   | "heat";
 
@@ -37,13 +38,14 @@ export interface TerritoryRelatedItem {
 export interface TerritoryFeature {
   id: string;
   municipioId: string;
-  layerId: Exclude<TerritoryLayerId, "neighborhoods" | "heat">;
+  layerId: Exclude<TerritoryLayerId, "neighborhoods" | "circuits" | "heat">;
   kind: TerritoryFeatureKind;
   subtype?: string;
   title: string;
   description: string;
   point: GeoPoint;
   barrioId: string;
+  circuitId?: string;
   localidad: string;
   occurredAt: ISODateTime;
   status: string;
@@ -84,6 +86,19 @@ export interface TerritoryNeighborhood {
   source: string;
 }
 
+export interface TerritoryCircuit {
+  id: string;
+  municipioId: string;
+  code: string;
+  name: string;
+  center: GeoPoint;
+  boundaries: GeoPoint[][];
+  updatedAt: ISODateTime;
+  source: string;
+  sourceUrl: string;
+  license: string;
+}
+
 export interface TerritoryPeriod {
   id: string;
   label: string;
@@ -97,6 +112,7 @@ export interface TerritorySnapshot {
   municipalityBoundaries: GeoPoint[][];
   layers: TerritoryLayer[];
   neighborhoods: TerritoryNeighborhood[];
+  circuits: TerritoryCircuit[];
   features: TerritoryFeature[];
   periods: TerritoryPeriod[];
 }
@@ -105,6 +121,7 @@ export interface TerritoryFilters {
   periodId: string;
   enabledLayers: Set<TerritoryLayerId>;
   selectedNeighborhoodId?: string;
+  selectedCircuitId?: string;
   search?: string;
   category?: string;
 }
@@ -147,11 +164,22 @@ export interface TerritoryHeatPoint {
   commitmentCount: number;
 }
 
+export interface TerritoryCircuitContextView {
+  circuit: TerritoryCircuit;
+  features: TerritoryFeature[];
+  activities: number;
+  problems: number;
+  commitments: number;
+  institutions: number;
+}
+
 export interface TerritoryView {
   cutoff: ISODate;
   visibleFeatures: TerritoryFeature[];
   visibleNeighborhoods: TerritoryNeighborhood[];
+  visibleCircuits: TerritoryCircuit[];
   stats: TerritoryStatsView;
   selectedNeighborhood?: NeighborhoodContextView;
+  selectedCircuit?: TerritoryCircuitContextView;
   heatPoints: TerritoryHeatPoint[];
 }

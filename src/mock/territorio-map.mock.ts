@@ -1,5 +1,7 @@
 import boundaryData from "@/data/san-fernando-boundaries.json";
+import circuitData from "@/data/san-fernando-electoral-circuits.json";
 import type {
+  TerritoryCircuit,
   TerritoryFeature,
   TerritoryLayer,
   TerritoryNeighborhood,
@@ -25,6 +27,24 @@ type BoundaryFeature = {
 };
 
 const boundaries = (boundaryData as unknown as { features: BoundaryFeature[] }).features;
+type CircuitFeature = {
+  geometry: {
+    type: "MultiPolygon";
+    coordinates: Coordinate[][][];
+  };
+  properties: {
+    id: string;
+    code: string;
+    name: string;
+    source: string;
+    sourceUrl: string;
+    license: string;
+    updatedAt: string;
+  };
+};
+const circuitFeatures = (
+  circuitData as unknown as { features: CircuitFeature[] }
+).features;
 
 function ringsFor(id: string): Coordinate[][] {
   const feature = boundaries.find((item) => item.properties.id === id);
@@ -51,6 +71,51 @@ function centerOf(rings: Coordinate[][]) {
   };
 }
 
+export const territoryElectoralCircuits: TerritoryCircuit[] =
+  circuitFeatures.map((feature) => {
+    const rings = feature.geometry.coordinates.map((polygon) => polygon[0]);
+    return {
+      id: feature.properties.id,
+      municipioId,
+      code: feature.properties.code,
+      name: feature.properties.name,
+      center: centerOf(rings),
+      boundaries: toPoints(rings),
+      updatedAt: `${feature.properties.updatedAt}T00:00:00.000Z`,
+      source: feature.properties.source,
+      sourceUrl: feature.properties.sourceUrl,
+      license: feature.properties.license,
+    };
+  });
+
+function pointInRing(
+  point: { latitude: number; longitude: number },
+  ring: Array<{ latitude: number; longitude: number }>,
+) {
+  let inside = false;
+  for (let current = 0, previous = ring.length - 1; current < ring.length; previous = current++) {
+    const a = ring[current];
+    const b = ring[previous];
+    const intersects =
+      a.latitude > point.latitude !== b.latitude > point.latitude &&
+      point.longitude <
+        ((b.longitude - a.longitude) * (point.latitude - a.latitude)) /
+          (b.latitude - a.latitude) +
+          a.longitude;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+export function findCircuitForPoint(point: {
+  latitude: number;
+  longitude: number;
+}) {
+  return territoryElectoralCircuits.find((circuit) =>
+    circuit.boundaries.some((ring) => pointInRing(point, ring)),
+  );
+}
+
 export const territoryLayers: TerritoryLayer[] = [
   { id: "activities", label: "Actividades", description: "Acciones registradas por el equipo", color: "#16a05d", enabledByDefault: true },
   { id: "problems", label: "Reclamos", description: "Situaciones abiertas o en seguimiento", color: "#e5484d", enabledByDefault: true },
@@ -59,6 +124,7 @@ export const territoryLayers: TerritoryLayer[] = [
   { id: "documents", label: "Documentos", description: "Documentación territorial relacionada", color: "#8856d8", enabledByDefault: false },
   { id: "institutions", label: "Instituciones", description: "Equipamiento e instituciones públicas", color: "#7b8794", enabledByDefault: true },
   { id: "neighborhoods", label: "Límites", description: "Municipio, localidades y barrios con geometría publicada", color: "#8b5e3c", enabledByDefault: true },
+  { id: "circuits", label: "Circuitos", description: "Circuitos electorales oficiales de San Fernando", color: "#00BBD4", enabledByDefault: false },
   { id: "photos", label: "Fotografías", description: "Evidencia visual georreferenciada", color: "#2f9e9e", enabledByDefault: false },
   { id: "heat", label: "Intensidad", description: "Capa preparada para concentración territorial", color: "#f06a3c", enabledByDefault: false },
 ];
@@ -108,11 +174,13 @@ type FeatureInput = Pick<
 
 function institution(input: FeatureInput): TerritoryFeature {
   const { sourceUrl, ...feature } = input;
+  const circuit = findCircuitForPoint(feature.point);
   return {
     ...feature,
     municipioId,
     layerId: "institutions",
     kind: "institution",
+    circuitId: circuit?.id,
     occurredAt: updatedAt,
     updatedAt,
     source: `OpenStreetMap · ${sourceUrl}`,
@@ -278,6 +346,7 @@ export const mockTerritorySnapshot: TerritorySnapshot = {
   municipalityBoundaries: toPoints(ringsFor("municipio-san-fernando")),
   layers: territoryLayers,
   neighborhoods: territoryNeighborhoods,
+  circuits: territoryElectoralCircuits,
   features: territoryFeatures,
   periods: [{ id: "today", label: "Hoy", cutoff: "2026-07-28" }],
 };

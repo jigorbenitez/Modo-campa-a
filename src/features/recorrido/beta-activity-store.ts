@@ -11,7 +11,8 @@ export type CaptureKind =
   | "commitment"
   | "institution"
   | "person"
-  | "location";
+  | "location"
+  | "document";
 
 export interface TourCapture {
   id: string;
@@ -25,6 +26,11 @@ export interface SavedTourActivity {
   municipalityId: string;
   neighborhoodId: string;
   neighborhoodName: string;
+  localityName: string;
+  circuitId: string;
+  coordinates: { latitude: number; longitude: number; accuracy: number };
+  institution?: string;
+  person?: string;
   title: string;
   startedAt: string;
   finishedAt: string;

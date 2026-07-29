@@ -75,6 +75,13 @@ export function ActivityCard({
               <span className="sm:hidden">{activity.date}</span>
               <span>{activity.startTime}{activity.endTime ? `–${activity.endTime}` : ""}</span>
               <span>{record.barrioNames.join(", ")}</span>
+              {activity.circuitIds?.length ? (
+                <span>
+                  {activity.circuitIds
+                    .map((id) => `Circuito ${id.replace("circuito-", "").replace(/^0+/, "")}`)
+                    .join(", ")}
+                </span>
+              ) : null}
               {record.organizerName && <span>Organiza: {record.organizerName}</span>}
             </div>
             <div className="mt-5">

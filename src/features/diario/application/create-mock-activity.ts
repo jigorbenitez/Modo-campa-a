@@ -24,6 +24,7 @@ export function createMockActivity(
   const problems: Problema[] = draft.problems.map((title, index) => ({
     id: createId("problema", index),
     municipioId,
+    circuitIds: draft.circuitIds,
     barrioId: draft.barrioIds[0],
     title,
     description: `Detectado durante la actividad “${draft.title}”.`,
@@ -43,6 +44,7 @@ export function createMockActivity(
   const opportunities: Oportunidad[] = draft.opportunities.map((title, index) => ({
     id: createId("oportunidad", index),
     municipioId,
+    circuitIds: draft.circuitIds,
     title,
     description: `Oportunidad registrada durante la actividad “${draft.title}”.`,
     category: "Articulación territorial",
@@ -59,6 +61,7 @@ export function createMockActivity(
   const commitments: Compromiso[] = draft.commitments.map((title, index) => ({
     id: createId("compromiso", index),
     municipioId,
+    circuitIds: draft.circuitIds,
     title,
     description: `Compromiso asumido durante la actividad “${draft.title}”.`,
     status: "open",
@@ -84,6 +87,7 @@ export function createMockActivity(
   const activity: Actividad = {
     id: activityId,
     municipioId,
+    circuitIds: draft.circuitIds,
     type: draft.type,
     title: draft.title,
     description: draft.description,

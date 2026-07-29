@@ -1,9 +1,30 @@
-import { SectionPage } from "@/components/pages/section-page";
+import { OperationalManager } from "@/components/management/operational-manager";
 
 export default function MarketingPage() {
-  return <SectionPage eyebrow="Comunicación" title="Marketing" description="Coordiná mensajes, canales y piezas para sostener una comunicación coherente en toda la campaña." cards={[
-    { eyebrow: "Mensaje", title: "Eje de la semana", description: "La idea central que ordena vocerías, recorridas y publicaciones.", status: "Aprobado" },
-    { eyebrow: "Redes", title: "Calendario de contenidos", description: "Publicaciones previstas y materiales que todavía faltan.", status: "5 piezas" },
-    { eyebrow: "Prensa", title: "Agenda de medios", description: "Oportunidades de entrevistas y temas a preparar.", status: "Abierto" },
-  ]} />;
+  return (
+    <OperationalManager
+      storageKey="atiy:communication-campaigns:v1"
+      eyebrow="Comunicación"
+      title="Campañas"
+      description="Planificá acciones de comunicación con objetivo, territorio y responsables claros."
+      singular="Campaña"
+      primaryField="name"
+      secondaryField="objective"
+      statuses={[
+        { value: "draft", label: "Borrador" },
+        { value: "planned", label: "Planificada" },
+        { value: "active", label: "Activa" },
+        { value: "completed", label: "Finalizada" },
+      ]}
+      fields={[
+        { id: "name", label: "Nombre", required: true },
+        { id: "objective", label: "Objetivo", type: "textarea", required: true },
+        { id: "territory", label: "Territorio" },
+        { id: "circuit", label: "Circuito electoral" },
+        { id: "responsible", label: "Responsable", required: true },
+        { id: "material", label: "Material y canales", type: "textarea" },
+        { id: "result", label: "Resultado", type: "textarea" },
+      ]}
+    />
+  );
 }

@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { territoryNeighborhoods } from "@/mock/territorio-map.mock";
+import {
+  territoryElectoralCircuits,
+  territoryNeighborhoods,
+} from "@/mock/territorio-map.mock";
 import {
   saveTourActivity,
   type CaptureKind,
@@ -28,11 +31,21 @@ const captureLabels: Record<CaptureKind, string> = {
   institution: "Institución",
   person: "Persona",
   location: "Ubicación",
+  document: "Documento",
 };
 
 export function TourMode() {
   const [stage, setStage] = useState<Stage>("setup");
   const [neighborhoodId, setNeighborhoodId] = useState(territoryNeighborhoods[0]?.id ?? "");
+  const [circuitId, setCircuitId] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [person, setPerson] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+  }>();
+  const [locationError, setLocationError] = useState("");
   const [startedAt, setStartedAt] = useState<number>();
   const [finishedAt, setFinishedAt] = useState<number>();
   const [captures, setCaptures] = useState<TourCapture[]>([]);
@@ -40,6 +53,7 @@ export function TourMode() {
   const [savedActivity, setSavedActivity] = useState<SavedTourActivity>();
   const fileInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
+  const documentInput = useRef<HTMLInputElement>(null);
   const online = useNetworkStatus();
   const battery = useDeviceBattery();
   const stopwatch = useStopwatch(startedAt, finishedAt);
@@ -63,6 +77,10 @@ export function TourMode() {
       videoInput.current?.click();
       return;
     }
+    if (kind === "document") {
+      documentInput.current?.click();
+      return;
+    }
     if (kind === "location") {
       if (!navigator.geolocation) {
         addCapture(kind, "Ubicación no disponible en este dispositivo");
@@ -79,6 +97,12 @@ export function TourMode() {
   }
 
   function beginTour() {
+    if (!coordinates || !circuitId || !neighborhood) {
+      setLocationError(
+        "Para iniciar, seleccioná un barrio y un circuito, y validá la ubicación GPS.",
+      );
+      return;
+    }
     const now = Date.now();
     setStartedAt(now);
     setFinishedAt(undefined);
@@ -86,8 +110,29 @@ export function TourMode() {
     setStage("running");
   }
 
+  function validateLocation() {
+    setLocationError("");
+    if (!navigator.geolocation) {
+      setLocationError("Este dispositivo no ofrece geolocalización.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) =>
+        setCoordinates({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+        }),
+      () =>
+        setLocationError(
+          "No se pudo validar la ubicación. Revisá el permiso de geolocalización.",
+        ),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
+    );
+  }
+
   function finishTour() {
-    if (!startedAt || !neighborhood) return;
+    if (!startedAt || !neighborhood || !coordinates || !circuitId) return;
     const end = Date.now();
     setFinishedAt(end);
     const relevant = captures.filter((capture) => ["problem", "opportunity", "commitment"].includes(capture.kind));
@@ -96,6 +141,11 @@ export function TourMode() {
       municipalityId: "municipio-san-fernando",
       neighborhoodId: neighborhood.id,
       neighborhoodName: neighborhood.name,
+      localityName: neighborhood.locality,
+      circuitId,
+      coordinates,
+      institution: institution.trim() || undefined,
+      person: person.trim() || undefined,
       title: `Recorrida por ${neighborhood.name}`,
       startedAt: new Date(startedAt).toISOString(),
       finishedAt: new Date(end).toISOString(),
@@ -130,6 +180,64 @@ export function TourMode() {
                 {territoryNeighborhoods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
             </label>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label>
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Circuito electoral
+                </span>
+                <select
+                  value={circuitId}
+                  onChange={(event) => setCircuitId(event.target.value)}
+                  className="mt-3 h-14 w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 text-base font-bold"
+                >
+                  <option value="">Seleccionar circuito</option>
+                  {territoryElectoralCircuits.map((circuit) => (
+                    <option key={circuit.id} value={circuit.id}>
+                      {circuit.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Ubicación GPS
+                </span>
+                <button
+                  type="button"
+                  onClick={validateLocation}
+                  className="mt-3 h-14 w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 text-left text-sm font-extrabold"
+                >
+                  {coordinates
+                    ? `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`
+                    : "Validar ubicación actual"}
+                </button>
+              </div>
+              <label>
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Institución
+                </span>
+                <input
+                  value={institution}
+                  onChange={(event) => setInstitution(event.target.value)}
+                  className="mt-3 h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm"
+                />
+              </label>
+              <label>
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Persona
+                </span>
+                <input
+                  value={person}
+                  onChange={(event) => setPerson(event.target.value)}
+                  className="mt-3 h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm"
+                />
+              </label>
+            </div>
+            {locationError ? (
+              <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                {locationError}
+              </p>
+            ) : null}
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {[
                 ["Actividad automática", "Se crea al comenzar"],
@@ -142,7 +250,7 @@ export function TourMode() {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={beginTour} className="premium-button mt-6 h-14 w-full text-base font-black active:scale-[0.99]">
+            <button type="button" onClick={beginTour} disabled={!coordinates || !circuitId} className="premium-button mt-6 h-14 w-full text-base font-black active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
               Iniciar recorrido
             </button>
           </section>
@@ -201,6 +309,7 @@ export function TourMode() {
 
           <input ref={fileInput} className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("photo", file.name || "Fotografía capturada"); event.currentTarget.value = ""; }} />
           <input ref={videoInput} className="hidden" type="file" accept="video/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("video", file.name || "Video capturado"); event.currentTarget.value = ""; }} />
+          <input ref={documentInput} className="hidden" type="file" accept=".pdf,.doc,.docx,image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("document", file.name || "Documento adjunto"); event.currentTarget.value = ""; }} />
           <CaptureDock onCapture={handleAction} />
           <QuickCaptureSheet kind={activeCapture} onClose={() => setActiveCapture(undefined)} onSave={(label) => activeCapture && addCapture(activeCapture, label)} />
         </>

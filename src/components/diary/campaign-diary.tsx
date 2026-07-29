@@ -37,6 +37,7 @@ export function CampaignDiary() {
           record.activity.observations.join(" "),
           record.participantNames.join(" "),
           record.barrioNames.join(" "),
+          record.activity.circuitIds?.join(" ") ?? "",
         ].join(" ").toLocaleLowerCase("es-AR");
         return (
           (!normalizedQuery || searchable.includes(normalizedQuery)) &&

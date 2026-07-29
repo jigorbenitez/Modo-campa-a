@@ -1,4 +1,4 @@
-import type { TerritoryNeighborhood } from "@/features/territorio-map";
+import type { TerritoryCircuit, TerritoryNeighborhood } from "@/features/territorio-map";
 
 const statusLabels = {
   stable: "Estable",
@@ -8,10 +8,14 @@ const statusLabels = {
 
 export function TerritoryOverview({
   neighborhoods,
+  circuits,
   onSelect,
+  onSelectCircuit,
 }: {
   neighborhoods: TerritoryNeighborhood[];
+  circuits: TerritoryCircuit[];
   onSelect: (id: string) => void;
+  onSelectCircuit: (id: string) => void;
 }) {
   return (
     <div className="p-5">
@@ -36,6 +40,29 @@ export function TerritoryOverview({
             </span>
             <span className="rounded-full bg-[var(--surface)] px-2 py-1 text-[10px] font-bold text-[var(--muted)]">
               {statusLabels[neighborhood.generalStatus]}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="mt-7 flex items-center justify-between">
+        <h3 className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--muted)]">
+          Circuitos electorales
+        </h3>
+        <span className="text-[10px] font-bold text-[var(--muted)]">{circuits.length}</span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {circuits.map((circuit) => (
+          <button
+            key={circuit.id}
+            type="button"
+            onClick={() => onSelectCircuit(circuit.id)}
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/60 px-3 py-3 text-left transition hover:border-[var(--accent)]"
+          >
+            <span className="block text-sm font-extrabold">
+              {circuit.code.replace(/^0+/, "")}
+            </span>
+            <span className="mt-1 block text-[9px] font-bold uppercase text-[var(--muted)]">
+              Circuito
             </span>
           </button>
         ))}

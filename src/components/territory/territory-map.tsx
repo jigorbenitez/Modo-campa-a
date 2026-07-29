@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Circle, MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { Circle, MapContainer, Polygon, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import type {
+  TerritoryCircuit,
   TerritoryFeature,
   TerritoryLayer,
   TerritoryNeighborhood,
@@ -20,6 +21,7 @@ function MapFocus({
   neighborhoodLatitude,
   neighborhoodLongitude,
   neighborhood,
+  circuit,
   municipalityBoundaries,
   defaultLatitude,
   defaultLongitude,
@@ -29,6 +31,7 @@ function MapFocus({
   neighborhoodLatitude?: number;
   neighborhoodLongitude?: number;
   neighborhood?: TerritoryNeighborhood;
+  circuit?: TerritoryCircuit;
   municipalityBoundaries: TerritoryNeighborhood["boundaries"];
   defaultLatitude: number;
   defaultLongitude: number;
@@ -46,6 +49,13 @@ function MapFocus({
     map.closePopup();
     if (feature) {
       map.flyTo([feature.point.latitude, feature.point.longitude], 15, { duration: 0.6 });
+    } else if (circuit?.boundaries.length) {
+      map.fitBounds(
+        circuit.boundaries.flatMap((ring) =>
+          ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+        ),
+        { animate: true, duration: 0.6, padding: [28, 28], maxZoom: 15 },
+      );
     } else if (neighborhood?.boundaries.length) {
       map.fitBounds(
         neighborhood.boundaries.flatMap((ring) =>
@@ -68,6 +78,7 @@ function MapFocus({
   }, [
     defaultLatitude,
     defaultLongitude,
+    circuit,
     feature,
     map,
     municipalityBoundaries,
@@ -92,6 +103,7 @@ export function TerritoryMap({
   selectedFeature,
   onSelectFeature,
   onSelectNeighborhood,
+  onSelectCircuit,
   resetToken,
   onClearSelection,
   municipalityBoundaries,
@@ -102,6 +114,7 @@ export function TerritoryMap({
   selectedFeature?: TerritoryFeature;
   onSelectFeature: (feature: TerritoryFeature) => void;
   onSelectNeighborhood: (id: string) => void;
+  onSelectCircuit?: (id: string) => void;
   resetToken: number;
   onClearSelection: () => void;
   municipalityBoundaries: TerritoryNeighborhood["boundaries"];
@@ -158,6 +171,29 @@ export function TerritoryMap({
         />
       ))}
 
+      {view.visibleCircuits.map((circuit) => (
+        <Polygon
+          key={circuit.id}
+          positions={circuit.boundaries.map((ring) =>
+            ring.map((point) => [point.latitude, point.longitude] as [number, number]),
+          )}
+          pathOptions={{
+            color: layerColors.get("circuits"),
+            fillColor: layerColors.get("circuits"),
+            fillOpacity: view.selectedCircuit?.circuit.id === circuit.id ? 0.2 : 0.045,
+            weight: view.selectedCircuit?.circuit.id === circuit.id ? 3 : 1.5,
+            dashArray: view.selectedCircuit?.circuit.id === circuit.id ? undefined : "5 5",
+          }}
+          eventHandlers={{
+            click: () => onSelectCircuit?.(circuit.id),
+          }}
+        >
+          <Tooltip sticky direction="top">
+            {circuit.name}
+          </Tooltip>
+        </Polygon>
+      ))}
+
       {view.heatPoints.map((point) => (
         <Circle
           key={point.barrioId}
@@ -193,6 +229,7 @@ export function TerritoryMap({
         neighborhoodLatitude={view.selectedNeighborhood?.neighborhood.center.latitude}
         neighborhoodLongitude={view.selectedNeighborhood?.neighborhood.center.longitude}
         neighborhood={view.selectedNeighborhood?.neighborhood}
+        circuit={view.selectedCircuit?.circuit}
         municipalityBoundaries={municipalityBoundaries}
       />
       <MapDismissSelection onClearSelection={onClearSelection} />

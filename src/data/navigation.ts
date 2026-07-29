@@ -9,7 +9,7 @@ export const navigation: NavItem[] = [
   { href: "/relaciones", label: "Relaciones", shortLabel: "Memoria", icon: "⎔" },
   { href: "/inteligencia", label: "Centro de Inteligencia", shortLabel: "Contexto", icon: "◎" },
   { href: "/presupuesto", label: "Presupuesto", shortLabel: "Fondos", icon: "$" },
-  { href: "/barrios", label: "Barrios", shortLabel: "Barrios", icon: "◇" },
+  { href: "/municipio", label: "Municipio", shortLabel: "Municipio", icon: "◇" },
   { href: "/propuestas", label: "Propuestas", shortLabel: "Ideas", icon: "✦" },
   { href: "/marketing", label: "Marketing", shortLabel: "Difusión", icon: "↗" },
   { href: "/agenda", label: "Agenda", shortLabel: "Agenda", icon: "□" },

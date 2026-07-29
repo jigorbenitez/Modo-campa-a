@@ -13,12 +13,13 @@ const actions: Array<{ kind: CaptureKind; icon: string; label: string }> = [
   { kind: "person", icon: "👤", label: "Persona" },
   { kind: "location", icon: "📍", label: "Ubicación" },
   { kind: "voice", icon: "🎤", label: "Voz" },
+  { kind: "document", icon: "▤", label: "Documento" },
 ];
 
 export function CaptureDock({ onCapture }: { onCapture: (kind: CaptureKind) => void }) {
   return (
     <section aria-label="Acciones rápidas" className="fixed inset-x-3 bottom-3 z-50 rounded-[1.75rem] border border-white/10 bg-[var(--brand-primary)]/95 p-2 shadow-2xl backdrop-blur-xl lg:left-auto lg:right-6 lg:w-[38rem]">
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-4 gap-1 sm:grid-cols-6">
         {actions.map((action) => (
           <button
             key={action.kind}

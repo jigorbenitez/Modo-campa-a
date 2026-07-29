@@ -40,6 +40,7 @@ export interface ActivityDraft {
   endTime: string;
   priority: ActivityPriority;
   barrioIds: string[];
+  circuitIds: string[];
   location: string;
   observations: string[];
   participants: string[];

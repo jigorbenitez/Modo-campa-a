@@ -1,5 +1,6 @@
 import type {
   NeighborhoodContextView,
+  TerritoryCircuitContextView,
   TerritoryFeature,
   TerritoryFilters,
   TerritoryHeatPoint,
@@ -20,6 +21,8 @@ export class TerritoryViewService {
       const layerEnabled = filters.enabledLayers.has(feature.layerId);
       const withinNeighborhood =
         !filters.selectedNeighborhoodId || feature.barrioId === filters.selectedNeighborhoodId;
+      const withinCircuit =
+        !filters.selectedCircuitId || feature.circuitId === filters.selectedCircuitId;
       const search = filters.search?.trim().toLocaleLowerCase("es-AR");
       const matchesSearch =
         !search ||
@@ -31,7 +34,14 @@ export class TerritoryViewService {
         filters.category === "all" ||
         feature.subtype === filters.category ||
         feature.kind === filters.category;
-      return withinTime && layerEnabled && withinNeighborhood && matchesSearch && matchesCategory;
+      return (
+        withinTime &&
+        layerEnabled &&
+        withinNeighborhood &&
+        withinCircuit &&
+        matchesSearch &&
+        matchesCategory
+      );
     });
     const allFeaturesAtCutoff = snapshot.features.filter(
       (feature) => feature.occurredAt.slice(0, 10) <= period.cutoff,
@@ -40,10 +50,20 @@ export class TerritoryViewService {
     const visibleNeighborhoods = filters.enabledLayers.has("neighborhoods")
       ? snapshot.neighborhoods
       : [];
+    const visibleCircuits = filters.enabledLayers.has("circuits")
+      ? snapshot.circuits
+      : [];
     const selectedNeighborhood = filters.selectedNeighborhoodId
       ? this.buildNeighborhoodContext(
           snapshot,
           filters.selectedNeighborhoodId,
+          allFeaturesAtCutoff,
+        )
+      : undefined;
+    const selectedCircuit = filters.selectedCircuitId
+      ? this.buildCircuitContext(
+          snapshot,
+          filters.selectedCircuitId,
           allFeaturesAtCutoff,
         )
       : undefined;
@@ -52,11 +72,34 @@ export class TerritoryViewService {
       cutoff: period.cutoff,
       visibleFeatures,
       visibleNeighborhoods,
+      visibleCircuits,
       stats: this.buildStats(snapshot, allFeaturesAtCutoff, period.cutoff),
       selectedNeighborhood,
+      selectedCircuit,
       heatPoints: filters.enabledLayers.has("heat")
         ? this.buildHeatPoints(snapshot, allFeaturesAtCutoff, filters.enabledLayers)
         : [],
+    };
+  }
+
+  private buildCircuitContext(
+    snapshot: TerritorySnapshot,
+    circuitId: string,
+    features: TerritoryFeature[],
+  ): TerritoryCircuitContextView | undefined {
+    const circuit = snapshot.circuits.find((item) => item.id === circuitId);
+    if (!circuit) return undefined;
+    const related = features
+      .filter((feature) => feature.circuitId === circuitId)
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+
+    return {
+      circuit,
+      features: related,
+      activities: related.filter((feature) => feature.kind === "activity").length,
+      problems: related.filter((feature) => feature.kind === "problem").length,
+      commitments: related.filter((feature) => feature.kind === "commitment").length,
+      institutions: related.filter((feature) => feature.kind === "institution").length,
     };
   }
 

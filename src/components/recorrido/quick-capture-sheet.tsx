@@ -14,6 +14,7 @@ const labels: Record<CaptureKind, string> = {
   institution: "Institución",
   person: "Persona",
   location: "Ubicación",
+  document: "Documento",
 };
 
 export function QuickCaptureSheet({

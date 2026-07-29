@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ActivityDraft, ActivityRecord } from "@/features/diario";
 import { createMockActivity } from "@/features/diario";
+import { territoryElectoralCircuits } from "@/mock/territorio-map.mock";
 
 const steps = ["Actividad", "Territorio", "Contexto", "Hallazgos", "Archivos", "Resumen"];
 const barrios = [
@@ -35,6 +36,7 @@ function emptyDraft(): ActivityDraft {
     endTime: "",
     priority: "medium",
     barrioIds: [],
+    circuitIds: [],
     location: "San Fernando",
     observations: [],
     participants: [],
@@ -57,6 +59,7 @@ function draftFromRecord(record?: ActivityRecord): ActivityDraft {
     endTime: record.activity.endTime ?? "",
     priority: record.activity.priority,
     barrioIds: record.activity.barrioIds,
+    circuitIds: record.activity.circuitIds ?? [],
     location: record.activity.location?.locality ?? "",
     observations: record.activity.observations,
     participants: record.participantNames,
@@ -225,6 +228,43 @@ export function ActivityWizard({
                   })}
                 </div>
               </div>
+              <div>
+                <FieldLabel>Circuitos electorales</FieldLabel>
+                <p className="mb-3 text-xs leading-5 text-[var(--muted)]">
+                  La asociación con circuitos complementa al barrio y utiliza límites oficiales.
+                </p>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {territoryElectoralCircuits.map((circuit) => {
+                    const selected = draft.circuitIds.includes(circuit.id);
+                    return (
+                      <button
+                        key={circuit.id}
+                        type="button"
+                        onClick={() =>
+                          update(
+                            "circuitIds",
+                            selected
+                              ? draft.circuitIds.filter((id) => id !== circuit.id)
+                              : [...draft.circuitIds, circuit.id],
+                          )
+                        }
+                        className={`rounded-xl border px-3 py-3 text-left transition ${
+                          selected
+                            ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                            : "border-[var(--border)] bg-[var(--surface)]"
+                        }`}
+                      >
+                        <span className="block text-sm font-extrabold">
+                          {circuit.code.replace(/^0+/, "")}
+                        </span>
+                        <span className="mt-1 block text-[10px] font-bold uppercase text-[var(--muted)]">
+                          Circuito
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <label>
                 <FieldLabel>Ubicación o punto de encuentro</FieldLabel>
                 <input value={draft.location} onChange={(event) => update("location", event.target.value)} placeholder="Dirección, institución o referencia" className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" />
@@ -280,7 +320,7 @@ export function ActivityWizard({
                 <h3 className="mt-2 text-xl font-extrabold">{draft.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.description || "Sin descripción adicional."}</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
-                  <span>{draft.date}</span><span>·</span><span>{draft.startTime}{draft.endTime ? `–${draft.endTime}` : ""}</span><span>·</span><span>{barrios.filter((item) => draft.barrioIds.includes(item.id)).map((item) => item.name).join(", ") || "Sin barrio"}</span>
+                  <span>{draft.date}</span><span>·</span><span>{draft.startTime}{draft.endTime ? `–${draft.endTime}` : ""}</span><span>·</span><span>{barrios.filter((item) => draft.barrioIds.includes(item.id)).map((item) => item.name).join(", ") || "Sin barrio"}</span><span>·</span><span>{draft.circuitIds.length ? `${draft.circuitIds.length} circuito${draft.circuitIds.length === 1 ? "" : "s"}` : "Sin circuito"}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

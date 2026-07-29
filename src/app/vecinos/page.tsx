@@ -1,9 +1,33 @@
-import { SectionPage } from "@/components/pages/section-page";
+import { OperationalManager } from "@/components/management/operational-manager";
 
 export default function VecinosPage() {
-  return <SectionPage eyebrow="Comunidad" title="Vecinos" description="Ordená contactos, conversaciones y temas recurrentes sin perder el contexto de cada vínculo." cards={[
-    { eyebrow: "Escucha", title: "Temas recurrentes", description: "Síntesis breve de las inquietudes recogidas en el territorio.", status: "Actualizado" },
-    { eyebrow: "Referentes", title: "Contactos barriales", description: "Personas y organizaciones vinculadas a cada zona.", status: "12 contactos" },
-    { eyebrow: "Seguimiento", title: "Conversaciones abiertas", description: "Compromisos y respuestas que el equipo debe retomar.", status: "4 pendientes" },
-  ]} />;
+  return (
+    <OperationalManager
+      storageKey="atiy:neighbors:v1"
+      eyebrow="CRM territorial"
+      title="Vecinos"
+      description="Conservá contactos, historial y compromisos con aislamiento municipal y contexto territorial."
+      singular="Vecino"
+      primaryField="firstName"
+      secondaryField="observations"
+      statuses={[
+        { value: "active", label: "Activo" },
+        { value: "follow_up", label: "Requiere seguimiento" },
+        { value: "inactive", label: "Inactivo" },
+      ]}
+      fields={[
+        { id: "firstName", label: "Nombre", required: true },
+        { id: "lastName", label: "Apellido", required: true },
+        { id: "address", label: "Dirección", required: true },
+        { id: "neighborhood", label: "Barrio", required: true },
+        { id: "circuit", label: "Circuito electoral", required: true },
+        { id: "phone", label: "Teléfono", type: "tel" },
+        { id: "email", label: "Correo electrónico", type: "email" },
+        { id: "institutions", label: "Instituciones relacionadas" },
+        { id: "commitments", label: "Compromisos" },
+        { id: "history", label: "Historial", type: "textarea" },
+        { id: "observations", label: "Observaciones", type: "textarea" },
+      ]}
+    />
+  );
 }

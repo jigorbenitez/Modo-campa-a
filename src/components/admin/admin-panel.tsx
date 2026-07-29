@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type {
   AdminOverview,
   PlatformContext,
@@ -23,7 +26,22 @@ export function AdminPanel({
   context: PlatformContext;
   overview: AdminOverview;
 }) {
+  const [audit, setAudit] = useState<string[]>([]);
   const activeUsers = overview.users.filter((user) => user.status === "active").length;
+
+  function register(action: string) {
+    setAudit((items) => [`${new Date().toLocaleString("es-AR")} · ${action}`, ...items]);
+  }
+
+  function downloadAudit() {
+    const url = URL.createObjectURL(new Blob([audit.join("\n") || "Sin eventos locales."], { type: "text/plain" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "atiy-auditoria-local.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    register("Auditoría exportada");
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
@@ -89,6 +107,20 @@ export function AdminPanel({
                   </p>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-extrabold">Auditoría y respaldos</h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">Registro local de acciones administrativas.</p>
+              </div>
+              <button type="button" onClick={downloadAudit} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-extrabold">Exportar</button>
+            </div>
+            <button type="button" onClick={() => register("Revisión manual del estado del sistema")} className="mt-4 w-full rounded-xl bg-[var(--primary)] px-3 py-2.5 text-xs font-extrabold text-white">Registrar revisión</button>
+            <div className="mt-3 max-h-32 space-y-2 overflow-y-auto" aria-live="polite">
+              {audit.length === 0 ? <p className="text-xs text-[var(--muted)]">Todavía no hay acciones locales en esta sesión.</p> : audit.map((item) => <p key={item} className="rounded-lg bg-[var(--surface-muted)] p-2 text-[10px]">{item}</p>)}
             </div>
           </section>
 

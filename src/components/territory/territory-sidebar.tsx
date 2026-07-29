@@ -1,5 +1,7 @@
 import type {
   NeighborhoodContextView,
+  TerritoryCircuit,
+  TerritoryCircuitContextView,
   TerritoryFeature,
   TerritoryNeighborhood,
 } from "@/features/territorio-map";
@@ -207,19 +209,120 @@ function NeighborhoodDetails({
   );
 }
 
+function CircuitDetails({
+  context,
+  onClose,
+  onSelectFeature,
+}: {
+  context: TerritoryCircuitContextView;
+  onClose: () => void;
+  onSelectFeature: (feature: TerritoryFeature) => void;
+}) {
+  const stats = [
+    ["Actividades", context.activities],
+    ["Problemas", context.problems],
+    ["Compromisos", context.commitments],
+    ["Instituciones", context.institutions],
+  ] as const;
+
+  return (
+    <div>
+      <div className="border-b border-[var(--border)] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent)]">
+              Circuito electoral
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold">{context.circuit.name}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid size-9 shrink-0 place-items-center rounded-xl border border-[var(--border)]"
+            aria-label="Cerrar circuito"
+          >
+            ×
+          </button>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+          División electoral oficial que complementa localidades y barrios sin reemplazarlos.
+        </p>
+        <dl className="mt-4 grid gap-2 text-xs text-[var(--muted)]">
+          <div className="flex justify-between gap-3">
+            <dt>Fuente</dt>
+            <dd className="text-right font-bold text-[var(--foreground)]">
+              Cámara Nacional Electoral
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt>Licencia</dt>
+            <dd className="font-bold text-[var(--foreground)]">{context.circuit.license}</dd>
+          </div>
+        </dl>
+      </div>
+      <div className="space-y-6 p-5">
+        <div className="grid grid-cols-2 gap-2">
+          {stats.map(([label, value]) => (
+            <div key={label} className="rounded-xl bg-[var(--surface-muted)] p-3">
+              <p className="text-lg font-extrabold">{value}</p>
+              <p className="text-[10px] font-bold uppercase text-[var(--muted)]">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        <section>
+          <h3 className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+            Contexto asociado
+          </h3>
+          {context.features.length ? (
+            <div className="mt-2 space-y-2">
+              {context.features.slice(0, 8).map((feature) => (
+                <button
+                  key={feature.id}
+                  type="button"
+                  onClick={() => onSelectFeature(feature)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl bg-[var(--surface-muted)] p-3 text-left"
+                >
+                  <span>
+                    <span className="block text-xs font-extrabold">{feature.title}</span>
+                    <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                      {kindLabels[feature.kind]}
+                    </span>
+                  </span>
+                  <span className="text-[var(--muted)]">→</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 rounded-xl bg-[var(--surface-muted)] p-4 text-xs leading-5 text-[var(--muted)]">
+              Todavía no hay información operativa asociada a este circuito.
+            </p>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function TerritorySidebar({
   neighborhoods,
+  circuits,
   selectedFeature,
   selectedNeighborhood,
+  selectedCircuit,
   onSelectNeighborhood,
+  onSelectCircuit,
   onSelectFeature,
   onClearFeature,
   onClearAll,
 }: {
   neighborhoods: TerritoryNeighborhood[];
+  circuits: TerritoryCircuit[];
   selectedFeature?: TerritoryFeature;
   selectedNeighborhood?: NeighborhoodContextView;
+  selectedCircuit?: TerritoryCircuitContextView;
   onSelectNeighborhood: (id: string) => void;
+  onSelectCircuit: (id: string) => void;
   onSelectFeature: (feature: TerritoryFeature) => void;
   onClearFeature: () => void;
   onClearAll: () => void;
@@ -230,8 +333,15 @@ export function TerritorySidebar({
         <FeatureDetails feature={selectedFeature} onClose={onClearFeature} />
       ) : selectedNeighborhood ? (
         <NeighborhoodDetails context={selectedNeighborhood} onClose={onClearAll} onSelectFeature={onSelectFeature} />
+      ) : selectedCircuit ? (
+        <CircuitDetails context={selectedCircuit} onClose={onClearAll} onSelectFeature={onSelectFeature} />
       ) : (
-        <TerritoryOverview neighborhoods={neighborhoods} onSelect={onSelectNeighborhood} />
+        <TerritoryOverview
+          neighborhoods={neighborhoods}
+          circuits={circuits}
+          onSelect={onSelectNeighborhood}
+          onSelectCircuit={onSelectCircuit}
+        />
       )}
     </aside>
   );

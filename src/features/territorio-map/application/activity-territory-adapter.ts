@@ -29,6 +29,7 @@ export function activityRecordToTerritoryFeature(
     description: record.activity.description,
     point: area.center,
     barrioId: area.id,
+    circuitId: record.activity.circuitIds?.[0],
     localidad: area.locality,
     occurredAt: `${record.activity.date}T${record.activity.startTime}:00.000-03:00`,
     status: record.activity.status,

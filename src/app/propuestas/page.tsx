@@ -1,9 +1,33 @@
-import { SectionPage } from "@/components/pages/section-page";
+import { OperationalManager } from "@/components/management/operational-manager";
 
 export default function PropuestasPage() {
-  return <SectionPage eyebrow="Plan de gobierno" title="Propuestas" description="Centralizá las ideas, su estado de elaboración y los responsables de convertirlas en compromisos claros." cards={[
-    { eyebrow: "Movilidad", title: "Calles más conectadas", description: "Lineamientos para mejorar recorridos y conectividad barrial.", status: "En revisión" },
-    { eyebrow: "Ambiente", title: "Ciudad más limpia", description: "Acciones municipales para residuos, plazas y cuidado urbano.", status: "Borrador" },
-    { eyebrow: "Gestión", title: "Trámites simples", description: "Una propuesta para acercar los servicios municipales.", status: "Idea" },
-  ]} />;
+  return (
+    <OperationalManager
+      storageKey="atiy:proposals:v1"
+      eyebrow="Planificación"
+      title="Propuestas"
+      description="Convertí necesidades territoriales en propuestas trazables y relacionadas."
+      singular="Propuesta"
+      primaryField="title"
+      secondaryField="description"
+      allowArchive
+      statuses={[
+        { value: "study", label: "En estudio" },
+        { value: "ready", label: "Lista" },
+        { value: "executing", label: "En ejecución" },
+        { value: "completed", label: "Ejecutada" },
+        { value: "archived", label: "Archivada" },
+      ]}
+      fields={[
+        { id: "title", label: "Título", required: true },
+        { id: "responsible", label: "Responsable", required: true },
+        { id: "neighborhood", label: "Barrio" },
+        { id: "circuit", label: "Circuito electoral", placeholder: "Ej. 878A" },
+        { id: "budget", label: "Partida presupuestaria" },
+        { id: "institutions", label: "Instituciones relacionadas" },
+        { id: "commitments", label: "Compromisos relacionados" },
+        { id: "description", label: "Descripción y alcance", type: "textarea", required: true },
+      ]}
+    />
+  );
 }

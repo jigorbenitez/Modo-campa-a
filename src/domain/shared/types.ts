@@ -15,6 +15,8 @@ export interface AuditMetadata {
 export interface TenantScoped {
   /** Límite de aislamiento obligatorio para toda información municipal. */
   municipioId: EntityId;
+  /** Asociación territorial opcional con uno o más circuitos electorales. */
+  circuitIds?: EntityId[];
 }
 
 export interface GeoPoint {

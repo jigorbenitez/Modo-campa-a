@@ -6,9 +6,17 @@ const boundaryUrl = new URL(
   "../public/data/san-fernando-boundaries.geojson",
   import.meta.url,
 );
+const circuitsUrl = new URL(
+  "../public/data/san-fernando-electoral-circuits.geojson",
+  import.meta.url,
+);
 
 async function readBoundaries() {
   return JSON.parse(await readFile(boundaryUrl, "utf8"));
+}
+
+async function readCircuits() {
+  return JSON.parse(await readFile(circuitsUrl, "utf8"));
 }
 
 test("la base cartográfica contiene municipio, localidades y barrio con fuente", async () => {
@@ -40,4 +48,44 @@ test("todos los límites tienen identificadores únicos y trazables", async () =
   assert.ok(ids.includes("localidad-victoria"));
   assert.ok(ids.includes("localidad-virreyes"));
   assert.ok(ids.includes("barrio-infico"));
+});
+
+test("integra los 16 circuitos oficiales de San Fernando", async () => {
+  const collection = await readCircuits();
+  const codes = collection.features.map((feature) => feature.properties.code);
+
+  assert.equal(collection.type, "FeatureCollection");
+  assert.equal(collection.features.length, 16);
+  assert.equal(new Set(codes).size, 16);
+  assert.deepEqual(codes, [
+    "0872",
+    "0873",
+    "0874",
+    "0875",
+    "0876",
+    "0877",
+    "0878",
+    "0878A",
+    "0879",
+    "0879A",
+    "0880",
+    "0880A",
+    "0880B",
+    "0881",
+    "0882",
+    "0882A",
+  ]);
+});
+
+test("cada circuito conserva geometría y atribución oficial", async () => {
+  const collection = await readCircuits();
+
+  for (const feature of collection.features) {
+    assert.equal(feature.geometry.type, "MultiPolygon");
+    assert.ok(feature.geometry.coordinates.length > 0);
+    assert.equal(feature.properties.municipality, "San Fernando");
+    assert.equal(feature.properties.license, "CC BY 4.0");
+    assert.match(feature.properties.source, /Cámara Nacional Electoral/);
+    assert.match(feature.properties.sourceUrl, /^https:\/\//);
+  }
 });

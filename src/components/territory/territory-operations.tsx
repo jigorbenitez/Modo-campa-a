@@ -68,6 +68,7 @@ export function TerritoryOperations() {
   );
   const [periodIndex, setPeriodIndex] = useState(mockTerritorySnapshot.periods.length - 1);
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>();
+  const [selectedCircuitId, setSelectedCircuitId] = useState<string>();
   const [selectedFeature, setSelectedFeature] = useState<TerritoryFeature>();
   const [presentationMode, setPresentationMode] = useState(false);
   const [resetToken, setResetToken] = useState(0);
@@ -110,6 +111,11 @@ export function TerritoryOperations() {
     () => snapshot.features.find((item) => item.id === safeSelection.featureId),
     [safeSelection.featureId, snapshot.features],
   );
+  const safeSelectedCircuitId =
+    enabledLayers.has("circuits") &&
+    snapshot.circuits.some((circuit) => circuit.id === selectedCircuitId)
+      ? selectedCircuitId
+      : undefined;
   const searchResults = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("es-AR");
     return snapshot.features.filter((feature) => {
@@ -129,10 +135,19 @@ export function TerritoryOperations() {
         periodId,
         enabledLayers,
         selectedNeighborhoodId: safeSelection.neighborhoodId,
+        selectedCircuitId: safeSelectedCircuitId,
         search,
         category,
       }),
-    [category, enabledLayers, periodId, safeSelection.neighborhoodId, search, snapshot],
+    [
+      category,
+      enabledLayers,
+      periodId,
+      safeSelectedCircuitId,
+      safeSelection.neighborhoodId,
+      search,
+      snapshot,
+    ],
   );
 
   useEffect(() => {
@@ -141,6 +156,7 @@ export function TerritoryOperations() {
         setRequestedSelectionDismissed(true);
         setSelectedFeature(undefined);
         setSelectedNeighborhoodId(undefined);
+        setSelectedCircuitId(undefined);
         setResetToken((value) => value + 1);
       }
     }
@@ -156,11 +172,24 @@ export function TerritoryOperations() {
       return next;
     });
     if (selectedFeature?.layerId === id) setSelectedFeature(undefined);
+    if (id === "circuits" && selectedCircuitId) setSelectedCircuitId(undefined);
   }
 
   function selectNeighborhood(id: string) {
     setRequestedSelectionDismissed(true);
     setSelectedNeighborhoodId(id);
+    setSelectedCircuitId(undefined);
+    setSelectedFeature(undefined);
+  }
+
+  function selectCircuit(id: string) {
+    setRequestedSelectionDismissed(true);
+    setEnabledLayers((current) => {
+      if (current.has("circuits")) return current;
+      return new Set([...current, "circuits"]);
+    });
+    setSelectedCircuitId(id);
+    setSelectedNeighborhoodId(undefined);
     setSelectedFeature(undefined);
   }
 
@@ -168,6 +197,7 @@ export function TerritoryOperations() {
     setRequestedSelectionDismissed(true);
     setSelectedFeature(feature);
     setSelectedNeighborhoodId(feature.barrioId);
+    setSelectedCircuitId(feature.circuitId);
   }
 
   function changePeriod(index: number) {
@@ -182,12 +212,15 @@ export function TerritoryOperations() {
     setRequestedSelectionDismissed(true);
     setSelectedFeature(undefined);
     setSelectedNeighborhoodId(undefined);
+    setSelectedCircuitId(undefined);
     setResetToken((value) => value + 1);
   }
 
   function clearMarkerSelection() {
     setRequestedSelectionDismissed(true);
     setSelectedFeature(undefined);
+    setSelectedNeighborhoodId(undefined);
+    setSelectedCircuitId(undefined);
     setResetToken((value) => value + 1);
   }
 
@@ -205,7 +238,7 @@ export function TerritoryOperations() {
                 Una lectura conectada de la base territorial y las instituciones de San Fernando.
               </p>
             </div>
-            <MapToolbar presentationMode={presentationMode} onTogglePresentation={() => setPresentationMode(true)} onReset={resetMap} onClearSelection={clearMarkerSelection} hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId)} />
+            <MapToolbar presentationMode={presentationMode} onTogglePresentation={() => setPresentationMode(true)} onReset={resetMap} onClearSelection={clearMarkerSelection} hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId || safeSelectedCircuitId)} />
           </div>
         </header>
       )}
@@ -235,6 +268,7 @@ export function TerritoryOperations() {
                 selectedFeature={safeSelectedFeature}
                 onSelectFeature={selectFeature}
                 onSelectNeighborhood={selectNeighborhood}
+                onSelectCircuit={selectCircuit}
                 resetToken={resetToken}
                 onClearSelection={clearMarkerSelection}
                 municipalityBoundaries={snapshot.municipalityBoundaries}
@@ -256,7 +290,7 @@ export function TerritoryOperations() {
                   onTogglePresentation={() => setPresentationMode((value) => !value)}
                   onReset={resetMap}
                   onClearSelection={clearMarkerSelection}
-                  hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId)}
+                  hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId || safeSelectedCircuitId)}
                 />
               </div>
 
@@ -279,9 +313,12 @@ export function TerritoryOperations() {
               <div className="max-h-[70vh] border-t border-[var(--border)] lg:max-h-none lg:border-l lg:border-t-0">
                 <TerritorySidebar
                   neighborhoods={snapshot.neighborhoods}
+                  circuits={snapshot.circuits}
                   selectedFeature={safeSelectedFeature}
                   selectedNeighborhood={view.selectedNeighborhood}
+                  selectedCircuit={view.selectedCircuit}
                   onSelectNeighborhood={selectNeighborhood}
+                  onSelectCircuit={selectCircuit}
                   onSelectFeature={selectFeature}
                   onClearFeature={clearMarkerSelection}
                   onClearAll={resetMap}
