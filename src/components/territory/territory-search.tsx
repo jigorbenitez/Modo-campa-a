@@ -1,4 +1,9 @@
-import type { TerritoryFeature } from "@/features/territorio-map";
+export type TerritorySearchResult = {
+  id: string;
+  title: string;
+  subtitle: string;
+  kind: "feature" | "circuit" | "area";
+};
 
 export function TerritorySearch({
   query,
@@ -12,10 +17,10 @@ export function TerritorySearch({
   query: string;
   category: string;
   categories: readonly string[];
-  results: TerritoryFeature[];
+  results: TerritorySearchResult[];
   onQueryChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
-  onSelect: (feature: TerritoryFeature) => void;
+  onSelect: (result: TerritorySearchResult) => void;
 }) {
   return (
     <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)]/95 p-2 shadow-lg backdrop-blur">
@@ -24,8 +29,8 @@ export function TerritorySearch({
           type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Buscar por nombre"
-          aria-label="Buscar punto territorial por nombre"
+          placeholder="Dirección, barrio, circuito o institución"
+          aria-label="Buscar en el territorio"
           className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
         />
         <select
@@ -40,15 +45,15 @@ export function TerritorySearch({
       </div>
       {query.trim() && (
         <div className="mt-2 max-h-48 overflow-y-auto">
-          {results.length ? results.slice(0, 8).map((feature) => (
+          {results.length ? results.slice(0, 10).map((result) => (
             <button
-              key={feature.id}
+              key={`${result.kind}-${result.id}`}
               type="button"
-              onClick={() => onSelect(feature)}
+              onClick={() => onSelect(result)}
               className="block w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[var(--surface-muted)]"
             >
-              <span className="block font-extrabold">{feature.title}</span>
-              <span className="text-[var(--muted)]">{feature.subtype} · {feature.localidad}</span>
+              <span className="block font-extrabold">{result.title}</span>
+              <span className="text-[var(--muted)]">{result.subtitle}</span>
             </button>
           )) : <p className="px-3 py-2 text-xs text-[var(--muted)]">Sin resultados.</p>}
         </div>

@@ -219,10 +219,18 @@ function CircuitDetails({
   onSelectFeature: (feature: TerritoryFeature) => void;
 }) {
   const stats = [
-    ["Actividades", context.activities],
+    ["Vecinos", context.neighbors],
+    ["Instituciones", context.institutions],
+    ["Escuelas", context.schools],
+    ["Clubes", context.clubs],
+    ["Hospitales", context.hospitals],
+    ["CAPS", context.healthCenters],
+    ["Recorridas", context.tours],
     ["Problemas", context.problems],
     ["Compromisos", context.commitments],
-    ["Instituciones", context.institutions],
+    ["Propuestas", context.proposals],
+    ["Documentos", context.documents],
+    ["Fotografías", context.photos],
   ] as const;
 
   return (
@@ -298,6 +306,21 @@ function CircuitDetails({
               Todavía no hay información operativa asociada a este circuito.
             </p>
           )}
+        </section>
+        <section>
+          <h3 className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">Indicadores automáticos</h3>
+          <p className="mt-2 rounded-xl bg-[var(--accent-soft)] p-3 text-xs leading-5 text-[var(--accent-strong)]">
+            {context.activities === 0
+              ? "No hay actividad registrada en el período visible."
+              : `${context.activities} actividades conectadas y ${context.commitments} compromisos permiten evaluar la cobertura del circuito.`}
+          </p>
+        </section>
+        <section>
+          <h3 className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">Acciones rápidas</h3>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <a href="/recorrido" className="rounded-xl bg-[var(--primary)] px-3 py-2.5 text-center text-xs font-extrabold text-white">Nueva recorrida</a>
+            <a href="/propuestas" className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-center text-xs font-extrabold">Crear propuesta</a>
+          </div>
         </section>
       </div>
     </div>

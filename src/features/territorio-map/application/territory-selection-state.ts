@@ -20,7 +20,11 @@ export function sanitizeTerritorySelection(
     ? features.find(
         (item) =>
           item.id === selection.featureId &&
-          enabledLayers.has(item.layerId) &&
+          (enabledLayers.has(item.layerId) ||
+            (item.kind === "institution" &&
+              ["schools", "hospitals", "health_centers", "clubs", "firefighters", "police", "libraries", "cultural_centers", "green_spaces"].some((layer) =>
+                enabledLayers.has(layer as TerritoryLayerId),
+              ))) &&
           item.occurredAt.slice(0, 10) <= cutoff,
       )
     : undefined;

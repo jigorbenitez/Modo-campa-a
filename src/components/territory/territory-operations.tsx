@@ -19,6 +19,9 @@ import { MapToolbar } from "./map-toolbar";
 import { TimelineSlider } from "./timeline-slider";
 import { TerritorySidebar } from "./territory-sidebar";
 import { TerritorySearch } from "./territory-search";
+import type { TerritorySearchResult } from "./territory-search";
+import { GisToolbox } from "./gis-toolbox";
+import type { GisTool } from "./gis-toolbox";
 
 const TerritoryMap = dynamic(
   () => import("./territory-map").then((module) => module.TerritoryMap),
@@ -35,12 +38,18 @@ const TerritoryMap = dynamic(
 
 const viewService = new TerritoryViewService();
 const emptyActivityRecords: ActivityRecord[] = [];
+const LAYERS_STORAGE_KEY = "atiy:territory:layers:v1";
+const CUSTOM_FEATURES_KEY = "atiy:territory:custom-features:v1";
 
 export function TerritoryOperations() {
   const searchParams = useSearchParams();
   const requestedActivityId = searchParams.get("activity");
   const { records: journalRecords, hasStoredJournal } =
     useActivityJournal(emptyActivityRecords);
+  const [customFeatures, setCustomFeatures] = useState<TerritoryFeature[]>(() => {
+    if (typeof window === "undefined") return [];
+    return JSON.parse(window.localStorage.getItem(CUSTOM_FEATURES_KEY) ?? "[]") as TerritoryFeature[];
+  });
   const snapshot = useMemo(() => {
     const journalFeatures = journalRecords
       .map((record) =>
@@ -55,16 +64,18 @@ export function TerritoryOperations() {
           (feature) => !hasStoredJournal || feature.layerId !== "activities",
         ),
         ...journalFeatures,
+        ...customFeatures,
       ],
     };
-  }, [hasStoredJournal, journalRecords]);
+  }, [customFeatures, hasStoredJournal, journalRecords]);
   const [enabledLayers, setEnabledLayers] = useState<Set<TerritoryLayerId>>(
-    () =>
-      new Set(
-        mockTerritorySnapshot.layers
-          .filter((layer) => layer.enabledByDefault)
-          .map((layer) => layer.id),
-      ),
+    () => {
+      const defaults = mockTerritorySnapshot.layers.filter((layer) => layer.enabledByDefault).map((layer) => layer.id);
+      if (typeof window === "undefined") return new Set(defaults);
+      const stored = window.localStorage.getItem(LAYERS_STORAGE_KEY);
+      const valid = new Set(mockTerritorySnapshot.layers.map((layer) => layer.id));
+      return new Set(stored ? (JSON.parse(stored) as TerritoryLayerId[]).filter((id) => valid.has(id)) : defaults);
+    },
   );
   const [periodIndex, setPeriodIndex] = useState(mockTerritorySnapshot.periods.length - 1);
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>();
@@ -75,6 +86,12 @@ export function TerritoryOperations() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [requestedSelectionDismissed, setRequestedSelectionDismissed] = useState(false);
+  const [activeTool, setActiveTool] = useState<GisTool>("navigate");
+  const [selectedCircuitIds, setSelectedCircuitIds] = useState<Set<string>>(new Set());
+  const [pendingPoint, setPendingPoint] = useState<[number, number]>();
+  const [newPointTitle, setNewPointTitle] = useState("");
+  const [newPointType, setNewPointType] = useState<"institution" | "activity" | "commitment" | "proposal" | "photo">("institution");
+  const [newPointArea, setNewPointArea] = useState("");
 
   const periodId = snapshot.periods[periodIndex]?.id ?? "today";
   const requestedFeature = useMemo(
@@ -116,9 +133,14 @@ export function TerritoryOperations() {
     snapshot.circuits.some((circuit) => circuit.id === selectedCircuitId)
       ? selectedCircuitId
       : undefined;
-  const searchResults = useMemo(() => {
+  useEffect(() => {
+    window.localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...enabledLayers]));
+  }, [enabledLayers]);
+
+  const searchResults = useMemo<TerritorySearchResult[]>(() => {
     const term = search.trim().toLocaleLowerCase("es-AR");
-    return snapshot.features.filter((feature) => {
+    if (!term) return [];
+    const featureResults = snapshot.features.filter((feature) => {
       const matchesTerm =
         !term ||
         `${feature.title} ${feature.description} ${feature.subtype ?? ""} ${feature.localidad}`
@@ -127,8 +149,62 @@ export function TerritoryOperations() {
       const matchesCategory =
         category === "all" || feature.subtype === category || feature.kind === category;
       return enabledLayers.has(feature.layerId) && matchesTerm && matchesCategory;
-    });
-  }, [category, enabledLayers, search, snapshot.features]);
+    }).map((feature) => ({ id: feature.id, title: feature.title, subtitle: `${feature.subtype ?? feature.kind} · ${feature.localidad}`, kind: "feature" as const }));
+    const areaResults = snapshot.neighborhoods
+      .filter((area) => `${area.name} ${area.locality}`.toLocaleLowerCase("es-AR").includes(term))
+      .map((area) => ({ id: area.id, title: area.name, subtitle: area.level === "locality" ? "Localidad" : "Barrio", kind: "area" as const }));
+    const circuitResults = snapshot.circuits
+      .filter((circuit) => `${circuit.name} ${circuit.code}`.toLocaleLowerCase("es-AR").includes(term))
+      .map((circuit) => ({ id: circuit.id, title: `Circuito ${circuit.code.replace(/^0/, "")}`, subtitle: "Circuito electoral oficial", kind: "circuit" as const }));
+    return [...circuitResults, ...areaResults, ...featureResults];
+  }, [category, enabledLayers, search, snapshot]);
+
+  function selectSearchResult(result: TerritorySearchResult) {
+    if (result.kind === "circuit") return selectCircuit(result.id);
+    if (result.kind === "area") return selectNeighborhood(result.id);
+    const feature = snapshot.features.find((item) => item.id === result.id);
+    if (feature) selectFeature(feature);
+  }
+
+  function saveCustomPoint() {
+    const area = snapshot.neighborhoods.find((item) => item.id === newPointArea);
+    if (!pendingPoint || !area || !newPointTitle.trim()) return;
+    const now = new Date().toISOString();
+    const layerByType = { institution: "custom_markers", activity: "activities", commitment: "commitments", proposal: "proposals", photo: "photos" } as const;
+    const feature: TerritoryFeature = {
+      id: `custom-${crypto.randomUUID()}`,
+      municipioId: snapshot.municipioId,
+      layerId: layerByType[newPointType],
+      kind: newPointType,
+      subtype: "Creado desde el mapa",
+      title: newPointTitle.trim(),
+      description: "Elemento georreferenciado creado desde el Centro de Operaciones Territorial.",
+      point: { latitude: pendingPoint[0], longitude: pendingPoint[1] },
+      barrioId: area.id,
+      localidad: area.locality,
+      occurredAt: now,
+      status: "open",
+      updatedAt: now,
+      source: "Carga operativa ATIY",
+      participants: [],
+      problems: [],
+      commitments: [],
+      proposals: [],
+      documents: [],
+      publications: [],
+      photos: [],
+      videos: [],
+      history: [{ at: now, label: "Creado desde el mapa" }],
+    };
+    const next = [...customFeatures, feature];
+    setCustomFeatures(next);
+    window.localStorage.setItem(CUSTOM_FEATURES_KEY, JSON.stringify(next));
+    setEnabledLayers((current) => new Set([...current, feature.layerId, "custom_markers"]));
+    setPendingPoint(undefined);
+    setNewPointTitle("");
+    setActiveTool("navigate");
+    setSelectedFeature(feature);
+  }
   const view = useMemo(
     () =>
       viewService.project(snapshot, {
@@ -188,6 +264,14 @@ export function TerritoryOperations() {
       if (current.has("circuits")) return current;
       return new Set([...current, "circuits"]);
     });
+    if (activeTool === "multi") {
+      setSelectedCircuitIds((current) => {
+        const next = new Set(current);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+      });
+      return;
+    }
     setSelectedCircuitId(id);
     setSelectedNeighborhoodId(undefined);
     setSelectedFeature(undefined);
@@ -272,6 +356,10 @@ export function TerritoryOperations() {
                 resetToken={resetToken}
                 onClearSelection={clearMarkerSelection}
                 municipalityBoundaries={snapshot.municipalityBoundaries}
+                enabledLayers={enabledLayers}
+                activeTool={activeTool}
+                selectedCircuitIds={selectedCircuitIds}
+                onCreatePoint={setPendingPoint}
               />
 
               <div className="pointer-events-none absolute inset-x-3 top-3 z-[500] sm:inset-x-4 sm:top-4">
@@ -281,7 +369,7 @@ export function TerritoryOperations() {
               </div>
 
               {!presentationMode && <div className="absolute left-3 top-[9.4rem] z-[510] w-[calc(100%-8rem)] sm:left-4 sm:w-96 lg:top-32">
-                <TerritorySearch query={search} category={category} categories={territoryCategories} results={searchResults} onQueryChange={setSearch} onCategoryChange={setCategory} onSelect={selectFeature} />
+                <TerritorySearch query={search} category={category} categories={territoryCategories} results={searchResults} onQueryChange={setSearch} onCategoryChange={setCategory} onSelect={selectSearchResult} />
               </div>}
 
               <div className="absolute right-3 top-[9.4rem] z-[500] sm:right-4 lg:top-32">
@@ -293,6 +381,29 @@ export function TerritoryOperations() {
                   hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId || safeSelectedCircuitId)}
                 />
               </div>
+
+              {!presentationMode && <div className="absolute right-3 top-[13rem] z-[505] sm:right-4 lg:top-44">
+                <GisToolbox
+                  activeTool={activeTool}
+                  onToolChange={setActiveTool}
+                  circuits={snapshot.circuits}
+                  neighborhoods={view.visibleNeighborhoods}
+                  features={view.visibleFeatures}
+                  selectedCircuitIds={selectedCircuitIds}
+                  onClearMultiSelection={() => setSelectedCircuitIds(new Set())}
+                />
+              </div>}
+
+              {pendingPoint && <div role="dialog" aria-modal="true" aria-label="Crear elemento georreferenciado" className="absolute inset-x-3 bottom-4 z-[700] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl sm:left-auto sm:right-4 sm:w-80">
+                <div className="flex items-center justify-between"><h2 className="text-sm font-extrabold">Nuevo elemento</h2><button type="button" onClick={() => setPendingPoint(undefined)} aria-label="Cerrar">×</button></div>
+                <p className="mt-1 text-[10px] text-[var(--muted)]">{pendingPoint[0].toFixed(6)}, {pendingPoint[1].toFixed(6)}</p>
+                <input autoFocus value={newPointTitle} onChange={(event) => setNewPointTitle(event.target.value)} placeholder="Nombre" className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm" />
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <select value={newPointType} onChange={(event) => setNewPointType(event.target.value as typeof newPointType)} className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"><option value="institution">Institución</option><option value="activity">Recorrida</option><option value="commitment">Compromiso</option><option value="proposal">Propuesta</option><option value="photo">Fotografía</option></select>
+                  <select value={newPointArea} onChange={(event) => setNewPointArea(event.target.value)} className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"><option value="">Área…</option>{snapshot.neighborhoods.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select>
+                </div>
+                <button type="button" disabled={!newPointTitle.trim() || !newPointArea} onClick={saveCustomPoint} className="mt-3 w-full rounded-xl bg-[var(--primary)] px-3 py-2.5 text-xs font-extrabold text-white disabled:opacity-40">Guardar en el mapa</button>
+              </div>}
 
               {!presentationMode && (
                 <>

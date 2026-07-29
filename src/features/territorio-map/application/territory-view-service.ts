@@ -11,6 +11,22 @@ import type {
 
 const activeStatuses = new Set(["open", "reported", "validated", "assigned", "in_progress", "under_review"]);
 
+function operationalLayerEnabled(feature: TerritoryFeature, enabled: Set<string>) {
+  if (feature.layerId === "custom_markers") return enabled.has("custom_markers");
+  if (feature.kind !== "institution") return enabled.has(feature.layerId);
+  const subtype = feature.subtype?.toLocaleLowerCase("es-AR") ?? "";
+  if (subtype.includes("escuela") || subtype.includes("jardín")) return enabled.has("schools");
+  if (subtype.includes("hospital") || subtype.includes("clínica")) return enabled.has("hospitals");
+  if (subtype.includes("caps") || subtype.includes("centro de salud")) return enabled.has("health_centers");
+  if (subtype.includes("club") || subtype.includes("polideportivo")) return enabled.has("clubs");
+  if (subtype.includes("bombero")) return enabled.has("firefighters");
+  if (subtype.includes("polic")) return enabled.has("police");
+  if (subtype.includes("biblioteca")) return enabled.has("libraries");
+  if (subtype.includes("cultural")) return enabled.has("cultural_centers");
+  if (subtype.includes("plaza") || subtype.includes("verde") || subtype.includes("parque")) return enabled.has("green_spaces");
+  return enabled.has("institutions");
+}
+
 export class TerritoryViewService {
   project(snapshot: TerritorySnapshot, filters: TerritoryFilters): TerritoryView {
     const period = snapshot.periods.find((item) => item.id === filters.periodId) ?? snapshot.periods.at(-1);
@@ -18,7 +34,7 @@ export class TerritoryViewService {
 
     const visibleFeatures = snapshot.features.filter((feature) => {
       const withinTime = feature.occurredAt.slice(0, 10) <= period.cutoff;
-      const layerEnabled = filters.enabledLayers.has(feature.layerId);
+      const layerEnabled = operationalLayerEnabled(feature, filters.enabledLayers);
       const withinNeighborhood =
         !filters.selectedNeighborhoodId || feature.barrioId === filters.selectedNeighborhoodId;
       const withinCircuit =
@@ -47,9 +63,11 @@ export class TerritoryViewService {
       (feature) => feature.occurredAt.slice(0, 10) <= period.cutoff,
     );
 
-    const visibleNeighborhoods = filters.enabledLayers.has("neighborhoods")
-      ? snapshot.neighborhoods
-      : [];
+    const visibleNeighborhoods = snapshot.neighborhoods.filter((area) =>
+      area.level === "locality"
+        ? filters.enabledLayers.has("localities")
+        : filters.enabledLayers.has("neighborhoods"),
+    );
     const visibleCircuits = filters.enabledLayers.has("circuits")
       ? snapshot.circuits
       : [];
@@ -100,6 +118,15 @@ export class TerritoryViewService {
       problems: related.filter((feature) => feature.kind === "problem").length,
       commitments: related.filter((feature) => feature.kind === "commitment").length,
       institutions: related.filter((feature) => feature.kind === "institution").length,
+      neighbors: related.filter((feature) => feature.layerId === "neighbors").length,
+      schools: this.countSubtype(related, ["Escuela", "Jardín"]),
+      clubs: this.countSubtype(related, ["Club", "Polideportivo"]),
+      hospitals: this.countSubtype(related, ["Hospital", "Clínica"]),
+      healthCenters: this.countSubtype(related, ["CAPS", "Centro de salud"]),
+      tours: related.filter((feature) => feature.kind === "activity").length,
+      proposals: related.filter((feature) => feature.kind === "proposal").length,
+      documents: related.filter((feature) => feature.kind === "document").length,
+      photos: related.reduce((total, feature) => total + feature.photos.length, 0),
     };
   }
 

@@ -105,3 +105,22 @@ main { animation: page-enter 220ms ease-out; }
   transform: rotate(-8deg);
 }
 .territory-marker > span { transform: rotate(8deg); }
+
+.atiy-territory-label {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 4px 14px rgb(8 20 38 / 12%);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 7px;
+}
+
+.atiy-territory-label::before { display: none; }
+
+@media print {
+  nav, header, .leaflet-control-container, button { display: none !important; }
+  .territory-map { height: 92vh !important; }
+  body { background: #fff !important; }
+}

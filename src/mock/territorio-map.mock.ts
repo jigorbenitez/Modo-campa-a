@@ -117,15 +117,29 @@ export function findCircuitForPoint(point: {
 }
 
 export const territoryLayers: TerritoryLayer[] = [
+  { id: "municipality", label: "Municipio", description: "Límite general de San Fernando", color: "#0A1D3D", enabledByDefault: true },
+  { id: "localities", label: "Localidades", description: "Localidades con geometría verificada", color: "#35577c", enabledByDefault: true },
+  { id: "streets", label: "Calles", description: "Cartografía vial del mapa base", color: "#94a3b8", enabledByDefault: true },
   { id: "activities", label: "Actividades", description: "Acciones registradas por el equipo", color: "#16a05d", enabledByDefault: true },
   { id: "problems", label: "Reclamos", description: "Situaciones abiertas o en seguimiento", color: "#e5484d", enabledByDefault: true },
   { id: "commitments", label: "Compromisos", description: "Acuerdos y tareas territoriales", color: "#d99a18", enabledByDefault: true },
   { id: "proposals", label: "Propuestas", description: "Propuestas vinculadas al territorio", color: "#2878d0", enabledByDefault: true },
   { id: "documents", label: "Documentos", description: "Documentación territorial relacionada", color: "#8856d8", enabledByDefault: false },
   { id: "institutions", label: "Instituciones", description: "Equipamiento e instituciones públicas", color: "#7b8794", enabledByDefault: true },
-  { id: "neighborhoods", label: "Límites", description: "Municipio, localidades y barrios con geometría publicada", color: "#8b5e3c", enabledByDefault: true },
+  { id: "neighborhoods", label: "Barrios", description: "Barrios con geometría publicada", color: "#71869f", enabledByDefault: true },
   { id: "circuits", label: "Circuitos", description: "Circuitos electorales oficiales de San Fernando", color: "#00BBD4", enabledByDefault: false },
   { id: "photos", label: "Fotografías", description: "Evidencia visual georreferenciada", color: "#2f9e9e", enabledByDefault: false },
+  { id: "schools", label: "Escuelas", description: "Establecimientos educativos", color: "#3676a8", enabledByDefault: true },
+  { id: "hospitals", label: "Hospitales", description: "Hospitales y clínicas", color: "#5e6e82", enabledByDefault: true },
+  { id: "health_centers", label: "CAPS", description: "Centros de atención primaria", color: "#527a78", enabledByDefault: true },
+  { id: "clubs", label: "Clubes", description: "Clubes y polideportivos", color: "#607c5b", enabledByDefault: true },
+  { id: "firefighters", label: "Bomberos", description: "Cuarteles de bomberos", color: "#8a6570", enabledByDefault: false },
+  { id: "police", label: "Policía", description: "Dependencias policiales", color: "#596f8f", enabledByDefault: false },
+  { id: "libraries", label: "Bibliotecas", description: "Bibliotecas", color: "#756a91", enabledByDefault: false },
+  { id: "cultural_centers", label: "Centros culturales", description: "Equipamiento cultural", color: "#7e6280", enabledByDefault: false },
+  { id: "green_spaces", label: "Espacios verdes", description: "Plazas, parques y paseos", color: "#56806a", enabledByDefault: false },
+  { id: "neighbors", label: "Vecinos", description: "Personas con ubicación autorizada", color: "#64748b", enabledByDefault: false },
+  { id: "custom_markers", label: "Marcadores personalizados", description: "Puntos creados por el equipo", color: "#00BBD4", enabledByDefault: false },
   { id: "heat", label: "Intensidad", description: "Capa preparada para concentración territorial", color: "#f06a3c", enabledByDefault: false },
 ];
 

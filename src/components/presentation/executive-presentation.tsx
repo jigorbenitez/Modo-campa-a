@@ -55,6 +55,10 @@ export function ExecutivePresentation() {
           onClearSelection={() => undefined}
           municipalityBoundaries={mockTerritorySnapshot.municipalityBoundaries}
           resetToken={0}
+          enabledLayers={presentationLayers}
+          activeTool="navigate"
+          selectedCircuitIds={new Set()}
+          onCreatePoint={() => undefined}
           />
           <div className="pointer-events-none absolute inset-x-4 top-4 z-[500] grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[

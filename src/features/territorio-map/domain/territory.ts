@@ -1,6 +1,9 @@
 import type { GeoPoint, ISODate, ISODateTime } from "@/domain/shared/types";
 
 export type TerritoryLayerId =
+  | "municipality"
+  | "localities"
+  | "streets"
   | "activities"
   | "problems"
   | "commitments"
@@ -10,6 +13,17 @@ export type TerritoryLayerId =
   | "neighborhoods"
   | "circuits"
   | "photos"
+  | "schools"
+  | "hospitals"
+  | "health_centers"
+  | "clubs"
+  | "firefighters"
+  | "police"
+  | "libraries"
+  | "cultural_centers"
+  | "green_spaces"
+  | "neighbors"
+  | "custom_markers"
   | "heat";
 
 export interface TerritoryLayer {
@@ -38,7 +52,7 @@ export interface TerritoryRelatedItem {
 export interface TerritoryFeature {
   id: string;
   municipioId: string;
-  layerId: Exclude<TerritoryLayerId, "neighborhoods" | "circuits" | "heat">;
+  layerId: Exclude<TerritoryLayerId, "municipality" | "localities" | "neighborhoods" | "circuits" | "streets" | "heat">;
   kind: TerritoryFeatureKind;
   subtype?: string;
   title: string;
@@ -171,6 +185,15 @@ export interface TerritoryCircuitContextView {
   problems: number;
   commitments: number;
   institutions: number;
+  neighbors: number;
+  schools: number;
+  clubs: number;
+  hospitals: number;
+  healthCenters: number;
+  tours: number;
+  proposals: number;
+  documents: number;
+  photos: number;
 }
 
 export interface TerritoryView {
