@@ -188,10 +188,10 @@ export const territoryNeighborhoods: TerritoryNeighborhood[] = [
 type FeatureInput = Pick<
   TerritoryFeature,
   "id" | "title" | "subtype" | "description" | "point" | "barrioId" | "localidad"
-> & { sourceUrl: string };
+> & { sourceUrl: string; officialSourceUrl?: string };
 
 function institution(input: FeatureInput): TerritoryFeature {
-  const { sourceUrl, ...feature } = input;
+  const { sourceUrl, officialSourceUrl, ...feature } = input;
   const circuit = findCircuitForPoint(feature.point);
   return {
     ...feature,
@@ -201,7 +201,9 @@ function institution(input: FeatureInput): TerritoryFeature {
     circuitId: circuit?.id,
     occurredAt: updatedAt,
     updatedAt,
-    source: `OpenStreetMap · ${sourceUrl}`,
+    source: officialSourceUrl
+      ? `Municipio de San Fernando · ${officialSourceUrl} · OpenStreetMap · ${sourceUrl}`
+      : `OpenStreetMap · ${sourceUrl}`,
     status: "active",
     participants: [],
     problems: [],
@@ -346,6 +348,39 @@ export const territoryFeatures: TerritoryFeature[] = [
     barrioId: "localidad-victoria",
     localidad: "Victoria",
     sourceUrl: "https://www.openstreetmap.org/way/206775934",
+  }),
+  institution({
+    id: "institucion-hospital-san-cayetano",
+    title: "Hospital Municipal San Cayetano",
+    subtype: "Hospital",
+    description: "Hospital municipal ubicado en Av. Nicolás Avellaneda 4850, Virreyes.",
+    point: { latitude: -34.4669037, longitude: -58.5846617 },
+    barrioId: "localidad-virreyes",
+    localidad: "Virreyes",
+    officialSourceUrl: "https://www.sanfernando.gob.ar/municipio/secretarias/salud-publica/especialidadesmedicas/clinica-medica",
+    sourceUrl: "https://www.openstreetmap.org/relation/12890381",
+  }),
+  institution({
+    id: "institucion-polideportivo-1",
+    title: "Polideportivo N.º 1",
+    subtype: "Polideportivo",
+    description: "Centro deportivo municipal. Domicilio publicado: French 2650.",
+    point: { latitude: -34.4581633, longitude: -58.5574849 },
+    barrioId: "localidad-victoria",
+    localidad: "Victoria",
+    officialSourceUrl: "https://www.sanfernando.gob.ar/municipio/secretarias/deportes/polideportivos",
+    sourceUrl: "https://www.openstreetmap.org/way/273066425",
+  }),
+  institution({
+    id: "institucion-palacio-belgrano-otamendi",
+    title: "Palacio Belgrano-Otamendi",
+    subtype: "Centro cultural",
+    description: "Espacio cultural municipal ubicado en Sarmiento 1401, esquina Lavalle.",
+    point: { latitude: -34.4412611, longitude: -58.5598652 },
+    barrioId: "localidad-san-fernando",
+    localidad: "San Fernando",
+    officialSourceUrl: "https://www.sanfernando.gob.ar/secretariadecultura/centrosculturales/palaciobelgranootamendi",
+    sourceUrl: "https://www.openstreetmap.org/node/9077297948",
   }),
 ];
 

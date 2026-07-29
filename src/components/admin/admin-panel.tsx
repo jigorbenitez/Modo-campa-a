@@ -7,6 +7,8 @@ import type {
 } from "@/infrastructure/supabase/platform-context";
 import { rolePermissions } from "@/application/auth";
 import type { UserRole } from "@/domain/entities";
+import { SettingsPanel } from "@/components/settings/settings-panel";
+import { TerritorialDataExchange } from "@/features/territorial-engine/presentation";
 
 const roleLabels: Record<UserRole, string> = {
   administrator: "Administrador",
@@ -146,6 +148,12 @@ export function AdminPanel({
           </section>
         </div>
       </div>
+      <section className="mt-8 border-t border-[var(--border)] pt-2">
+        <TerritorialDataExchange />
+      </section>
+      <section id="configuracion" className="mt-2 border-t border-[var(--border)]">
+        <SettingsPanel />
+      </section>
     </div>
   );
 }

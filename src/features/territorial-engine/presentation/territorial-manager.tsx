@@ -2,6 +2,9 @@ import { OperationalManager } from "@/components/management/operational-manager"
 import { TerritorialDataExchange } from "./territorial-data-exchange";
 
 const typeOptions = [
+  ["municipality", "Municipio"],
+  ["locality", "Localidad"],
+  ["electoral_circuit", "Circuito"],
   ["hospital", "Hospital"],
   ["primary_care_center", "CAPS"],
   ["school", "Escuela"],
@@ -32,6 +35,7 @@ export function TerritorialManager() {
       primaryField="name"
       secondaryField="description"
       locationFields={{ latitude: "latitude", longitude: "longitude" }}
+      categoryFilterField="type"
       statuses={[
         { value: "active", label: "Activa" },
         { value: "pending_review", label: "Pendiente de revisión" },

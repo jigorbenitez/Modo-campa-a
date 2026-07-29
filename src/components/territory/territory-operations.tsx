@@ -44,6 +44,9 @@ const CUSTOM_FEATURES_KEY = "atiy:territory:custom-features:v1";
 export function TerritoryOperations() {
   const searchParams = useSearchParams();
   const requestedActivityId = searchParams.get("activity");
+  const requestedEntityId = searchParams.get("entity");
+  const requestedAreaId = searchParams.get("area");
+  const requestedCircuitId = searchParams.get("circuit");
   const { records: journalRecords, hasStoredJournal } =
     useActivityJournal(emptyActivityRecords);
   const [customFeatures, setCustomFeatures] = useState<TerritoryFeature[]>(() => {
@@ -71,6 +74,7 @@ export function TerritoryOperations() {
   const [enabledLayers, setEnabledLayers] = useState<Set<TerritoryLayerId>>(
     () => {
       const defaults = mockTerritorySnapshot.layers.filter((layer) => layer.enabledByDefault).map((layer) => layer.id);
+      if (requestedCircuitId && !defaults.includes("circuits")) defaults.push("circuits");
       if (typeof window === "undefined") return new Set(defaults);
       const stored = window.localStorage.getItem(LAYERS_STORAGE_KEY);
       const valid = new Set(mockTerritorySnapshot.layers.map((layer) => layer.id));
@@ -90,7 +94,7 @@ export function TerritoryOperations() {
   const [selectedCircuitIds, setSelectedCircuitIds] = useState<Set<string>>(new Set());
   const [pendingPoint, setPendingPoint] = useState<[number, number]>();
   const [newPointTitle, setNewPointTitle] = useState("");
-  const [newPointType, setNewPointType] = useState<"institution" | "activity" | "commitment" | "proposal" | "photo">("institution");
+  const [newPointType, setNewPointType] = useState<"institution" | "activity" | "commitment" | "proposal" | "photo" | "document">("institution");
   const [newPointArea, setNewPointArea] = useState("");
 
   const periodId = snapshot.periods[periodIndex]?.id ?? "today";
@@ -99,15 +103,15 @@ export function TerritoryOperations() {
       requestedSelectionDismissed || !requestedActivityId
         ? undefined
         : snapshot.features.find(
-            (feature) => feature.id === `journal-${requestedActivityId}`,
+            (feature) => feature.id === requestedEntityId || feature.id === `journal-${requestedActivityId}`,
           ),
-    [requestedActivityId, requestedSelectionDismissed, snapshot.features],
+    [requestedActivityId, requestedEntityId, requestedSelectionDismissed, snapshot.features],
   );
   const safeSelection = useMemo(() => {
     const cutoff = snapshot.periods[periodIndex]?.cutoff ?? "9999-12-31";
     return sanitizeTerritorySelection(
       {
-        neighborhoodId: selectedNeighborhoodId ?? requestedFeature?.barrioId,
+        neighborhoodId: selectedNeighborhoodId ?? requestedAreaId ?? requestedFeature?.barrioId,
         featureId: selectedFeature?.id ?? requestedFeature?.id,
       },
       snapshot.features,
@@ -120,6 +124,7 @@ export function TerritoryOperations() {
     periodIndex,
     requestedFeature?.barrioId,
     requestedFeature?.id,
+    requestedAreaId,
     selectedFeature?.id,
     selectedNeighborhoodId,
     snapshot,
@@ -130,8 +135,8 @@ export function TerritoryOperations() {
   );
   const safeSelectedCircuitId =
     enabledLayers.has("circuits") &&
-    snapshot.circuits.some((circuit) => circuit.id === selectedCircuitId)
-      ? selectedCircuitId
+    snapshot.circuits.some((circuit) => circuit.id === (selectedCircuitId ?? requestedCircuitId))
+      ? (selectedCircuitId ?? requestedCircuitId ?? undefined)
       : undefined;
   useEffect(() => {
     window.localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...enabledLayers]));
@@ -170,7 +175,7 @@ export function TerritoryOperations() {
     const area = snapshot.neighborhoods.find((item) => item.id === newPointArea);
     if (!pendingPoint || !area || !newPointTitle.trim()) return;
     const now = new Date().toISOString();
-    const layerByType = { institution: "custom_markers", activity: "activities", commitment: "commitments", proposal: "proposals", photo: "photos" } as const;
+    const layerByType = { institution: "custom_markers", activity: "activities", commitment: "commitments", proposal: "proposals", photo: "photos", document: "documents" } as const;
     const feature: TerritoryFeature = {
       id: `custom-${crypto.randomUUID()}`,
       municipioId: snapshot.municipioId,
@@ -399,7 +404,7 @@ export function TerritoryOperations() {
                 <p className="mt-1 text-[10px] text-[var(--muted)]">{pendingPoint[0].toFixed(6)}, {pendingPoint[1].toFixed(6)}</p>
                 <input autoFocus value={newPointTitle} onChange={(event) => setNewPointTitle(event.target.value)} placeholder="Nombre" className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm" />
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <select value={newPointType} onChange={(event) => setNewPointType(event.target.value as typeof newPointType)} className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"><option value="institution">Institución</option><option value="activity">Recorrida</option><option value="commitment">Compromiso</option><option value="proposal">Propuesta</option><option value="photo">Fotografía</option></select>
+                  <select value={newPointType} onChange={(event) => setNewPointType(event.target.value as typeof newPointType)} className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"><option value="institution">Institución</option><option value="activity">Recorrida</option><option value="commitment">Compromiso</option><option value="proposal">Propuesta</option><option value="photo">Fotografía</option><option value="document">Documento</option></select>
                   <select value={newPointArea} onChange={(event) => setNewPointArea(event.target.value)} className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"><option value="">Área…</option>{snapshot.neighborhoods.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select>
                 </div>
                 <button type="button" disabled={!newPointTitle.trim() || !newPointArea} onClick={saveCustomPoint} className="mt-3 w-full rounded-xl bg-[var(--primary)] px-3 py-2.5 text-xs font-extrabold text-white disabled:opacity-40">Guardar en el mapa</button>

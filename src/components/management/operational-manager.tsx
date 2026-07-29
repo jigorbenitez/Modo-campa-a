@@ -54,6 +54,7 @@ export function OperationalManager({
   secondaryField,
   allowArchive = false,
   locationFields,
+  categoryFilterField,
 }: {
   storageKey: string;
   eyebrow: string;
@@ -66,10 +67,12 @@ export function OperationalManager({
   secondaryField?: string;
   allowArchive?: boolean;
   locationFields?: { latitude: string; longitude: string };
+  categoryFilterField?: string;
 }) {
   const [records, setRecords] = useState<ManagedRecord[]>([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [editing, setEditing] = useState<ManagedRecord>();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -97,6 +100,7 @@ export function OperationalManager({
       .filter(
         (record) =>
           (statusFilter === "all" || record.status === statusFilter) &&
+          (categoryFilter === "all" || !categoryFilterField || record.values[categoryFilterField] === categoryFilter) &&
           (!normalized ||
             Object.values(record.values)
               .join(" ")
@@ -104,7 +108,7 @@ export function OperationalManager({
               .includes(normalized)),
       )
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-  }, [query, records, statusFilter]);
+  }, [categoryFilter, categoryFilterField, query, records, statusFilter]);
 
   function persist(next: ManagedRecord[]) {
     setRecords(next);
@@ -220,6 +224,10 @@ export function OperationalManager({
               <option key={status.value} value={status.value}>{status.label}</option>
             ))}
           </select>
+          {categoryFilterField && (() => {
+            const field = fields.find((item) => item.id === categoryFilterField);
+            return field?.options ? <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} aria-label={`Filtrar por ${field.label}`} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-xs font-bold"><option value="all">Todas las categorías</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : null;
+          })()}
         </label>
         <div className="flex items-center justify-end px-2 text-xs font-bold text-[var(--muted)]">
           {visibleRecords.length} registros
