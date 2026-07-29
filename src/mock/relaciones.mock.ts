@@ -1,4 +1,5 @@
 import type { Institucion, Persona } from "@/domain/entities";
+import officialSyncData from "@/data/san-fernando-official-sync.json";
 import type {
   KnowledgeEdge,
   KnowledgeNode,
@@ -12,6 +13,47 @@ const audit = {
   updatedAt: "2026-07-26T12:00:00.000Z",
   version: 1,
 };
+
+type SyncedInstitutionRecord = {
+  id: string;
+  name: string;
+  category: string;
+  source: string;
+  sourceUrl: string;
+  license: string;
+  confidence: string;
+  syncedAt: string;
+};
+
+const synchronizedInstitutionNodes: KnowledgeNode[] = (
+  officialSyncData.records as SyncedInstitutionRecord[]
+)
+  .filter((record) => !["municipality", "locality", "neighborhood"].includes(record.category))
+  .map((record) => ({
+    id: `sync-${record.id}`,
+    municipioId,
+    type: "institution",
+    title: record.name,
+    summary: `Registro territorial público sincronizado desde ${record.source}.`,
+    status: "active",
+    occurredAt: record.syncedAt,
+    barrioIds: [],
+    institutionIds: [],
+    personIds: [],
+    tags: [record.category, "dato público"],
+    metadata: {
+      source: record.source,
+      sourceUrl: record.sourceUrl,
+      license: record.license,
+      confidence: record.confidence,
+    },
+    history: [{
+      id: `sync-history-${record.id}`,
+      at: record.syncedAt,
+      label: "Importado desde fuente pública",
+      description: record.source,
+    }],
+  }));
 
 export const mockInstituciones: Institucion[] = [
   {
@@ -640,6 +682,7 @@ export const mockKnowledgeSnapshot: KnowledgeSnapshot = {
     ...institutionNodes,
     ...personNodes,
     ...operationalNodes,
+    ...synchronizedInstitutionNodes,
   ],
   explicitEdges,
 };

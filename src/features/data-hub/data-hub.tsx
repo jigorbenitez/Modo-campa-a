@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { sanFernandoPublicDatasets } from "./catalog";
 import type { PublicDataset } from "./domain";
@@ -53,6 +54,9 @@ export function DataHub({ municipalityId, municipalityName = "Municipio" }: { mu
         municipalityName={municipalityName}
         bounds={municipalityName === "San Fernando" ? activeMunicipalityBounds() : undefined}
       />
+      <Link href="/admin/data-sync" className="mt-4 inline-flex rounded-xl border border-[var(--border)] px-4 py-3 text-xs font-extrabold">
+        Abrir centro de sincronización e historial →
+      </Link>
     </section>
   );
 }

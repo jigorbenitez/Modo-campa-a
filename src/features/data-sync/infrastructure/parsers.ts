@@ -18,8 +18,14 @@ function fingerprint(value: unknown) {
 function normalized(features: GeoFeature[], dataset: DiscoveredDataset): NormalizedFeature[] {
   return features.map((feature, index) => {
     const properties = feature.properties ?? {};
-    const externalId = String(feature.id ?? properties.id ?? properties.osm_id ?? `${dataset.id}-${index}`);
-    const name = String(properties.name ?? properties.nombre ?? properties.descripcion ?? externalId);
+    const externalId = String(
+      feature.id ?? properties.id ?? properties.establecimiento_id ?? properties.cueanexo
+      ?? properties.OBJECTID ?? properties.osm_id ?? `${dataset.id}-${index}`,
+    );
+    const name = String(
+      properties.name ?? properties.nombre ?? properties.establecimiento_nombre
+      ?? properties.FNA ?? properties.NAM ?? properties.descripcion ?? externalId,
+    );
     const value = { externalId, geometry: feature.geometry ?? null, properties };
     return {
       externalId,
@@ -33,7 +39,13 @@ function normalized(features: GeoFeature[], dataset: DiscoveredDataset): Normali
   });
 }
 function classify(properties: Record<string, unknown>, fallback: DatasetCategory): DatasetCategory {
-  const terms = `${properties.amenity ?? ""} ${properties.leisure ?? ""} ${properties.tipo ?? ""}`.toLowerCase();
+  const level = String(properties.level ?? properties.nivel ?? "").toLowerCase();
+  if (level === "municipality" || level === "municipio") return "municipality";
+  if (level === "locality" || level === "localidad") return "locality";
+  if (level === "neighborhood" || level === "barrio") return "neighborhood";
+  if (level === "electoral_circuit" || level === "circuito") return "electoral_circuit";
+  const terms = `${properties.amenity ?? ""} ${properties.leisure ?? ""} ${properties.tipo ?? ""} ${properties.nivel ?? ""} ${properties.establecimiento_nombre ?? ""}`.toLowerCase();
+  if (terms.includes("jardín") || terms.includes("jardin") || terms.includes("nivel inicial")) return "kindergarten";
   if (terms.includes("school")) return "school";
   if (terms.includes("kindergarten")) return "kindergarten";
   if (terms.includes("university")) return "university";
@@ -61,9 +73,23 @@ export class CsvParser implements DatasetParser {
   supports(format: SyncFormat) { return format === "csv"; }
   async parse(content: ArrayBuffer, dataset: DiscoveredDataset) {
     const rows = text(content).replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
-    const headers = rows.shift()?.split(",").map((item) => item.trim()) ?? [];
+    const parseRow = (row: string) => {
+      const values: string[] = [];
+      let value = "";
+      let quoted = false;
+      for (let index = 0; index < row.length; index += 1) {
+        const character = row[index];
+        if (character === '"' && quoted && row[index + 1] === '"') { value += '"'; index += 1; }
+        else if (character === '"') quoted = !quoted;
+        else if (character === "," && !quoted) { values.push(value); value = ""; }
+        else value += character;
+      }
+      values.push(value);
+      return values;
+    };
+    const headers = parseRow(rows.shift() ?? "").map((item) => item.trim());
     const features: GeoFeature[] = rows.map((row) => {
-      const values = row.split(",");
+      const values = parseRow(row);
       const properties = Object.fromEntries(headers.map((header, index) => [header, values[index]?.trim() ?? ""]));
       const latitudeValue = properties.latitud ?? properties.latitude ?? properties.lat;
       const longitudeValue = properties.longitud ?? properties.longitude ?? properties.lon;

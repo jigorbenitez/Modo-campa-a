@@ -10,7 +10,8 @@
     "test": "node scripts/check-utf8.mjs && node --test --experimental-strip-types tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "generate:municipality": "node scripts/generate-municipality-boundary.mjs",
-    "generate:territorial-hierarchy": "node scripts/generate-territorial-hierarchy.mjs"
+    "generate:territorial-hierarchy": "node scripts/generate-territorial-hierarchy.mjs",
+    "sync:san-fernando": "node scripts/sync-san-fernando-public-data.mjs"
   },
   "dependencies": {
     "@ngageoint/geopackage": "^4.2.8",

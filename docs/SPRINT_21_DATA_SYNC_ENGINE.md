@@ -52,6 +52,10 @@ Un recurso inválido o un entorno que no pueda ejecutar su parser produce un err
 9. Guardar la versión completa y el resumen de auditoría.
 10. Recalcular cobertura exclusivamente con universos publicados.
 
+La operación está integrada en `/admin/data-sync`. `/admin/sync` se conserva como alias y redirige al centro de sincronización. El usuario puede seleccionar cualquiera de los municipios visibles para su cuenta, observar el progreso, revisar el delta, consultar las entidades importadas y recorrer el historial.
+
+Las descargas remotas pasan por `/api/territorial-sync/download`, que aplica HTTPS, lista cerrada de proveedores y un máximo de 50 MB. Esto evita CORS y reduce el riesgo de SSRF. Cuando una fuente remota no está disponible, el conector de caché territorial puede utilizar únicamente snapshots públicos ya verificados y distribuidos por ATIY; los errores remotos siguen visibles en la auditoría.
+
 No se calcula un porcentaje cuando una fuente no publica el universo esperado. En ese caso ATIY muestra “sin universo público verificable” y deja la categoría pendiente de carga manual.
 
 ## Persistencia y seguridad
@@ -92,4 +96,3 @@ Las pruebas automáticas verifican:
 - reintentos;
 - filtrado y deduplicación antes de persistir;
 - auditoría de la ejecución.
-

@@ -92,15 +92,43 @@ export class TerritorialDataSyncEngine {
       this.connectors.map((connector) => connector.discover(selection, signal)),
     );
     const datasets = discoveries.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-    const results = await Promise.all(datasets.map((dataset) => this.synchronizeDataset(selection, dataset, signal)));
+    const discoveryFailures: DatasetSyncResult[] = discoveries.flatMap((result, index) => {
+      if (result.status === "fulfilled") return [];
+      const connector = this.connectors[index];
+      const message = result.reason instanceof Error ? result.reason.message : "No se pudo consultar la fuente.";
+      return [{
+        dataset: {
+          id: `discovery-${connector.id}-${selection.municipalityId}`,
+          connectorId: connector.id,
+          name: `Conectividad de ${connector.id}`,
+          category: "point_of_interest",
+          downloadUrl: "",
+          sourcePageUrl: "",
+          publisher: connector.id,
+          license: "No verificada: la fuente no respondió",
+          format: "geojson",
+          version: startedAt.slice(0, 10),
+          confidence: "low",
+        },
+        status: "unavailable" as const,
+        delta: { added: [], updated: [], removed: [], unchanged: 0 },
+        imported: 0,
+        discarded: 0,
+        issues: [{ code: "discovery_failed", message, severity: "error" as const }],
+      }];
+    });
+    const results = [
+      ...await Promise.all(datasets.map((dataset) => this.synchronizeDataset(selection, dataset, signal))),
+      ...discoveryFailures,
+    ];
     const finishedAt = this.now().toISOString();
     const run: TerritorialSyncRun = {
       id: `sync-${selection.municipalityId}-${startedAt}`,
       municipalityId: selection.municipalityId,
       startedAt,
       finishedAt,
-      status: results.some((item) => item.status === "failed")
-        ? (results.some((item) => item.status !== "failed") ? "partial" : "failed")
+      status: results.some((item) => item.status === "failed" || item.status === "unavailable")
+        ? (results.some((item) => item.status !== "failed" && item.status !== "unavailable") ? "partial" : "failed")
         : "completed",
       results,
       coverage: coverage(results, finishedAt),

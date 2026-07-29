@@ -15,7 +15,7 @@ export function Sidebar() {
       </Link>
       <nav aria-label="Navegación principal" className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
         {navigation.map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
           return (
             <Link
               key={item.href}

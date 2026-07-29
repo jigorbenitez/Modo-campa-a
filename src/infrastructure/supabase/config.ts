@@ -4,5 +4,6 @@ export const supabaseConfig = {
 };
 
 export function isSupabaseConfigured(): boolean {
+  if (process.env.ATIY_FORCE_DEMO_MODE === "true") return false;
   return Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 }

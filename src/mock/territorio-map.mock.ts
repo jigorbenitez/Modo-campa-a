@@ -1,6 +1,7 @@
 import boundaryData from "@/data/san-fernando-territorial-hierarchy.json";
 import circuitData from "@/data/san-fernando-electoral-circuits.json";
 import municipalityData from "@/data/san-fernando-municipality-from-circuits.json";
+import officialSyncData from "@/data/san-fernando-official-sync.json";
 import type {
   TerritoryCircuit,
   TerritoryFeature,
@@ -222,8 +223,84 @@ function institution(input: FeatureInput): TerritoryFeature {
   };
 }
 
+type OfficialSyncedRecord = {
+  id: string;
+  name: string;
+  category: string;
+  latitude: number;
+  longitude: number;
+  source: string;
+  sourceUrl: string;
+  license: string;
+  confidence: "verified" | "high" | "medium" | "low";
+  syncedAt: string;
+  properties: Record<string, unknown>;
+};
+
+const officialCategoryPresentation: Record<string, { layerId: TerritoryFeature["layerId"]; subtype: string }> = {
+  school: { layerId: "schools", subtype: "Escuela" },
+  kindergarten: { layerId: "schools", subtype: "Jardín" },
+  university: { layerId: "schools", subtype: "Universidad" },
+  hospital: { layerId: "hospitals", subtype: "Hospital" },
+  primary_care_center: { layerId: "health_centers", subtype: "CAPS / centro de salud" },
+  police: { layerId: "police", subtype: "Policía" },
+  fire_station: { layerId: "firefighters", subtype: "Bomberos" },
+  club: { layerId: "clubs", subtype: "Club / espacio deportivo" },
+  square: { layerId: "green_spaces", subtype: "Plaza" },
+  park: { layerId: "green_spaces", subtype: "Parque / espacio verde" },
+  station: { layerId: "institutions", subtype: "Estación" },
+  municipal_office: { layerId: "institutions", subtype: "Dependencia pública" },
+  public_institution: { layerId: "institutions", subtype: "Institución pública" },
+  point_of_interest: { layerId: "institutions", subtype: "Punto de interés" },
+};
+
+function areaForPoint(point: { latitude: number; longitude: number }) {
+  return territoryNeighborhoods.find((area) =>
+    area.boundaries?.some((ring) => pointInRing(point, ring))
+    || pointInRing(point, area.boundary),
+  );
+}
+
+const synchronizedTerritoryFeatures: TerritoryFeature[] = (
+  officialSyncData.records as OfficialSyncedRecord[]
+).flatMap((record) => {
+  const presentation = officialCategoryPresentation[record.category];
+  if (!presentation) return [];
+  const point = { latitude: record.latitude, longitude: record.longitude };
+  const area = areaForPoint(point);
+  const circuit = findCircuitForPoint(point);
+  return [{
+    id: `sync-${record.id}`,
+    municipioId,
+    layerId: presentation.layerId,
+    kind: "institution",
+    title: record.name,
+    subtype: presentation.subtype,
+    description: `Registro público sincronizado desde ${record.source}.`,
+    point,
+    barrioId: area?.id ?? municipioId,
+    localidad: area?.locality ?? "San Fernando",
+    circuitId: circuit?.id,
+    occurredAt: record.syncedAt,
+    updatedAt: record.syncedAt,
+    source: `${record.source} · ${record.license}`,
+    sourceUrl: record.sourceUrl,
+    confidence: record.confidence,
+    status: "active",
+    participants: [],
+    problems: [],
+    commitments: [],
+    proposals: [],
+    documents: [],
+    publications: [],
+    photos: [],
+    videos: [],
+    history: [{ at: record.syncedAt, label: "Importado por Territorial Data Sync Engine" }],
+  }];
+});
+
 // Selección acotada de puntos con coordenadas publicadas en OpenStreetMap.
-export const territoryFeatures: TerritoryFeature[] = [
+const curatedTerritoryFeatures: TerritoryFeature[] = [
   institution({
     id: "institucion-municipalidad-san-fernando",
     title: "Municipalidad de San Fernando",
@@ -387,6 +464,21 @@ export const territoryFeatures: TerritoryFeature[] = [
     officialSourceUrl: "https://www.sanfernando.gob.ar/secretariadecultura/centrosculturales/palaciobelgranootamendi",
     sourceUrl: "https://www.openstreetmap.org/node/9077297948",
   }),
+];
+
+const curatedNames = new Set(
+  curatedTerritoryFeatures.map((feature) =>
+    feature.title.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-AR"),
+  ),
+);
+
+export const territoryFeatures: TerritoryFeature[] = [
+  ...curatedTerritoryFeatures,
+  ...synchronizedTerritoryFeatures.filter((feature) =>
+    !curatedNames.has(
+      feature.title.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-AR"),
+    ),
+  ),
 ];
 
 export const territoryCategories = [

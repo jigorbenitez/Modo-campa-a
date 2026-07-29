@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { TerritorialDataSyncEngine } from "../application/sync-engine";
-import { GeoRefConnector, OpenStreetMapConnector } from "../infrastructure/connectors";
+import { officialTerritorialConnectors } from "../infrastructure/connectors";
 import { BoundsTerritorialFilter, BrowserSyncRepository, HttpDatasetDownloader } from "../infrastructure/browser-infrastructure";
 import { CsvParser, GeoJsonParser, KmlParser, OsmJsonParser, ShapefileParser } from "../infrastructure/parsers";
-import type { SyncFrequency, TerritorialSyncRun } from "../domain";
+import type { NormalizedFeature, SyncFrequency, TerritorialSyncRun } from "../domain";
 
 const labels: Record<SyncFrequency, string> = {
   manual: "Manual", daily: "Diaria", weekly: "Semanal", monthly: "Mensual",
@@ -31,7 +31,7 @@ export function DataSyncPanel({
 }) {
   const repository = useMemo(() => new BrowserSyncRepository(), []);
   const engine = useMemo(() => new TerritorialDataSyncEngine(
-    [new GeoRefConnector(), new OpenStreetMapConnector()],
+    officialTerritorialConnectors(),
     new HttpDatasetDownloader(),
     [new GeoJsonParser(), new CsvParser(), new ShapefileParser(), new KmlParser(), new OsmJsonParser()],
     new BoundsTerritorialFilter(),
@@ -44,11 +44,13 @@ export function DataSyncPanel({
   });
   const [runs, setRuns] = useState<TerritorialSyncRun[]>([]);
   const [current, setCurrent] = useState<TerritorialSyncRun | null>(null);
+  const [features, setFeatures] = useState<NormalizedFeature[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     repository.listRuns(municipalityId).then(setRuns);
+    repository.listFeatures(municipalityId).then(setFeatures);
   }, [municipalityId, repository]);
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export function DataSyncPanel({
     }, controller.signal).then(async (result) => {
       setCurrent(result);
       setRuns(await repository.listRuns(municipalityId));
+      setFeatures(await repository.listFeatures(municipalityId));
       setMessage(result.status === "completed" ? "Sincronización programada completada." : "La sincronización programada fue parcial.");
       const next = nextRun(frequency);
       if (next) localStorage.setItem(`atiy:data-sync:next:${municipalityId}`, next);
@@ -78,6 +81,7 @@ export function DataSyncPanel({
       });
       setCurrent(result);
       setRuns(await repository.listRuns(municipalityId));
+      setFeatures(await repository.listFeatures(municipalityId));
       setMessage(result.status === "completed"
         ? "Sincronización completada."
         : "Sincronización parcial: revisá los errores por fuente.");
@@ -120,6 +124,16 @@ export function DataSyncPanel({
         </label>
       </div>
       {message && <p aria-live="polite" className="mt-4 rounded-xl bg-[var(--accent-soft)] p-3 text-xs font-bold">{message}</p>}
+      {loading && (
+        <div role="status" aria-label="Progreso de sincronización" className="mt-4">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+            <div className="h-full w-2/3 animate-pulse rounded-full bg-[var(--accent)]" />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold text-[var(--muted)]">
+            <span>1. Descubrir fuentes</span><span>2. Descargar y validar</span><span>3. Comparar e importar</span>
+          </div>
+        </div>
+      )}
       {current && <div className="mt-5 space-y-3">
         {current.results.map((result) => <article key={result.dataset.id} className="rounded-xl border border-[var(--border)] p-4">
           <div className="flex flex-wrap justify-between gap-2"><strong className="text-sm">{result.dataset.name}</strong><span className="text-[10px] font-black">{result.status}</span></div>
@@ -135,9 +149,32 @@ export function DataSyncPanel({
           <p className="mt-2 text-[10px] text-[var(--muted)]">No existe una fuente pública verificable para las categorías pendientes de carga manual.</p>
         </div>
       </div>}
-      <p className="mt-5 text-[10px] text-[var(--muted)]">
-        {runs.length} ejecuciones registradas. Próxima consulta: {frequency === "manual" ? "bajo demanda" : nextRun(frequency)?.slice(0, 10)}.
-      </p>
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section>
+          <h4 className="text-sm font-black">Entidades importadas</h4>
+          <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+            {features.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--border)] p-4 text-xs text-[var(--muted)]">Todavía no hay entidades importadas para este municipio.</p> : features.slice(0, 20).map((feature) => (
+              <article key={`${feature.sourceDatasetId}-${feature.externalId}`} className="rounded-xl border border-[var(--border)] p-3">
+                <p className="text-xs font-extrabold">{feature.name}</p>
+                <p className="mt-1 text-[10px] text-[var(--muted)]">{feature.category} · {feature.sourceDatasetId}</p>
+              </article>
+            ))}
+          </div>
+          {features.length > 20 && <p className="mt-2 text-[10px] text-[var(--muted)]">Mostrando 20 de {features.length} registros.</p>}
+        </section>
+        <section>
+          <h4 className="text-sm font-black">Historial</h4>
+          <div className="mt-3 space-y-2">
+            {runs.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--border)] p-4 text-xs text-[var(--muted)]">Todavía no hay sincronizaciones registradas.</p> : runs.slice(0, 5).map((run) => (
+              <article key={run.id} className="rounded-xl border border-[var(--border)] p-3">
+                <div className="flex justify-between gap-3 text-xs"><strong>{new Date(run.startedAt).toLocaleString("es-AR")}</strong><span>{run.status}</span></div>
+                <p className="mt-1 text-[10px] text-[var(--muted)]">{run.results.length} fuentes · {run.results.reduce((total, item) => total + item.imported, 0)} importadas · {run.results.reduce((total, item) => total + item.discarded, 0)} descartadas</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+      <p className="mt-5 text-[10px] text-[var(--muted)]">Próxima consulta: {frequency === "manual" ? "bajo demanda" : nextRun(frequency)?.slice(0, 10)}.</p>
     </section>
   );
 }

@@ -5,3 +5,4 @@ export * from "./infrastructure/connectors";
 export * from "./infrastructure/parsers";
 export * from "./infrastructure/browser-infrastructure";
 export * from "./presentation/data-sync-panel";
+export * from "./presentation/data-sync-admin-screen";

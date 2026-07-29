@@ -79,7 +79,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
       </header>
 
       <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)]">
+        <aside className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)]">
           <label className="block">
             <span className="sr-only">Buscar entidades</span>
             <input
@@ -108,7 +108,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
             ))}
           </div>
           <div className="mt-2 max-h-72 space-y-1 overflow-y-auto xl:max-h-[calc(100vh-14rem)]">
-            {nodes.map((node) => (
+            {nodes.slice(0, 100).map((node) => (
               <EntityCard
                 key={node.id}
                 node={node}
@@ -117,13 +117,18 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
                 onSelect={selectEntity}
               />
             ))}
+            {nodes.length > 100 && (
+              <p className="p-3 text-center text-[10px] leading-4 text-[var(--muted)]">
+                Mostrando 100 de {nodes.length}. Usá la búsqueda para encontrar una entidad específica.
+              </p>
+            )}
             {nodes.length === 0 && (
               <p className="p-4 text-center text-xs leading-5 text-[var(--muted)]">No hay entidades que coincidan con la búsqueda.</p>
             )}
           </div>
         </aside>
 
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)]">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)]">
           <EntityHeader context={context} />
           <div className="grid gap-5 p-4 sm:p-6 2xl:grid-cols-[minmax(0,1fr)_270px]">
             <main className="min-w-0 space-y-6">

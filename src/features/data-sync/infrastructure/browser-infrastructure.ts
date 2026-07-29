@@ -3,11 +3,21 @@ import type { DatasetDownloader, SyncRepository, TerritorialFilter } from "../po
 
 export class HttpDatasetDownloader implements DatasetDownloader {
   async download(dataset: DiscoveredDataset, signal?: AbortSignal): Promise<ArrayBuffer> {
-    const response = await fetch(dataset.downloadUrl, {
+    if (dataset.downloadUrl.startsWith("/")) {
+      const response = await fetch(dataset.downloadUrl, { signal, cache: "no-store" });
+      if (!response.ok) throw new Error(`La caché territorial respondió HTTP ${response.status}.`);
+      return response.arrayBuffer();
+    }
+    const response = await fetch("/api/territorial-sync/download", {
+      method: "POST",
       signal,
-      headers: { Accept: "application/geo+json, application/json, text/csv, application/octet-stream" },
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: dataset.downloadUrl }),
     });
-    if (!response.ok) throw new Error(`${dataset.publisher} respondió HTTP ${response.status}.`);
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      throw new Error(payload?.error ?? `${dataset.publisher} respondió HTTP ${response.status}.`);
+    }
     return response.arrayBuffer();
   }
 }
@@ -29,9 +39,14 @@ export class BoundsTerritorialFilter implements TerritorialFilter {
     const municipality = selection.municipalityName.toLocaleLowerCase("es-AR");
     const province = selection.provinceName.toLocaleLowerCase("es-AR");
     return features.filter((feature) => {
+      if (feature.sourceDatasetId.startsWith("verified-hierarchy-")) return true;
       if (!pointInsideBounds(feature.geometry, selection.bounds)) return false;
       if (feature.sourceDatasetId.startsWith("osm-")) return Boolean(selection.bounds);
       const searchable = JSON.stringify(feature.properties).toLocaleLowerCase("es-AR");
+      if (
+        feature.sourceDatasetId.includes("4becb4b7-0a21-4fef-8f2c-30df7f345a01")
+        || feature.sourceDatasetId.startsWith("ign-arcgis-")
+      ) return searchable.includes(municipality);
       if (selection.georefId && searchable.includes(selection.georefId.toLocaleLowerCase("es-AR"))) return true;
       if (feature.category === "municipality") {
         return feature.name.toLocaleLowerCase("es-AR").includes(municipality)
@@ -74,5 +89,8 @@ export class BrowserSyncRepository implements SyncRepository {
   }
   async listRuns(municipalityId: string) {
     return this.read<TerritorialSyncRun>(this.runsKey(municipalityId));
+  }
+  async listFeatures(municipalityId: string) {
+    return this.read<NormalizedFeature>(`atiy:data-sync:features:${municipalityId}`);
   }
 }
