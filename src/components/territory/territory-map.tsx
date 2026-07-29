@@ -296,8 +296,8 @@ export function TerritoryMap({
           pathOptions={{
             color: layerColors.get(neighborhood.level === "locality" ? "localities" : "neighborhoods"),
             fillColor: layerColors.get(neighborhood.level === "locality" ? "localities" : "neighborhoods"),
-            fillOpacity: view.selectedNeighborhood?.neighborhood.id === neighborhood.id ? 0.18 : 0.07,
-            weight: view.selectedNeighborhood?.neighborhood.id === neighborhood.id ? 3.5 : neighborhood.level === "locality" ? 2.25 : 1.25,
+            fillOpacity: view.selectedNeighborhood?.neighborhood.id === neighborhood.id ? 0.14 : neighborhood.level === "locality" ? 0.055 : 0.018,
+            weight: view.selectedNeighborhood?.neighborhood.id === neighborhood.id ? 2.5 : neighborhood.level === "locality" ? 1.4 : 0.8,
           }}
           eventHandlers={{ click: (event) => { event.originalEvent.stopPropagation(); onSelectNeighborhood(neighborhood.id); } }}
         />
@@ -312,9 +312,9 @@ export function TerritoryMap({
           pathOptions={{
             color: layerColors.get("circuits"),
             fillColor: layerColors.get("circuits"),
-            fillOpacity: selectedCircuitIds.has(circuit.id) || view.selectedCircuit?.circuit.id === circuit.id ? 0.2 : view.selectedCircuit ? 0.012 : 0.035,
+            fillOpacity: selectedCircuitIds.has(circuit.id) || view.selectedCircuit?.circuit.id === circuit.id ? 0.12 : view.selectedCircuit ? 0.006 : 0.014,
             opacity: view.selectedCircuit && view.selectedCircuit.circuit.id !== circuit.id && !selectedCircuitIds.has(circuit.id) ? 0.22 : 1,
-            weight: selectedCircuitIds.has(circuit.id) || view.selectedCircuit?.circuit.id === circuit.id ? 4 : 2,
+            weight: selectedCircuitIds.has(circuit.id) || view.selectedCircuit?.circuit.id === circuit.id ? 2.5 : 0.8,
           }}
           eventHandlers={{
             click: (event) => { event.originalEvent.stopPropagation(); onSelectCircuit?.(circuit.id); },

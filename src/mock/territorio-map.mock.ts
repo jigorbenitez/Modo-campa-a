@@ -89,6 +89,7 @@ export const territoryElectoralCircuits: TerritoryCircuit[] =
       source: feature.properties.source,
       sourceUrl: feature.properties.sourceUrl,
       license: feature.properties.license,
+      confidence: "verified",
     };
   });
 
@@ -175,6 +176,8 @@ function territorialArea(
     ],
     updatedAt,
     source: `${feature.properties.source} · ${feature.properties.sourceUrl}`,
+    sourceUrl: feature.properties.sourceUrl,
+    confidence: "verified",
   };
 }
 
@@ -204,6 +207,8 @@ function institution(input: FeatureInput): TerritoryFeature {
     source: officialSourceUrl
       ? `Municipio de San Fernando · ${officialSourceUrl} · OpenStreetMap · ${sourceUrl}`
       : `OpenStreetMap · ${sourceUrl}`,
+    sourceUrl: officialSourceUrl ?? sourceUrl,
+    confidence: officialSourceUrl ? "verified" : "high",
     status: "active",
     participants: [],
     problems: [],

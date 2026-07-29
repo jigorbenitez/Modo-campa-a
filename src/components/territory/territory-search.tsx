@@ -23,7 +23,7 @@ export function TerritorySearch({
   onSelect: (result: TerritorySearchResult) => void;
 }) {
   return (
-    <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)]/95 p-2 shadow-lg backdrop-blur">
+    <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)]/95 p-1.5 shadow-lg backdrop-blur">
       <div className="grid grid-cols-[1fr_auto] gap-2">
         <input
           type="search"
@@ -31,13 +31,13 @@ export function TerritorySearch({
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Dirección, barrio, circuito o institución"
           aria-label="Buscar en el territorio"
-          className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+          className="min-w-0 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
         />
         <select
           value={category}
           onChange={(event) => onCategoryChange(event.target.value)}
           aria-label="Filtrar por categoría"
-          className="max-w-36 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-xs font-bold"
+          className="max-w-28 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-[10px] font-bold"
         >
           <option value="all">Todas</option>
           {categories.map((item) => <option key={item} value={item}>{item}</option>)}

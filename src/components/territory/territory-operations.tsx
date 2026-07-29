@@ -15,13 +15,16 @@ import { mockTerritorySnapshot, territoryCategories } from "@/mock";
 import { FloatingMetrics } from "./floating-metrics";
 import { LayerControl } from "./layer-control";
 import { MapLegend } from "./map-legend";
-import { MapToolbar } from "./map-toolbar";
 import { TimelineSlider } from "./timeline-slider";
 import { TerritorySidebar } from "./territory-sidebar";
 import { TerritorySearch } from "./territory-search";
 import type { TerritorySearchResult } from "./territory-search";
 import { GisToolbox } from "./gis-toolbox";
 import type { GisTool } from "./gis-toolbox";
+import { MapCommandMenu } from "./map-command-menu";
+import type { MapPanel } from "./map-command-menu";
+import { cartographicModes, MapModeSwitcher } from "./map-mode-switcher";
+import type { CartographicMode } from "./map-mode-switcher";
 
 const TerritoryMap = dynamic(
   () => import("./territory-map").then((module) => module.TerritoryMap),
@@ -39,6 +42,7 @@ const TerritoryMap = dynamic(
 const viewService = new TerritoryViewService();
 const emptyActivityRecords: ActivityRecord[] = [];
 const LAYERS_STORAGE_KEY = "atiy:territory:layers:v1";
+const MODE_STORAGE_KEY = "atiy:territory:mode:v1";
 const CUSTOM_FEATURES_KEY = "atiy:territory:custom-features:v1";
 
 export function TerritoryOperations() {
@@ -71,13 +75,19 @@ export function TerritoryOperations() {
       ],
     };
   }, [customFeatures, hasStoredJournal, journalRecords]);
+  const [cartographicMode, setCartographicMode] = useState<CartographicMode>(() => {
+    if (requestedCircuitId) return "electoral";
+    if (typeof window === "undefined") return "territorial";
+    const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
+    return stored && stored in cartographicModes ? stored as CartographicMode : "territorial";
+  });
   const [enabledLayers, setEnabledLayers] = useState<Set<TerritoryLayerId>>(
     () => {
-      const defaults = mockTerritorySnapshot.layers.filter((layer) => layer.enabledByDefault).map((layer) => layer.id);
+      const defaults = [...cartographicModes[cartographicMode].layers];
       if (requestedCircuitId && !defaults.includes("circuits")) defaults.push("circuits");
       if (typeof window === "undefined") return new Set(defaults);
       const stored = window.localStorage.getItem(LAYERS_STORAGE_KEY);
-      const valid = new Set(mockTerritorySnapshot.layers.map((layer) => layer.id));
+      const valid = new Set(defaults);
       return new Set(stored ? (JSON.parse(stored) as TerritoryLayerId[]).filter((id) => valid.has(id)) : defaults);
     },
   );
@@ -96,6 +106,8 @@ export function TerritoryOperations() {
   const [newPointTitle, setNewPointTitle] = useState("");
   const [newPointType, setNewPointType] = useState<"institution" | "activity" | "commitment" | "proposal" | "photo" | "document">("institution");
   const [newPointArea, setNewPointArea] = useState("");
+  const [activePanel, setActivePanel] = useState<MapPanel>(null);
+  const [contextPanelOpen, setContextPanelOpen] = useState(Boolean(requestedActivityId || requestedEntityId || requestedAreaId || requestedCircuitId));
 
   const periodId = snapshot.periods[periodIndex]?.id ?? "today";
   const requestedFeature = useMemo(
@@ -141,6 +153,9 @@ export function TerritoryOperations() {
   useEffect(() => {
     window.localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...enabledLayers]));
   }, [enabledLayers]);
+  useEffect(() => {
+    window.localStorage.setItem(MODE_STORAGE_KEY, cartographicMode);
+  }, [cartographicMode]);
 
   const searchResults = useMemo<TerritorySearchResult[]>(() => {
     const term = search.trim().toLocaleLowerCase("es-AR");
@@ -239,6 +254,8 @@ export function TerritoryOperations() {
         setSelectedNeighborhoodId(undefined);
         setSelectedCircuitId(undefined);
         setResetToken((value) => value + 1);
+        setContextPanelOpen(false);
+        setActivePanel(null);
       }
     }
     window.addEventListener("keydown", handleEscape);
@@ -261,6 +278,7 @@ export function TerritoryOperations() {
     setSelectedNeighborhoodId(id);
     setSelectedCircuitId(undefined);
     setSelectedFeature(undefined);
+    setContextPanelOpen(true);
   }
 
   function selectCircuit(id: string) {
@@ -280,6 +298,7 @@ export function TerritoryOperations() {
     setSelectedCircuitId(id);
     setSelectedNeighborhoodId(undefined);
     setSelectedFeature(undefined);
+    setContextPanelOpen(true);
   }
 
   function selectFeature(feature: TerritoryFeature) {
@@ -287,6 +306,7 @@ export function TerritoryOperations() {
     setSelectedFeature(feature);
     setSelectedNeighborhoodId(feature.barrioId);
     setSelectedCircuitId(feature.circuitId);
+    setContextPanelOpen(true);
   }
 
   function changePeriod(index: number) {
@@ -303,6 +323,7 @@ export function TerritoryOperations() {
     setSelectedNeighborhoodId(undefined);
     setSelectedCircuitId(undefined);
     setResetToken((value) => value + 1);
+    setContextPanelOpen(false);
   }
 
   function clearMarkerSelection() {
@@ -311,45 +332,24 @@ export function TerritoryOperations() {
     setSelectedNeighborhoodId(undefined);
     setSelectedCircuitId(undefined);
     setResetToken((value) => value + 1);
+    setContextPanelOpen(false);
+  }
+
+  function changeCartographicMode(mode: CartographicMode) {
+    setCartographicMode(mode);
+    setEnabledLayers(new Set(cartographicModes[mode].layers));
+    clearMarkerSelection();
+    setActivePanel(null);
   }
 
   return (
     <div className={presentationMode ? "bg-[var(--background)]" : undefined}>
-      {!presentationMode && (
-        <header className="mx-auto max-w-[1600px] px-4 pb-5 pt-7 sm:px-6 lg:px-8">
-          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">
-                Centro de Operaciones Territorial
-              </p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">Mapa Vivo</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                Una lectura conectada de la base territorial y las instituciones de San Fernando.
-              </p>
-            </div>
-            <MapToolbar presentationMode={presentationMode} onTogglePresentation={() => setPresentationMode(true)} onReset={resetMap} onClearSelection={clearMarkerSelection} hasSelection={Boolean(safeSelectedFeature || safeSelection.neighborhoodId || safeSelectedCircuitId)} />
-          </div>
-        </header>
-      )}
-
-      <div
-        className={`mx-auto max-w-[1600px] ${
-          presentationMode ? "h-[calc(100vh-4rem)] p-0" : "px-0 pb-8 sm:px-4 lg:px-8"
-        }`}
-      >
-        {!presentationMode && (
-          <div className="px-4 pb-3 lg:hidden">
-            <LayerControl layers={snapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
-          </div>
-        )}
-
+      <div className="h-[calc(100dvh-4rem)] min-h-[560px]">
         <div
-          className={`overflow-hidden border-y border-[var(--border)] bg-[var(--surface)] sm:border sm:shadow-[var(--shadow)] ${
-            presentationMode ? "h-full" : "sm:rounded-3xl"
-          }`}
+          className="h-full overflow-hidden bg-[var(--surface)]"
         >
-          <div className={`grid h-full ${presentationMode ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_360px]"}`}>
-            <div className={`relative ${presentationMode ? "h-full" : "h-[68vh] min-h-[590px] lg:h-[calc(100vh-13rem)]"}`}>
+          <div className="relative grid h-full grid-cols-1">
+            <div className="relative h-full min-h-[560px]">
               <TerritoryMap
                 center={[snapshot.center.latitude, snapshot.center.longitude]}
                 view={view}
@@ -367,19 +367,25 @@ export function TerritoryOperations() {
                 onCreatePoint={setPendingPoint}
               />
 
-              <div className="pointer-events-none absolute inset-x-3 top-3 z-[500] sm:inset-x-4 sm:top-4">
+              {activePanel === "metrics" && <div className="pointer-events-none absolute inset-x-3 top-32 z-[500] sm:inset-x-4">
                 <div className="pointer-events-auto">
                   <FloatingMetrics stats={view.stats} />
                 </div>
-              </div>
+              </div>}
 
-              {!presentationMode && <div className="absolute left-3 top-[9.4rem] z-[510] w-[calc(100%-8rem)] sm:left-4 sm:w-96 lg:top-32">
+              {!presentationMode && <div className="absolute left-3 top-3 z-[510] sm:left-4 sm:top-4">
+                <MapModeSwitcher value={cartographicMode} onChange={changeCartographicMode} />
+              </div>}
+
+              {!presentationMode && <div className="absolute left-3 top-16 z-[510] w-[calc(100%-5rem)] sm:left-4 sm:w-80">
                 <TerritorySearch query={search} category={category} categories={territoryCategories} results={searchResults} onQueryChange={setSearch} onCategoryChange={setCategory} onSelect={selectSearchResult} />
               </div>}
 
-              <div className="absolute right-3 top-[9.4rem] z-[500] sm:right-4 lg:top-32">
-                <MapToolbar
+              <div className="absolute right-3 top-3 z-[620] sm:right-4 sm:top-4">
+                <MapCommandMenu
+                  activePanel={activePanel}
                   presentationMode={presentationMode}
+                  onPanel={setActivePanel}
                   onTogglePresentation={() => setPresentationMode((value) => !value)}
                   onReset={resetMap}
                   onClearSelection={clearMarkerSelection}
@@ -387,7 +393,7 @@ export function TerritoryOperations() {
                 />
               </div>
 
-              {!presentationMode && <div className="absolute right-3 top-[13rem] z-[505] sm:right-4 lg:top-44">
+              {!presentationMode && activePanel === "gis" && <div className="absolute right-3 top-16 z-[505] sm:right-4">
                 <GisToolbox
                   activeTool={activeTool}
                   onToolChange={setActiveTool}
@@ -412,21 +418,21 @@ export function TerritoryOperations() {
 
               {!presentationMode && (
                 <>
-                  <div className="absolute left-4 top-64 z-[500] hidden w-48 lg:block">
-                    <LayerControl layers={snapshot.layers} enabled={enabledLayers} onToggle={toggleLayer} />
-                  </div>
-                  <div className="absolute bottom-4 left-1/2 z-[500] hidden w-[min(34rem,65%)] -translate-x-1/2 lg:block">
+                  {activePanel === "layers" && <div className="absolute bottom-4 left-3 top-32 z-[500] w-[min(20rem,calc(100%-1.5rem))] overflow-y-auto sm:left-4">
+                    <LayerControl layers={snapshot.layers.filter((layer) => cartographicModes[cartographicMode].layers.includes(layer.id))} enabled={enabledLayers} onToggle={toggleLayer} />
+                  </div>}
+                  {activePanel === "history" && <div className="absolute bottom-4 left-1/2 z-[500] w-[min(34rem,calc(100%-1.5rem))] -translate-x-1/2">
                     <TimelineSlider periods={snapshot.periods} value={periodIndex} onChange={changePeriod} />
-                  </div>
-                  <div className="absolute bottom-4 right-4 z-[500] hidden xl:block">
+                  </div>}
+                  {activePanel === "legend" && <div className="absolute bottom-4 left-1/2 z-[500] max-w-[calc(100%-1.5rem)] -translate-x-1/2">
                     <MapLegend layers={snapshot.layers} enabled={enabledLayers} />
-                  </div>
+                  </div>}
                 </>
               )}
             </div>
 
-            {!presentationMode && (
-              <div className="max-h-[70vh] border-t border-[var(--border)] lg:max-h-none lg:border-l lg:border-t-0">
+            {!presentationMode && contextPanelOpen && Boolean(safeSelectedFeature || safeSelection.neighborhoodId || safeSelectedCircuitId) && (
+              <div className="absolute inset-x-0 bottom-0 z-[600] max-h-[72dvh] overflow-y-auto rounded-t-3xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl sm:inset-y-3 sm:left-auto sm:right-3 sm:max-h-none sm:w-[min(380px,38vw)] sm:rounded-2xl">
                 <TerritorySidebar
                   neighborhoods={snapshot.neighborhoods}
                   circuits={snapshot.circuits}
@@ -444,11 +450,6 @@ export function TerritoryOperations() {
           </div>
         </div>
 
-        {!presentationMode && (
-          <div className="px-4 pt-3 lg:hidden">
-            <TimelineSlider periods={snapshot.periods} value={periodIndex} onChange={changePeriod} />
-          </div>
-        )}
       </div>
     </div>
   );

@@ -65,6 +65,8 @@ export interface TerritoryFeature {
   status: string;
   updatedAt: ISODateTime;
   source: string;
+  sourceUrl?: string;
+  confidence?: "verified" | "high" | "medium" | "low";
   priority?: "low" | "medium" | "high" | "critical";
   participants: string[];
   problems: TerritoryRelatedItem[];
@@ -98,6 +100,8 @@ export interface TerritoryNeighborhood {
   indicators: TerritoryIndicator[];
   updatedAt: ISODateTime;
   source: string;
+  sourceUrl?: string;
+  confidence?: "verified" | "high" | "medium" | "low";
 }
 
 export interface TerritoryCircuit {
@@ -111,6 +115,7 @@ export interface TerritoryCircuit {
   source: string;
   sourceUrl: string;
   license: string;
+  confidence?: "verified" | "high" | "medium" | "low";
 }
 
 export interface TerritoryPeriod {

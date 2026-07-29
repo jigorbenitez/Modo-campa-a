@@ -66,6 +66,7 @@ function FeatureDetails({ feature, onClose }: { feature: TerritoryFeature; onClo
         <dl className="mt-4 grid gap-2 text-xs text-[var(--muted)]">
           <div className="flex justify-between gap-3"><dt>Localidad</dt><dd className="font-bold text-[var(--foreground)]">{feature.localidad}</dd></div>
           <div className="flex justify-between gap-3"><dt>Fuente</dt><dd className="text-right font-bold text-[var(--foreground)]">{feature.source}</dd></div>
+          <div className="flex justify-between gap-3"><dt>Confianza</dt><dd className="font-bold text-[var(--foreground)]">{feature.confidence === "verified" ? "Verificada" : feature.confidence === "high" ? "Alta" : "Sin evaluar"}</dd></div>
           <div className="flex justify-between gap-3"><dt>Actualización</dt><dd className="font-bold text-[var(--foreground)]">{new Intl.DateTimeFormat("es-AR").format(new Date(feature.updatedAt))}</dd></div>
         </dl>
       </div>
