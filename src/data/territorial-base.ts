@@ -489,7 +489,7 @@ export const territoryCategories = [
   "Punto de interés", "Polideportivo",
 ] as const;
 
-export const mockTerritorySnapshot: TerritorySnapshot = {
+export const territorialBaseSnapshot: TerritorySnapshot = {
   municipioId,
   municipalityName: "San Fernando",
   center: { latitude: -34.4431, longitude: -58.5579 },
@@ -499,6 +499,6 @@ export const mockTerritorySnapshot: TerritorySnapshot = {
   layers: territoryLayers,
   neighborhoods: territoryNeighborhoods,
   circuits: territoryElectoralCircuits,
-  features: territoryFeatures,
-  periods: [{ id: "today", label: "Hoy", cutoff: "2026-07-28" }],
+  features: [],
+  periods: [{ id: "today", label: "Hoy", cutoff: "2026-07-29" }],
 };

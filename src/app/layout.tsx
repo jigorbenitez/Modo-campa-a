@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { AppShell } from "@/components/layout/app-shell";
+import { createTerritorialEntityRepository } from "@/features/territorial-engine/infrastructure/repository-factory.server";
+import { TerritorialRegistryProvider } from "@/features/territorial-engine";
+import { getPlatformContext } from "@/infrastructure/supabase/platform-context";
 import "./globals.css";
 
 const description = "Inteligencia para transformar el territorio.";
@@ -42,10 +45,18 @@ export const viewport: Viewport = {
   colorScheme: "light dark",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const context = await getPlatformContext();
+  const repository = await createTerritorialEntityRepository();
+  const municipalityId = context?.user.municipioId ?? "municipio-san-fernando";
+  const registry = await repository.search(municipalityId, { pageSize: 5000 });
   return (
     <html lang="es" suppressHydrationWarning>
-      <body><AppShell>{children}</AppShell></body>
+      <body>
+        <TerritorialRegistryProvider entities={registry.items}>
+          <AppShell>{children}</AppShell>
+        </TerritorialRegistryProvider>
+      </body>
     </html>
   );
 }

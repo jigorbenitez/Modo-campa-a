@@ -45,7 +45,9 @@ export function TerritorySearch({
       </div>
       {query.trim() && (
         <div className="mt-2 max-h-48 overflow-y-auto">
-          {results.length ? results.slice(0, 10).map((result) => (
+          {results.length ? <>
+            <p className="px-3 py-1 text-[10px] font-bold text-[var(--muted)]">{results.length} resultados</p>
+            {results.map((result) => (
             <button
               key={`${result.kind}-${result.id}`}
               type="button"
@@ -55,7 +57,8 @@ export function TerritorySearch({
               <span className="block font-extrabold">{result.title}</span>
               <span className="text-[var(--muted)]">{result.subtitle}</span>
             </button>
-          )) : <p className="px-3 py-2 text-xs text-[var(--muted)]">Sin resultados.</p>}
+            ))}
+          </> : <p className="px-3 py-2 text-xs text-[var(--muted)]">Sin resultados.</p>}
         </div>
       )}
     </div>

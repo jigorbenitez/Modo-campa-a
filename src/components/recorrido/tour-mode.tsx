@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import {
   territoryElectoralCircuits,
   territoryNeighborhoods,
-} from "@/mock/territorio-map.mock";
+} from "@/data/territorial-base";
 import {
   saveTourActivity,
   type CaptureKind,

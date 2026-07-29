@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { mockTerritorySnapshot } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
+import { territorialEntityToMapFeature, useTerritorialEntities } from "@/features/territorial-engine";
 import {
   buildPriorityInputs,
   DecisionService,
@@ -21,7 +22,7 @@ type View = "decisions" | "coverage" | "planner" | "configuration";
 
 function readConfiguration() {
   if (typeof window === "undefined") return defaultPriorityConfiguration;
-  const value = localStorage.getItem(`atiy:priority-config:${mockTerritorySnapshot.municipioId}:v1`);
+  const value = localStorage.getItem(`atiy:priority-config:${territorialBaseSnapshot.municipioId}:v1`);
   if (!value) return defaultPriorityConfiguration;
   try {
     return JSON.parse(value) as PriorityConfiguration;
@@ -31,27 +32,39 @@ function readConfiguration() {
 }
 
 export function IntelligenceCenter() {
+  const territorialEntities = useTerritorialEntities();
+  const territorialSnapshot = useMemo(() => ({
+    ...territorialBaseSnapshot,
+    features: territorialEntities
+      .map((entity) => territorialEntityToMapFeature(
+        entity,
+        territorialBaseSnapshot.neighborhoods,
+        territorialBaseSnapshot.circuits,
+      ))
+      .filter((feature) => feature !== null),
+  }), [territorialEntities]);
   const [view, setView] = useState<View>("decisions");
   const [configuration, setConfiguration] = useState<PriorityConfiguration>(readConfiguration);
   const [statuses, setStatuses] = useState<Record<string, DecisionStatus>>({});
   const [availableMinutes, setAvailableMinutes] = useState(120);
   const [areaId, setAreaId] = useState("");
   const [auditCount, setAuditCount] = useState(0);
+  const [decisionQuery, setDecisionQuery] = useState("");
 
   const model = useMemo(() => {
-    const coverage = new TerritorialCoverageService().calculate(mockTerritorySnapshot, referenceDate);
-    const inputs = buildPriorityInputs(mockTerritorySnapshot, coverage, referenceDate);
+    const coverage = new TerritorialCoverageService().calculate(territorialSnapshot, referenceDate);
+    const inputs = buildPriorityInputs(territorialSnapshot, coverage, referenceDate);
     const priorities = new TerritorialPriorityEngine().calculateAll(inputs, configuration, referenceDate);
     const decisions = new DecisionService().generate(priorities, referenceDate);
     return { coverage, inputs, priorities, decisions };
-  }, [configuration]);
+  }, [configuration, territorialSnapshot]);
   const plan = useMemo(
     () => new TerritorialPlannerService().plan(
-      { availableMinutes, areaId: areaId || undefined, center: mockTerritorySnapshot.center },
+      { availableMinutes, areaId: areaId || undefined, center: territorialBaseSnapshot.center },
       model.decisions.filter((decision) => (statuses[decision.id] ?? "pending") === "pending"),
-      mockTerritorySnapshot.features,
+      territorialSnapshot.features,
     ),
-    [areaId, availableMinutes, model.decisions, statuses],
+    [areaId, availableMinutes, model.decisions, statuses, territorialSnapshot.features],
   );
 
   function changeStatus(id: string, status: DecisionStatus) {
@@ -127,13 +140,28 @@ export function IntelligenceCenter() {
 
       {view === "decisions" && (
         <section className="mt-6">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Summary label="Requieren atención" value={model.decisions.filter((item) => ["critical", "high"].includes(item.priority.level)).length} />
             <Summary label="Cobertura crítica" value={model.coverage.filter((item) => item.level === "critical").length} />
             <Summary label="Acciones pendientes" value={model.decisions.filter((item) => (statuses[item.id] ?? "pending") === "pending").length} />
+            <Summary label="Entidades territoriales" value={territorialEntities.length} />
           </div>
+          <label className="mt-5 block">
+            <span className="sr-only">Buscar registro en decisiones</span>
+            <input
+              type="search"
+              value={decisionQuery}
+              onChange={(event) => setDecisionQuery(event.target.value)}
+              placeholder="Buscar registro en decisiones"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]"
+            />
+          </label>
           <div className="mt-5 space-y-3">
-            {model.decisions.slice(0, 15).map((decision, index) => {
+            {model.decisions.filter((decision) =>
+              !decisionQuery.trim()
+              || `${decision.title} ${decision.reason}`.toLocaleLowerCase("es-AR")
+                .includes(decisionQuery.trim().toLocaleLowerCase("es-AR")),
+            ).slice(0, decisionQuery.trim() ? Number.MAX_SAFE_INTEGER : 50).map((decision, index) => {
               const status = statuses[decision.id] ?? "pending";
               return (
                 <article key={decision.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
@@ -152,6 +180,14 @@ export function IntelligenceCenter() {
                       <div className="mt-3 text-xs text-[var(--muted)]">{decision.estimatedMinutes} min estimados</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      {territorialEntities.some((entity) => entity.id === decision.priority.entityId) && (
+                        <Link
+                          href={`/territorio/entidades/${encodeURIComponent(decision.priority.entityId)}`}
+                          className="rounded-lg border border-[var(--border)] px-3 py-2 text-[10px] font-extrabold text-[var(--accent-strong)]"
+                        >
+                          Abrir registro
+                        </Link>
+                      )}
                       {(["completed", "postponed", "discarded"] as DecisionStatus[]).map((next) => (
                         <button key={next} type="button" onClick={() => changeStatus(decision.id, status === next ? "pending" : next)}
                           className="rounded-lg border border-[var(--border)] px-3 py-2 text-[10px] font-extrabold">
@@ -196,7 +232,7 @@ export function IntelligenceCenter() {
             <label className="mt-4 block text-xs font-bold">Localidad o barrio
               <select value={areaId} onChange={(event) => setAreaId(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-transparent p-3">
                 <option value="">Todo San Fernando</option>
-                {mockTerritorySnapshot.neighborhoods.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
+                {territorialBaseSnapshot.neighborhoods.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
               </select>
             </label>
             <p className="mt-4 text-xs leading-5 text-[var(--muted)]">{plan.explanation}</p>

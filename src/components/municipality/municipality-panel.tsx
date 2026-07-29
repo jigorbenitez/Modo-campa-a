@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   territoryElectoralCircuits,
-  territoryFeatures,
-} from "@/mock/territorio-map.mock";
+} from "@/data/territorial-base";
+import { useTerritorialEntities } from "@/features/territorial-engine";
 
 interface MunicipalityState {
   name: string;
@@ -55,6 +55,7 @@ const initialState: MunicipalityState = {
 };
 
 export function MunicipalityPanel() {
+  const territorialEntities = useTerritorialEntities();
   const [state, setState] = useState<MunicipalityState>(initialState);
   const [saved, setSaved] = useState(false);
 
@@ -101,7 +102,7 @@ export function MunicipalityPanel() {
           ["Localidades", state.localities.length],
           ["Barrios verificados", state.neighborhoods.length],
           ["Circuitos oficiales", territoryElectoralCircuits.length],
-          ["Instituciones geolocalizadas", territoryFeatures.length],
+          ["Entidades geolocalizadas", territorialEntities.length],
           ["Secretarías", state.secretariats.length],
         ].map(([label, value]) => (
           <article key={label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]">
@@ -167,7 +168,7 @@ export function MunicipalityPanel() {
         <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
           <h2 className="text-lg font-extrabold">Instituciones</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {territoryFeatures.length} puntos con coordenadas y fuente disponibles en la base territorial.
+            {territorialEntities.length} puntos con coordenadas y fuente disponibles en el repositorio territorial.
           </p>
           <Link href="/territorio/entidades" className="mt-4 inline-flex text-xs font-extrabold text-[var(--accent)]">Gestionar instituciones →</Link>
         </article>

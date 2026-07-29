@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import {
-  EmptyTerritorialEntityRepository,
   TerritorialEntityDetail,
 } from "@/features/territorial-engine";
+import { createTerritorialEntityRepository } from "@/features/territorial-engine/infrastructure/repository-factory.server";
+import { getPlatformContext } from "@/infrastructure/supabase/platform-context";
 
 export const metadata: Metadata = {
   title: "Ficha territorial",
@@ -15,7 +16,11 @@ export default async function TerritorialEntityPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const repository = new EmptyTerritorialEntityRepository();
-  const entity = await repository.findById("municipio-san-fernando", id);
+  const context = await getPlatformContext();
+  const repository = await createTerritorialEntityRepository();
+  const entity = await repository.findById(
+    context?.user.municipioId ?? "municipio-san-fernando",
+    id,
+  );
   return <TerritorialEntityDetail entity={entity} />;
 }

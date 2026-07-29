@@ -5,13 +5,14 @@ import { useState } from "react";
 import { sanFernandoPublicDatasets } from "./catalog";
 import type { PublicDataset } from "./domain";
 import { TerritorialDataCoverageService } from "./coverage-service";
-import { mockTerritorySnapshot } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
 import { DataSyncPanel } from "@/features/data-sync";
+import { territorialEntityToMapFeature, useTerritorialEntities } from "@/features/territorial-engine";
 
 const statusLabel = { verified: "Verificado", pending: "Pendiente", update_available: "Actualización", rejected: "Rechazado" };
 
 function activeMunicipalityBounds(): [number, number, number, number] | undefined {
-  const points = mockTerritorySnapshot.municipalityBoundaries.flat();
+  const points = territorialBaseSnapshot.municipalityBoundaries.flat();
   if (!points.length) return undefined;
   const longitudes = points.map((point) => point.longitude);
   const latitudes = points.map((point) => point.latitude);
@@ -19,9 +20,15 @@ function activeMunicipalityBounds(): [number, number, number, number] | undefine
 }
 
 export function DataHub({ municipalityId, municipalityName = "Municipio" }: { municipalityId: string; municipalityName?: string }) {
+  const entities = useTerritorialEntities();
   const datasets = sanFernandoPublicDatasets.filter((dataset) => dataset.municipalityId === municipalityId);
   const [selected, setSelected] = useState<PublicDataset | undefined>(datasets[0]);
-  const coverage = new TerritorialDataCoverageService().calculate(mockTerritorySnapshot);
+  const coverage = new TerritorialDataCoverageService().calculate({
+    ...territorialBaseSnapshot,
+    features: entities
+      .map((entity) => territorialEntityToMapFeature(entity, territorialBaseSnapshot.neighborhoods, territorialBaseSnapshot.circuits))
+      .filter((feature) => feature !== null),
+  });
 
   return (
     <section className="mt-8 border-t border-[var(--border)] pt-8">

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { mockTerritorySnapshot } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
+import { territorialEntityToMapFeature, useTerritorialEntities } from "@/features/territorial-engine";
 import {
   buildPriorityInputs,
   defaultPriorityConfiguration,
@@ -33,18 +34,25 @@ function readScenarios(): SavedScenario[] {
 }
 
 export function ImpactSimulator() {
-  const [targetId, setTargetId] = useState(mockTerritorySnapshot.circuits[0]?.id ?? "");
+  const entities = useTerritorialEntities();
+  const snapshot = useMemo(() => ({
+    ...territorialBaseSnapshot,
+    features: entities
+      .map((entity) => territorialEntityToMapFeature(entity, territorialBaseSnapshot.neighborhoods, territorialBaseSnapshot.circuits))
+      .filter((feature) => feature !== null),
+  }), [entities]);
+  const [targetId, setTargetId] = useState(territorialBaseSnapshot.circuits[0]?.id ?? "");
   const [type, setType] = useState<SimulationActionType>("tour");
   const [quantity, setQuantity] = useState(1);
   const [optimizerMinutes, setOptimizerMinutes] = useState(120);
   const [actions, setActions] = useState<SimulationAction[]>([]);
   const [scenarios, setScenarios] = useState<SavedScenario[]>(readScenarios);
   const base = useMemo(() => {
-    const coverage = new TerritorialCoverageService().calculate(mockTerritorySnapshot, referenceDate);
-    const inputs = buildPriorityInputs(mockTerritorySnapshot, coverage, referenceDate);
+    const coverage = new TerritorialCoverageService().calculate(snapshot, referenceDate);
+    const inputs = buildPriorityInputs(snapshot, coverage, referenceDate);
     const priorities = new TerritorialPriorityEngine().calculateAll(inputs, defaultPriorityConfiguration, referenceDate);
     return { coverage, inputs, priorities };
-  }, []);
+  }, [snapshot]);
   const input = base.inputs.find((item) => item.entityId === targetId);
   const coverage = base.coverage.find((item) => item.entityId === targetId);
   const priority = base.priorities.find((item) => item.entityId === targetId);
@@ -58,7 +66,7 @@ export function ImpactSimulator() {
 
   function save() {
     if (!result) return;
-    const next = [{ id: `scenario-${Date.now()}`, municipalityId: mockTerritorySnapshot.municipioId, name: `Escenario ${scenarios.length + 1}`, result, createdAt: new Date().toISOString() }, ...scenarios];
+    const next = [{ id: `scenario-${Date.now()}`, municipalityId: snapshot.municipioId, name: `Escenario ${scenarios.length + 1}`, result, createdAt: new Date().toISOString() }, ...scenarios];
     setScenarios(next);
     localStorage.setItem("atiy:simulation-scenarios:municipio-san-fernando:v1", JSON.stringify(next));
   }
@@ -96,8 +104,8 @@ export function ImpactSimulator() {
           <h2 className="font-black">Construir escenario</h2>
           <label className="mt-4 block text-xs font-bold">Territorio
             <select value={targetId} onChange={(event) => { setTargetId(event.target.value); setActions([]); }} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-transparent p-3">
-              <optgroup label="Circuitos">{mockTerritorySnapshot.circuits.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>
-              <optgroup label="Localidades y barrios">{mockTerritorySnapshot.neighborhoods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>
+              <optgroup label="Circuitos">{snapshot.circuits.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>
+              <optgroup label="Localidades y barrios">{snapshot.neighborhoods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>
             </select>
           </label>
           <label className="mt-4 block text-xs font-bold">Acción

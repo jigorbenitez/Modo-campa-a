@@ -5,8 +5,10 @@ import type { ActivityRecord } from "@/features/diario";
 import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { ActivityTimeline } from "./activity-timeline";
 import { ActivityWizard } from "./activity-wizard";
+import { useTerritorialEntities } from "@/features/territorial-engine";
 
 export function CampaignDiary() {
+  const territorialEntities = useTerritorialEntities();
   const { records, replace } = useActivityJournal([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<ActivityRecord>();
@@ -158,6 +160,7 @@ export function CampaignDiary() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold text-[var(--muted)]">
+            <span><strong className="mr-1 text-[var(--foreground)]">{territorialEntities.length}</strong> entidades territoriales disponibles</span>
             <span><strong className="mr-1 text-[var(--foreground)]">{records.length}</strong> actividades</span>
             <span><strong className="mr-1 text-[var(--foreground)]">{linkedCount}</strong> hallazgos conectados</span>
             <span><strong className="mr-1 text-[var(--foreground)]">{records.filter((record) => record.activity.attachments.length > 0).length}</strong> con evidencia</span>

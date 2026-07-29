@@ -16,7 +16,7 @@ export const cartographicModes: Record<CartographicMode, { label: string; descri
   institutional: {
     label: "Institucional",
     description: "Servicios y equipamiento público verificado",
-    layers: ["streets", "municipality", "institutions", "schools", "hospitals", "health_centers", "clubs", "green_spaces"],
+    layers: ["streets", "municipality", "institutions", "schools", "hospitals", "health_centers", "clubs", "green_spaces", "police", "firefighters"],
   },
   operational: {
     label: "Operativo",

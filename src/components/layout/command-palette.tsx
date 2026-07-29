@@ -2,20 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { mockTerritorySnapshot } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
+import { useTerritorialEntities } from "@/features/territorial-engine";
+import { territorialTypeLabels } from "@/features/territorial-engine/presentation/territorial-presentation-config";
 
 type Result = { id: string; title: string; context: string; href: string };
-const operationalKeys = [
-  ["atiy:neighbors:v1", "Vecino", "/vecinos"],
-  ["atiy:proposals:v1", "Propuesta", "/propuestas"],
-  ["atiy:agenda:v1", "Agenda", "/agenda"],
-] as const;
 
 export function CommandPalette() {
   const router = useRouter();
+  const entities = useTerritorialEntities();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [localResults, setLocalResults] = useState<Result[]>([]);
 
   useEffect(() => {
     function keyboard(event: KeyboardEvent) {
@@ -29,27 +26,21 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", keyboard);
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    const found = operationalKeys.flatMap(([key, label, href]) => {
-      try {
-        const records = JSON.parse(localStorage.getItem(key) ?? "[]") as Array<{ id: string; values: Record<string, string> }>;
-        return records.map((record) => ({ id: record.id, title: Object.values(record.values).find(Boolean) ?? label, context: label, href }));
-      } catch { return []; }
-    });
-    queueMicrotask(() => setLocalResults(found));
-  }, [open]);
-
   const results = useMemo(() => {
     const term = query.trim().toLocaleLowerCase("es-AR");
     if (!term) return [];
     const territory: Result[] = [
-      ...mockTerritorySnapshot.neighborhoods.map((area) => ({ id: area.id, title: area.name, context: area.level === "locality" ? "Localidad" : "Barrio", href: `/territorio?area=${area.id}` })),
-      ...mockTerritorySnapshot.circuits.map((circuit) => ({ id: circuit.id, title: circuit.name, context: "Circuito", href: `/territorio?circuit=${circuit.id}` })),
-      ...mockTerritorySnapshot.features.map((feature) => ({ id: feature.id, title: feature.title, context: `${feature.subtype ?? feature.kind} · ${feature.localidad}`, href: `/territorio?entity=${feature.id}` })),
+      ...territorialBaseSnapshot.neighborhoods.map((area) => ({ id: area.id, title: area.name, context: area.level === "locality" ? "Localidad" : "Barrio", href: `/territorio?area=${area.id}` })),
+      ...territorialBaseSnapshot.circuits.map((circuit) => ({ id: circuit.id, title: circuit.name, context: "Circuito", href: `/territorio?circuit=${circuit.id}` })),
+      ...entities.map((entity) => ({
+        id: entity.id,
+        title: entity.name,
+        context: territorialTypeLabels[entity.type],
+        href: `/territorio/entidades/${encodeURIComponent(entity.id)}`,
+      })),
     ];
-    return [...territory, ...localResults].filter((item) => `${item.title} ${item.context}`.toLocaleLowerCase("es-AR").includes(term)).slice(0, 12);
-  }, [localResults, query]);
+    return territory.filter((item) => `${item.title} ${item.context}`.toLocaleLowerCase("es-AR").includes(term)).slice(0, 1000);
+  }, [entities, query]);
 
   function choose(result: Result) {
     setOpen(false);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ActivityDraft, ActivityRecord } from "@/features/diario";
 import { createMockActivity } from "@/features/diario";
-import { territoryElectoralCircuits } from "@/mock/territorio-map.mock";
+import { territoryElectoralCircuits } from "@/data/territorial-base";
 
 const steps = ["Actividad", "Territorio", "Contexto", "Hallazgos", "Archivos", "Resumen"];
 const barrios = [

@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import type { KnowledgeEntityType } from "@/features/relaciones";
 import { RelationshipEngine } from "@/features/relaciones";
-import { mockKnowledgeSnapshot } from "@/mock";
+import { useTerritorialEntities } from "@/features/territorial-engine";
+import { territorialTypeLabels } from "@/features/territorial-engine/presentation/territorial-presentation-config";
 import { ContextSummary } from "./context-summary";
 import { EntityCard } from "./entity-card";
 import { EntityHeader } from "./entity-header";
@@ -12,7 +13,6 @@ import { RelatedItemsPanel } from "./related-items-panel";
 import { RelationshipGraph } from "./relationship-graph";
 import { TimelinePanel } from "./timeline-panel";
 
-const engine = new RelationshipEngine(mockKnowledgeSnapshot);
 const typeFilters: Array<{ id: KnowledgeEntityType | "all"; label: string }> = [
   { id: "all", label: "Todo" },
   { id: "neighborhood", label: "Barrios" },
@@ -26,9 +26,44 @@ const typeFilters: Array<{ id: KnowledgeEntityType | "all"; label: string }> = [
 ];
 
 export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: string }) {
+  const territorialEntities = useTerritorialEntities();
+  const engine = useMemo(() => new RelationshipEngine({
+    municipioId: territorialEntities[0]?.municipalityId ?? "municipio-san-fernando",
+    generatedAt: territorialEntities.reduce(
+      (latest, entity) => entity.updatedAt > latest ? entity.updatedAt : latest,
+      "1970-01-01T00:00:00.000Z",
+    ),
+    nodes: territorialEntities.map((entity) => ({
+      id: entity.id,
+      municipioId: entity.municipalityId,
+      type: "institution" as const,
+      title: entity.name,
+      summary: entity.description ?? `Entidad territorial · ${entity.category}`,
+      status: entity.status,
+      occurredAt: entity.updatedAt,
+      barrioIds: entity.neighborhoodId ? [entity.neighborhoodId] : [],
+      institutionIds: [],
+      personIds: [],
+      tags: [...entity.tags, territorialTypeLabels[entity.type]],
+      metadata: {
+        ...Object.fromEntries(
+          Object.entries(entity.metadata).filter((entry): entry is [string, string | number | boolean | string[]] =>
+            ["string", "number", "boolean"].includes(typeof entry[1]) || Array.isArray(entry[1]),
+          ),
+        ),
+        category: entity.category,
+      },
+      history: [{
+        id: `sync:${entity.id}`,
+        at: entity.updatedAt,
+        label: "Sincronizado desde el repositorio territorial",
+      }],
+    })),
+    explicitEdges: [],
+  }), [territorialEntities]);
   const defaultId = engine.getCompleteContext(initialEntityId ?? "")
     ? initialEntityId!
-    : "barrio-san-fernando-centro";
+    : engine.getNodes()[0]?.id ?? "";
   const [selectedId, setSelectedId] = useState(defaultId);
   const [search, setSearch] = useState("");
   const [type, setType] = useState<KnowledgeEntityType | "all">("all");
@@ -50,7 +85,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
           engine.calculateConnections(b.id).total -
           engine.calculateConnections(a.id).total,
       );
-  }, [search, type]);
+  }, [engine, search, type]);
 
   const context = engine.getCompleteContext(selectedId);
 

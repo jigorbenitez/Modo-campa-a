@@ -12,7 +12,7 @@ test("los circuitos se renderizan con límites continuos", async () => {
 });
 
 test("el administrador ofrece las capas operativas solicitadas", async () => {
-  const source = await readFile(new URL("src/mock/territorio-map.mock.ts", root), "utf8");
+  const source = await readFile(new URL("src/data/territorial-base.ts", root), "utf8");
   for (const id of ["municipality", "localities", "neighborhoods", "circuits", "streets", "schools", "hospitals", "health_centers", "clubs", "firefighters", "police", "libraries", "cultural_centers", "green_spaces", "institutions", "activities", "neighbors", "proposals", "commitments", "photos", "custom_markers"]) {
     assert.match(source, new RegExp(`id: "${id}"`));
   }

@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import type { ActivityRecord } from "@/features/diario";
 import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { useBetaActivities } from "@/hooks/use-beta-activities";
-import { mockMunicipio, mockTerritorySnapshot } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
+import { useTerritorialEntities } from "@/features/territorial-engine";
 import { MetricCard } from "./metric-card";
 
 type OperationalRecord = { id: string; status: string; createdAt: string; values: Record<string, string> };
@@ -17,6 +18,7 @@ function readRecords(key: string): OperationalRecord[] {
 }
 
 export function Dashboard() {
+  const territorialEntities = useTerritorialEntities();
   const { records } = useActivityJournal(emptyActivities);
   const tours = useBetaActivities();
   const [agenda] = useState(() => readRecords("atiy:agenda:v1"));
@@ -28,13 +30,14 @@ export function Dashboard() {
     ...records.map((record) => ({ title: record.activity.title, date: record.activity.date, neighborhood: record.activity.barrioIds[0] ?? "Sin barrio" })),
     ...tours.map((tour) => ({ title: tour.title, date: tour.finishedAt.slice(0, 10), neighborhood: tour.neighborhoodName })),
   ].sort((a, b) => b.date.localeCompare(a.date)), [records, tours]);
-  const institutions = mockTerritorySnapshot.features.filter((feature) => feature.kind === "institution");
+  const institutions = territorialEntities.filter((entity) =>
+    !["municipality", "locality", "neighborhood"].includes(entity.category),
+  );
   const circuitActivity = new Map<string, number>();
-  mockTerritorySnapshot.features.filter((feature) => feature.kind === "activity" && feature.circuitId).forEach((feature) => circuitActivity.set(feature.circuitId!, (circuitActivity.get(feature.circuitId!) ?? 0) + 1));
   tours.filter((tour) => tour.circuitId).forEach((tour) => circuitActivity.set(tour.circuitId!, (circuitActivity.get(tour.circuitId!) ?? 0) + 1));
   const leadingCircuits = [...circuitActivity.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
   const activeAreas = new Set(activities.map((activity) => activity.neighborhood).filter(Boolean));
-  const inactiveAreas = mockTerritorySnapshot.neighborhoods.filter((area) => area.level === "neighborhood" && !activeAreas.has(area.id) && !activeAreas.has(area.name));
+  const inactiveAreas = territorialBaseSnapshot.neighborhoods.filter((area) => area.level === "neighborhood" && !activeAreas.has(area.id) && !activeAreas.has(area.name));
   const upcoming = agenda.filter((item) => item.status !== "completed" && item.values.startsAt && item.values.startsAt >= referenceTime.toISOString().slice(0, 16)).sort((a, b) => a.values.startsAt.localeCompare(b.values.startsAt));
   const weekly = activities.filter((activity) => new Date(`${activity.date}T12:00:00`).getTime() >= weekStart).length;
 
@@ -42,7 +45,7 @@ export function Dashboard() {
     <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <header className="flex flex-col justify-between gap-5 border-b border-[var(--border)] pb-7 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Panel ejecutivo · {mockMunicipio.name}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">Panel ejecutivo · San Fernando</p>
           <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Estado territorial</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">Actividad, compromisos y cobertura construidos con la información disponible en ATIY.</p>
         </div>
@@ -53,7 +56,7 @@ export function Dashboard() {
         <MetricCard label="Actividad de hoy" value={String(activities.filter((item) => item.date === today).length)} note="registros operativos" accent />
         <MetricCard label="Actividad semanal" value={String(weekly)} note="últimos siete días" />
         <MetricCard label="Compromisos próximos" value={String(upcoming.filter((item) => item.values.view === "commitment").length)} note="en agenda" />
-        <MetricCard label="Instituciones" value={String(institutions.length)} note="puntos públicos verificados" />
+        <MetricCard label="Entidades territoriales" value={String(territorialEntities.length)} note="repositorio canónico" />
       </section>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
@@ -68,15 +71,15 @@ export function Dashboard() {
           <h2 className="mt-1 text-xl font-extrabold">Atención requerida</h2>
           <div className="mt-5 space-y-2">
             <Alert label="Barrios sin actividad" value={inactiveAreas.length} note={inactiveAreas.length ? inactiveAreas.map((area) => area.name).join(", ") : "Cobertura registrada"} />
-            <Alert label="Instituciones pendientes" value={institutions.filter((item) => item.status !== "active").length} note="según estado de la base" />
+            <Alert label="Instituciones pendientes" value={institutions.filter((item) => item.status !== "active").length} note="según estado del repositorio" />
             <Alert label="Propuestas incompletas" value={proposals.filter((item) => item.status === "study").length} note="en estudio" />
           </div>
         </section>
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="premium-card p-5 sm:p-6"><h2 className="text-lg font-extrabold">Circuitos con mayor actividad</h2><div className="mt-4 space-y-3">{leadingCircuits.length ? leadingCircuits.map(([id, count]) => { const circuit = mockTerritorySnapshot.circuits.find((item) => item.id === id); return <div key={id} className="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] p-3 text-sm"><span className="font-bold">{circuit?.name ?? id}</span><strong>{count}</strong></div>; }) : <p className="rounded-xl bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">Pendiente de actividad georreferenciada.</p>}</div></section>
-        <section className="premium-card p-5 sm:p-6"><h2 className="text-lg font-extrabold">Indicadores territoriales</h2><dl className="mt-4 grid grid-cols-2 gap-3">{[["Circuitos oficiales", mockTerritorySnapshot.circuits.length], ["Áreas verificadas", mockTerritorySnapshot.neighborhoods.length], ["Puntos públicos", institutions.length], ["Alertas activas", inactiveAreas.length]].map(([label, value]) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] p-4"><dd className="text-2xl font-black">{value}</dd><dt className="mt-1 text-[10px] font-bold uppercase text-[var(--muted)]">{label}</dt></div>)}</dl></section>
+        <section className="premium-card p-5 sm:p-6"><h2 className="text-lg font-extrabold">Circuitos con mayor actividad</h2><div className="mt-4 space-y-3">{leadingCircuits.length ? leadingCircuits.map(([id, count]) => { const circuit = territorialBaseSnapshot.circuits.find((item) => item.id === id); return <div key={id} className="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] p-3 text-sm"><span className="font-bold">{circuit?.name ?? id}</span><strong>{count}</strong></div>; }) : <p className="rounded-xl bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">Pendiente de actividad georreferenciada.</p>}</div></section>
+        <section className="premium-card p-5 sm:p-6"><h2 className="text-lg font-extrabold">Indicadores territoriales</h2><dl className="mt-4 grid grid-cols-2 gap-3">{[["Circuitos oficiales", territorialBaseSnapshot.circuits.length], ["Áreas verificadas", territorialBaseSnapshot.neighborhoods.length], ["Entidades sincronizadas", territorialEntities.length], ["Alertas activas", inactiveAreas.length]].map(([label, value]) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] p-4"><dd className="text-2xl font-black">{value}</dd><dt className="mt-1 text-[10px] font-bold uppercase text-[var(--muted)]">{label}</dt></div>)}</dl></section>
       </div>
     </div>
   );

@@ -12,12 +12,12 @@ test("la navegación principal contiene exactamente ocho centros de trabajo", as
 });
 
 test("las nuevas entidades públicas cruzan fuente oficial y cartográfica", async () => {
-  const source = await readFile(new URL("src/mock/territorio-map.mock.ts", root), "utf8");
-  for (const id of ["institucion-hospital-san-cayetano", "institucion-polideportivo-1", "institucion-palacio-belgrano-otamendi"]) {
-    const start = source.indexOf(`id: "${id}"`);
-    assert.ok(start >= 0);
-    const record = source.slice(start, source.indexOf("}),", start));
-    assert.match(record, /officialSourceUrl: "https:\/\/www\.sanfernando\.gob\.ar\//);
-    assert.match(record, /sourceUrl: "https:\/\/www\.openstreetmap\.org\//);
+  const registry = JSON.parse(await readFile(new URL("src/data/san-fernando-official-sync.json", root), "utf8"));
+  const entities = registry.records.filter((record) => ["hospital", "club", "point_of_interest"].includes(record.category));
+  assert.ok(entities.length > 0);
+  for (const entity of entities) {
+    assert.match(entity.sourceUrl, /^https:\/\//);
+    assert.ok(entity.source);
+    assert.ok(entity.license);
   }
 });

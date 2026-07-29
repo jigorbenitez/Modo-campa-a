@@ -11,7 +11,8 @@ import {
   TerritoryViewService,
 } from "@/features/territorio-map";
 import { useActivityJournal } from "@/hooks/use-activity-journal";
-import { mockTerritorySnapshot, territoryCategories } from "@/mock";
+import { territorialEntityToMapFeature, useTerritorialEntities } from "@/features/territorial-engine";
+import { territorialBaseSnapshot, territoryCategories } from "@/data/territorial-base";
 import { FloatingMetrics } from "./floating-metrics";
 import { LayerControl } from "./layer-control";
 import { MapLegend } from "./map-legend";
@@ -46,13 +47,13 @@ const MODE_STORAGE_KEY = "atiy:territory:mode:v1";
 const CUSTOM_FEATURES_KEY = "atiy:territory:custom-features:v1";
 
 export function TerritoryOperations() {
+  const territorialEntities = useTerritorialEntities();
   const searchParams = useSearchParams();
   const requestedActivityId = searchParams.get("activity");
   const requestedEntityId = searchParams.get("entity");
   const requestedAreaId = searchParams.get("area");
   const requestedCircuitId = searchParams.get("circuit");
-  const { records: journalRecords, hasStoredJournal } =
-    useActivityJournal(emptyActivityRecords);
+  const { records: journalRecords } = useActivityJournal(emptyActivityRecords);
   const [customFeatures, setCustomFeatures] = useState<TerritoryFeature[]>(() => {
     if (typeof window === "undefined") return [];
     return JSON.parse(window.localStorage.getItem(CUSTOM_FEATURES_KEY) ?? "[]") as TerritoryFeature[];
@@ -60,21 +61,26 @@ export function TerritoryOperations() {
   const snapshot = useMemo(() => {
     const journalFeatures = journalRecords
       .map((record) =>
-        activityRecordToTerritoryFeature(record, mockTerritorySnapshot.neighborhoods),
+        activityRecordToTerritoryFeature(record, territorialBaseSnapshot.neighborhoods),
       )
       .filter((feature): feature is TerritoryFeature => Boolean(feature));
 
+    const synchronizedFeatures = territorialEntities
+      .map((entity) => territorialEntityToMapFeature(
+        entity,
+        territorialBaseSnapshot.neighborhoods,
+        territorialBaseSnapshot.circuits,
+      ))
+      .filter((feature): feature is TerritoryFeature => Boolean(feature));
     return {
-      ...mockTerritorySnapshot,
+      ...territorialBaseSnapshot,
       features: [
-        ...mockTerritorySnapshot.features.filter(
-          (feature) => !hasStoredJournal || feature.layerId !== "activities",
-        ),
+        ...synchronizedFeatures,
         ...journalFeatures,
         ...customFeatures,
       ],
     };
-  }, [customFeatures, hasStoredJournal, journalRecords]);
+  }, [customFeatures, journalRecords, territorialEntities]);
   const [cartographicMode, setCartographicMode] = useState<CartographicMode>(() => {
     if (requestedCircuitId) return "electoral";
     if (typeof window === "undefined") return "territorial";
@@ -91,7 +97,7 @@ export function TerritoryOperations() {
       return new Set(stored ? (JSON.parse(stored) as TerritoryLayerId[]).filter((id) => valid.has(id)) : defaults);
     },
   );
-  const [periodIndex, setPeriodIndex] = useState(mockTerritorySnapshot.periods.length - 1);
+  const [periodIndex, setPeriodIndex] = useState(territorialBaseSnapshot.periods.length - 1);
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>();
   const [selectedCircuitId, setSelectedCircuitId] = useState<string>();
   const [selectedFeature, setSelectedFeature] = useState<TerritoryFeature>();
@@ -168,7 +174,7 @@ export function TerritoryOperations() {
           .includes(term);
       const matchesCategory =
         category === "all" || feature.subtype === category || feature.kind === category;
-      return enabledLayers.has(feature.layerId) && matchesTerm && matchesCategory;
+      return matchesTerm && matchesCategory;
     }).map((feature) => ({ id: feature.id, title: feature.title, subtitle: `${feature.subtype ?? feature.kind} · ${feature.localidad}`, kind: "feature" as const }));
     const areaResults = snapshot.neighborhoods
       .filter((area) => `${area.name} ${area.locality}`.toLocaleLowerCase("es-AR").includes(term))
@@ -177,7 +183,7 @@ export function TerritoryOperations() {
       .filter((circuit) => `${circuit.name} ${circuit.code}`.toLocaleLowerCase("es-AR").includes(term))
       .map((circuit) => ({ id: circuit.id, title: `Circuito ${circuit.code.replace(/^0/, "")}`, subtitle: "Circuito electoral oficial", kind: "circuit" as const }));
     return [...circuitResults, ...areaResults, ...featureResults];
-  }, [category, enabledLayers, search, snapshot]);
+  }, [category, search, snapshot]);
 
   function selectSearchResult(result: TerritorySearchResult) {
     if (result.kind === "circuit") return selectCircuit(result.id);

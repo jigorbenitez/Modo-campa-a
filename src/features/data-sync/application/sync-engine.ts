@@ -171,12 +171,12 @@ export class TerritorialDataSyncEngine {
         features: deduplicated,
         errors: issues,
       };
+      await this.repository.saveVersion(version);
       await this.repository.applyChanges(
         selection.municipalityId,
         [...delta.added, ...delta.updated],
         delta.removed.map((feature) => feature.externalId),
       );
-      await this.repository.saveVersion(version);
       return {
         dataset,
         status: delta.added.length || delta.updated.length || delta.removed.length ? "updated" : "unchanged",

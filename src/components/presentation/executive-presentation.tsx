@@ -4,8 +4,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { TerritoryViewService } from "@/features/territorio-map";
-import { mockActivityRecords, mockTerritorySnapshot, territoryFeatures } from "@/mock";
+import { territorialBaseSnapshot } from "@/data/territorial-base";
+import { territorialEntityToMapFeature, useTerritorialEntities } from "@/features/territorial-engine";
 import { useBetaActivities } from "@/hooks/use-beta-activities";
+import { useActivityJournal } from "@/hooks/use-activity-journal";
+import type { ActivityRecord } from "@/features/diario";
 import { BrandMark } from "@/components/brand/brand-logo";
 
 const TerritoryMap = dynamic(
@@ -17,21 +20,30 @@ const TerritoryMap = dynamic(
 );
 
 const viewService = new TerritoryViewService();
-const presentationLayers = new Set(mockTerritorySnapshot.layers.map((layer) => layer.id).filter((id) => id !== "documents" && id !== "photos"));
+const presentationLayers = new Set(territorialBaseSnapshot.layers.map((layer) => layer.id).filter((id) => id !== "documents" && id !== "photos"));
+const emptyActivities: ActivityRecord[] = [];
 
 export function ExecutivePresentation() {
-  const [periodIndex, setPeriodIndex] = useState(mockTerritorySnapshot.periods.length - 1);
+  const entities = useTerritorialEntities();
+  const { records } = useActivityJournal(emptyActivities);
+  const snapshot = useMemo(() => ({
+    ...territorialBaseSnapshot,
+    features: entities
+      .map((entity) => territorialEntityToMapFeature(entity, territorialBaseSnapshot.neighborhoods, territorialBaseSnapshot.circuits))
+      .filter((feature) => feature !== null),
+  }), [entities]);
+  const [periodIndex, setPeriodIndex] = useState(territorialBaseSnapshot.periods.length - 1);
   const localActivities = useBetaActivities();
-  const period = mockTerritorySnapshot.periods[periodIndex] ?? mockTerritorySnapshot.periods.at(-1)!;
+  const period = snapshot.periods[periodIndex] ?? snapshot.periods.at(-1)!;
   const view = useMemo(
-    () => viewService.project(mockTerritorySnapshot, { periodId: period.id, enabledLayers: presentationLayers }),
-    [period.id],
+    () => viewService.project(snapshot, { periodId: period.id, enabledLayers: presentationLayers }),
+    [period.id, snapshot],
   );
-  const institutions = territoryFeatures.filter((feature) => feature.kind === "institution").length;
-  const people = 43 + localActivities.reduce((total, activity) => total + activity.captures.filter((capture) => capture.kind === "person").length, 0);
+  const institutions = entities.length;
+  const people = localActivities.reduce((total, activity) => total + activity.captures.filter((capture) => capture.kind === "person").length, 0);
   const recent = [
     ...localActivities.map((activity) => ({ title: activity.title, at: activity.finishedAt, label: "Recorrido" })),
-    ...mockActivityRecords.map((record) => ({ title: record.activity.title, at: `${record.activity.date}T${record.activity.startTime}:00`, label: "Actividad" })),
+    ...records.map((record) => ({ title: record.activity.title, at: `${record.activity.date}T${record.activity.startTime}:00`, label: "Actividad" })),
   ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 4);
 
   return (
@@ -47,13 +59,13 @@ export function ExecutivePresentation() {
       <div className="grid min-h-[calc(100vh-5rem)] xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.55fr)]">
         <section className="relative min-h-[58vh] border-b border-white/8 xl:border-b-0 xl:border-r">
           <TerritoryMap
-            center={[mockTerritorySnapshot.center.latitude, mockTerritorySnapshot.center.longitude]}
+            center={[snapshot.center.latitude, snapshot.center.longitude]}
             view={view}
-            layers={mockTerritorySnapshot.layers}
+            layers={snapshot.layers}
             onSelectFeature={() => undefined}
           onSelectNeighborhood={() => undefined}
           onClearSelection={() => undefined}
-          municipalityBoundaries={mockTerritorySnapshot.municipalityBoundaries}
+          municipalityBoundaries={snapshot.municipalityBoundaries}
           resetToken={0}
           enabledLayers={presentationLayers}
           activeTool="navigate"
@@ -78,8 +90,8 @@ export function ExecutivePresentation() {
             <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/40">
               <span>Evolución territorial</span><span>{period.label}</span>
             </div>
-            <input aria-label="Período de presentación" type="range" min={0} max={mockTerritorySnapshot.periods.length - 1} value={periodIndex} onChange={(event) => setPeriodIndex(Number(event.target.value))} className="mt-3 w-full accent-[var(--brand-accent)]" />
-            <div className="mt-1 flex justify-between text-[9px] font-bold text-white/35">{mockTerritorySnapshot.periods.map((item) => <span key={item.id}>{item.label}</span>)}</div>
+            <input aria-label="Período de presentación" type="range" min={0} max={snapshot.periods.length - 1} value={periodIndex} onChange={(event) => setPeriodIndex(Number(event.target.value))} className="mt-3 w-full accent-[var(--brand-accent)]" />
+            <div className="mt-1 flex justify-between text-[9px] font-bold text-white/35">{snapshot.periods.map((item) => <span key={item.id}>{item.label}</span>)}</div>
           </div>
         </section>
 

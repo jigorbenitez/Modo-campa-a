@@ -16,7 +16,7 @@ export type DecisionStatus = "pending" | "completed" | "postponed" | "discarded"
 
 export class DecisionService {
   generate(priorities: PriorityResult[], generatedAt: string): DecisionRecommendation[] {
-    return priorities.filter((priority) => priority.level !== "none").slice(0, 30).map((priority) => {
+    return priorities.filter((priority) => priority.level !== "none").map((priority) => {
       const isArea = priority.entityType === "circuit" || priority.entityType === "neighborhood" || priority.entityType === "locality";
       const topReason = priority.reasons[0]?.message ?? "La configuración vigente asigna atención a este elemento.";
       return {

@@ -5,7 +5,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import type { FilterDefinition, FilterState } from "@/application/shared/filters";
 import { ReusableFilterBar } from "@/components/ui/reusable-filter-bar";
 import type { TerritorialEntity } from "../domain";
-import { territorialMapLayers } from "../application";
+import { TerritorialMapProjectionService, territorialMapLayers } from "../application";
 import { territorialTypeLabels } from "./territorial-presentation-config";
 
 export function TerritorialDirectory({
@@ -18,13 +18,14 @@ export function TerritorialDirectory({
   const [search, setSearch] = useState("");
   const [filterState, setFilterState] = useState<FilterState>({});
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase("es"));
+  const mapPoints = useMemo(() => new TerritorialMapProjectionService().project(entities), [entities]);
 
   const filteredEntities = useMemo(
     () =>
       entities.filter((entity) => {
         const matchesText =
           !deferredSearch ||
-          [entity.name, entity.category, entity.neighborhoodName, entity.localityName, entity.description]
+          [entity.name, entity.category, territorialTypeLabels[entity.type], entity.neighborhoodName, entity.localityName, entity.description]
             .filter(Boolean)
             .some((value) => value?.toLocaleLowerCase("es").includes(deferredSearch));
         const matchesType = !filterState.type || entity.type === filterState.type;
@@ -76,7 +77,7 @@ export function TerritorialDirectory({
 
       <div className="mt-6 flex items-center justify-between">
         <p className="text-xs font-bold text-[var(--muted)]">{filteredEntities.length} entidades disponibles</p>
-        <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-extrabold text-[var(--accent)]">Infraestructura lista</span>
+        <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-extrabold text-[var(--accent)]">Repositorio canónico</span>
       </div>
 
       {filteredEntities.length === 0 ? (
@@ -103,7 +104,9 @@ export function TerritorialDirectory({
             <article key={layer.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
               <span className="block size-2 rounded-full bg-[var(--brand-accent)]" />
               <p className="mt-3 text-xs font-extrabold">{layer.label}</p>
-              <p className="mt-1 text-[10px] text-[var(--muted)]">0 puntos</p>
+              <p className="mt-1 text-[10px] text-[var(--muted)]">
+                {mapPoints.filter((point) => point.layerId === layer.id).length} puntos
+              </p>
             </article>
           ))}
         </div>

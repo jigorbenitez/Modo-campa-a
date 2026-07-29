@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { TerritorialDataSyncEngine } from "../application/sync-engine";
 import { officialTerritorialConnectors } from "../infrastructure/connectors";
 import { BoundsTerritorialFilter, BrowserSyncRepository, HttpDatasetDownloader } from "../infrastructure/browser-infrastructure";
+import { ApiSyncRepository } from "../infrastructure/api-sync-repository";
+import { isSupabaseConfigured } from "@/infrastructure/supabase";
 import { CsvParser, GeoJsonParser, KmlParser, OsmJsonParser, ShapefileParser } from "../infrastructure/parsers";
 import type { NormalizedFeature, SyncFrequency, TerritorialSyncRun } from "../domain";
 
@@ -29,7 +31,10 @@ export function DataSyncPanel({
   provinceName?: string;
   bounds?: [number, number, number, number];
 }) {
-  const repository = useMemo(() => new BrowserSyncRepository(), []);
+  const repository = useMemo(
+    () => isSupabaseConfigured() ? new ApiSyncRepository() : new BrowserSyncRepository(),
+    [],
+  );
   const engine = useMemo(() => new TerritorialDataSyncEngine(
     officialTerritorialConnectors(),
     new HttpDatasetDownloader(),
