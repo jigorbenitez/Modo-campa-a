@@ -8,6 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
+const INSTALL_DISMISSED_KEY = "atiy:pwa-install-dismissed:v1";
 
 export function ServiceWorkerRegister() {
   const online = useNetworkStatus();
@@ -31,7 +32,7 @@ export function ServiceWorkerRegister() {
   useEffect(() => {
     const onInstall = (event: Event) => {
       event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
+      if (localStorage.getItem(INSTALL_DISMISSED_KEY) !== "true") setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onInstall);
 
@@ -53,6 +54,12 @@ export function ServiceWorkerRegister() {
     if (!installPrompt) return;
     await installPrompt.prompt();
     await installPrompt.userChoice;
+    localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+    setInstallPrompt(undefined);
+  }
+
+  function dismissInstall() {
+    localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
     setInstallPrompt(undefined);
   }
 
@@ -83,9 +90,11 @@ export function ServiceWorkerRegister() {
         </div>
       )}
       {installPrompt && (
-        <button type="button" onClick={install} className="premium-button fixed bottom-24 right-4 z-[65] px-4 py-3 text-xs font-black shadow-xl lg:bottom-6">
-          Instalar aplicación
-        </button>
+        <div className="fixed inset-x-3 top-20 z-[65] mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-xl">
+          <div className="min-w-0 flex-1"><p className="text-xs font-black">Instalar ATIY</p><p className="mt-0.5 text-[10px] text-[var(--muted)]">Acceso rápido y experiencia PWA.</p></div>
+          <button type="button" onClick={install} className="premium-button px-3 py-2 text-[10px] font-black">Instalar</button>
+          <button type="button" onClick={dismissInstall} aria-label="Cerrar sugerencia de instalación" className="grid size-8 place-items-center rounded-lg text-sm font-black">×</button>
+        </div>
       )}
     </>
   );

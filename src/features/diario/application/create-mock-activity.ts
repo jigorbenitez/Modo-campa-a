@@ -13,7 +13,7 @@ function createId(prefix: string, index = 0) {
   return `${prefix}-${Date.now()}-${index}`;
 }
 
-export function createMockActivity(
+export function createActivity(
   draft: ActivityDraft,
   barrioNames: string[],
 ): ActivityCreationResult {
@@ -133,3 +133,6 @@ export function createMockActivity(
 
   return { record, createdProblems: problems, createdOpportunities: opportunities, createdCommitments: commitments };
 }
+
+/** @deprecated Usar createActivity. Se conserva para compatibilidad con sprints anteriores. */
+export const createMockActivity = createActivity;

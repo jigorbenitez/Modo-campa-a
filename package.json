@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "node scripts/check-utf8.mjs && node --test --experimental-strip-types tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "generate:municipality": "node scripts/generate-municipality-boundary.mjs"
+    "generate:municipality": "node scripts/generate-municipality-boundary.mjs",
+    "generate:territorial-hierarchy": "node scripts/generate-territorial-hierarchy.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",

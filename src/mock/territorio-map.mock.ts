@@ -1,4 +1,4 @@
-import boundaryData from "@/data/san-fernando-boundaries.json";
+import boundaryData from "@/data/san-fernando-territorial-hierarchy.json";
 import circuitData from "@/data/san-fernando-electoral-circuits.json";
 import municipalityData from "@/data/san-fernando-municipality-from-circuits.json";
 import type {

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { sanFernandoPublicDatasets } from "./catalog";
 import type { DatasetSync, PublicDataset } from "./domain";
+import { TerritorialDataCoverageService } from "./coverage-service";
+import { mockTerritorySnapshot } from "@/mock";
 
 const statusLabel = { verified: "Verificado", pending: "Pendiente", update_available: "Actualización", rejected: "Rechazado" };
 
@@ -10,6 +12,7 @@ export function DataHub({ municipalityId }: { municipalityId: string }) {
   const datasets = sanFernandoPublicDatasets.filter((dataset) => dataset.municipalityId === municipalityId);
   const [selected, setSelected] = useState<PublicDataset | undefined>(datasets[0]);
   const [syncs, setSyncs] = useState<DatasetSync[]>([]);
+  const coverage = new TerritorialDataCoverageService().calculate(mockTerritorySnapshot);
 
   function checkUpdates() {
     const checkedAt = new Date().toISOString();
@@ -42,6 +45,13 @@ export function DataHub({ municipalityId }: { municipalityId: string }) {
         </aside>
       </div>
       {syncs.length > 0 && <div className="mt-4 rounded-2xl border border-[var(--border)] p-4"><p className="text-xs font-black">Historial de sincronización</p><p className="mt-2 text-xs text-[var(--muted)]">{syncs.length} fuentes revisadas · sin cambios aceptados automáticamente.</p></div>}
+      <section className="mt-6">
+        <h3 className="text-sm font-black">Cobertura automática de los registros aceptados</h3>
+        <p className="mt-1 text-xs text-[var(--muted)]">Mide calidad y trazabilidad de lo cargado; no inventa el tamaño del universo municipal.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {coverage.map((item) => <article key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"><div className="flex items-end justify-between"><p className="text-xs font-bold">{item.label}</p><strong className="text-xl">{item.percentage}%</strong></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]"><div className="h-full bg-[var(--accent)]" style={{ width: `${item.percentage}%` }} /></div><p className="mt-2 text-[10px] text-[var(--muted)]">{item.completeRecords}/{item.loadedRecords} registros completos. {item.explanation}</p></article>)}
+        </div>
+      </section>
       <p className="mt-4 text-xs text-[var(--muted)]">Formatos admitidos: CSV, GeoJSON, JSON y XLSX. Shapefile queda disponible mediante el puerto de importación para una conversión geoespacial validada.</p>
     </section>
   );

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CaptureKind } from "@/features/recorrido";
+import { VoiceRecorder } from "./voice-recorder";
+import type { VoiceRecording } from "./voice-recorder";
 
 const labels: Record<CaptureKind, string> = {
   photo: "Fotografía",
@@ -24,15 +26,17 @@ export function QuickCaptureSheet({
 }: {
   kind?: CaptureKind;
   onClose: () => void;
-  onSave: (label: string) => void;
+  onSave: (label: string, recording?: VoiceRecording) => void;
 }) {
   const [value, setValue] = useState("");
+  const [voiceRecording, setVoiceRecording] = useState<VoiceRecording>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!kind) return;
     const timer = window.setTimeout(() => {
       setValue("");
+      setVoiceRecording(undefined);
       inputRef.current?.focus();
     }, 100);
     return () => window.clearTimeout(timer);
@@ -53,11 +57,7 @@ export function QuickCaptureSheet({
         </div>
 
         {isVoice ? (
-          <div className="mt-5 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center">
-            <span className="text-3xl">🎤</span>
-            <p className="mt-3 text-sm font-extrabold">Grabación preparada</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">El flujo reserva este punto para integrar captura y almacenamiento de audio de forma segura.</p>
-          </div>
+          <VoiceRecorder onChange={setVoiceRecording} />
         ) : (
           <label className="mt-5 block">
             <span className="sr-only">{labels[kind]}</span>
@@ -73,8 +73,8 @@ export function QuickCaptureSheet({
 
         <button
           type="button"
-          disabled={!isVoice && !value.trim()}
-          onClick={() => onSave(isVoice ? "Nota de voz pendiente de grabación" : value.trim())}
+          disabled={isVoice ? !voiceRecording : !value.trim()}
+          onClick={() => onSave(isVoice ? `Nota de voz · ${Math.max(1, Math.round((voiceRecording?.durationMs ?? 0) / 1000))} s` : value.trim(), voiceRecording)}
           className="premium-button mt-4 h-13 w-full px-5 text-sm font-extrabold disabled:opacity-40"
         >
           Agregar ahora

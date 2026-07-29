@@ -1,12 +1,19 @@
 import type { TerritorialEntity } from "../domain";
 
-export type TerritorialImportFormat = "csv" | "xlsx" | "json" | "geojson";
+export type TerritorialImportFormat = "csv" | "xlsx" | "json" | "geojson" | "shapefile" | "geopackage";
 
 export interface TerritorialImportSource {
   format: TerritorialImportFormat;
   fileName: string;
   municipalityId: string;
   content: string | ArrayBuffer;
+  source: {
+    name: string;
+    url: string;
+    retrievedAt: string;
+    confidence: "verified" | "high" | "medium" | "low";
+    license?: string;
+  };
   options?: {
     delimiter?: string;
     encoding?: string;

@@ -19,6 +19,9 @@ export interface TourCapture {
   kind: CaptureKind;
   label: string;
   createdAt: string;
+  audioDataUrl?: string;
+  mimeType?: string;
+  durationMs?: number;
 }
 
 export interface SavedTourActivity {
@@ -52,5 +55,10 @@ export function readSavedTourActivities(): SavedTourActivity[] {
 export function saveTourActivity(activity: SavedTourActivity) {
   const current = readSavedTourActivities();
   localStorage.setItem(BETA_ACTIVITY_STORAGE_KEY, JSON.stringify([activity, ...current].slice(0, 20)));
+  const journalRecord = tourToActivityRecord(activity);
+  const journal = readActivityJournal([]);
+  writeActivityJournal([journalRecord, ...journal.filter((record) => record.activity.id !== activity.id)]);
   window.dispatchEvent(new CustomEvent(BETA_ACTIVITY_EVENT, { detail: activity }));
 }
+import { readActivityJournal, writeActivityJournal } from "@/features/diario/infrastructure/activity-journal-store";
+import { tourToActivityRecord } from "./tour-journal-adapter";

@@ -127,12 +127,14 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
           <EntityHeader context={context} />
           <div className="grid gap-5 p-4 sm:p-6 2xl:grid-cols-[minmax(0,1fr)_270px]">
             <main className="min-w-0 space-y-6">
-              <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-                <ContextSummary context={context} />
-                <RelationshipGraph context={context} onSelect={selectEntity} />
-              </div>
+              <ContextSummary context={context} />
               <RelatedItemsPanel context={context} onSelect={selectEntity} />
               <TimelinePanel items={context.timeline} />
+              <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                <summary className="cursor-pointer text-sm font-extrabold">Ver grafo de relaciones</summary>
+                <p className="mt-2 text-xs text-[var(--muted)]">Vista secundaria para explorar conexiones visuales entre entidades.</p>
+                <div className="mt-4"><RelationshipGraph context={context} onSelect={selectEntity} /></div>
+              </details>
             </main>
             <EntitySidebar context={context} onSelect={selectEntity} />
           </div>

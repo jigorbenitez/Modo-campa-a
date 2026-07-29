@@ -3,12 +3,11 @@
 import { useMemo, useState } from "react";
 import type { ActivityRecord } from "@/features/diario";
 import { useActivityJournal } from "@/hooks/use-activity-journal";
-import { mockActivityRecords } from "@/mock";
 import { ActivityTimeline } from "./activity-timeline";
 import { ActivityWizard } from "./activity-wizard";
 
 export function CampaignDiary() {
-  const { records, replace } = useActivityJournal(mockActivityRecords);
+  const { records, replace } = useActivityJournal([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<ActivityRecord>();
   const [newestId, setNewestId] = useState<string>();
@@ -105,6 +104,32 @@ export function CampaignDiary() {
     setNewestId(duplicate.activity.id);
   }
 
+  function completeRecordStatus(record: ActivityRecord) {
+    if (record.activity.status === "completed") return;
+    const now = new Date().toISOString();
+    const updated: ActivityRecord = {
+      ...record,
+      activity: {
+        ...record.activity,
+        status: "completed",
+        endTime: record.activity.endTime ?? new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
+        statusHistory: [...record.activity.statusHistory, { from: record.activity.status, to: "completed", changedAt: now, reason: "Actividad finalizada desde el Diario" }],
+        audit: { ...record.activity.audit, updatedAt: now, version: record.activity.audit.version + 1 },
+      },
+    };
+    replace(records.map((item) => item.activity.id === updated.activity.id ? updated : item));
+    setNewestId(updated.activity.id);
+  }
+
+  function exportRecord(record: ActivityRecord) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `atiy-${record.activity.id}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   const linkedCount = records.reduce(
     (total, record) =>
       total + record.problems.length + record.opportunities.length + record.commitments.length,
@@ -174,11 +199,14 @@ export function CampaignDiary() {
               onEdit={(record) => { setEditing(record); setWizardOpen(true); }}
               onDelete={deleteRecord}
               onDuplicate={duplicateRecord}
+              onComplete={completeRecordStatus}
+              onExport={exportRecord}
             />
           ) : (
             <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-14 text-center">
-              <p className="text-base font-extrabold">No encontramos actividades</p>
-              <p className="mt-2 text-sm text-[var(--muted)]">Probá con otros filtros o registrá una nueva actividad.</p>
+              <p className="text-base font-extrabold">{records.length ? "No encontramos actividades con estos filtros" : "Todavía no registraste actividades"}</p>
+              <p className="mt-2 text-sm text-[var(--muted)]">{records.length ? "Probá con otros filtros." : "Creá una actividad o finalizá una recorrida para comenzar tu historial operativo."}</p>
+              {!records.length && <button type="button" onClick={() => { setEditing(undefined); setWizardOpen(true); }} className="premium-button mt-5 px-5 py-3 text-xs font-black">Crear primera actividad</button>}
             </div>
           )}
         </section>

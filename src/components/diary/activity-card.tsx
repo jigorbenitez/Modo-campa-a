@@ -34,12 +34,16 @@ export function ActivityCard({
   onEdit,
   onDelete,
   onDuplicate,
+  onComplete,
+  onExport,
 }: {
   record: ActivityRecord;
   defaultOpen?: boolean;
   onEdit?: (record: ActivityRecord) => void;
   onDelete?: (record: ActivityRecord) => void;
   onDuplicate?: (record: ActivityRecord) => void;
+  onComplete?: (record: ActivityRecord) => void;
+  onExport?: (record: ActivityRecord) => void;
 }) {
   const [expanded, setExpanded] = useState(defaultOpen);
   const { activity } = record;
@@ -90,13 +94,20 @@ export function ActivityCard({
           </div>
         </div>
       </button>
-      {(onEdit || onDelete || onDuplicate) && (
-        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] px-4 py-3 sm:px-6">
+      {(onEdit || onDelete || onDuplicate || onComplete || onExport) && (
+        <div className="flex items-center gap-2 border-t border-[var(--border)] px-4 py-3 sm:px-6">
           <button type="button" onClick={() => setExpanded(true)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Abrir</button>
-          {onEdit && <button type="button" onClick={() => onEdit(record)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Editar</button>}
-          {onDuplicate && <button type="button" onClick={() => onDuplicate(record)} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Duplicar</button>}
           <Link href={`/territorio?activity=${encodeURIComponent(activity.id)}`} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs font-extrabold">Ver ubicación</Link>
-          {onDelete && <button type="button" onClick={() => onDelete(record)} className="ml-auto rounded-lg px-3 py-2 text-xs font-extrabold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">Eliminar</button>}
+          <details className="relative ml-auto">
+            <summary aria-label={`Acciones para ${activity.title}`} className="grid size-9 cursor-pointer list-none place-items-center rounded-lg border border-[var(--border)] text-lg font-black">⋯</summary>
+            <div className="absolute bottom-11 right-0 z-20 w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-xl">
+              {onEdit && <button type="button" onClick={() => onEdit(record)} className="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-[var(--surface-muted)]">Editar</button>}
+              {onComplete && activity.status !== "completed" && <button type="button" onClick={() => onComplete(record)} className="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-[var(--surface-muted)]">Finalizar</button>}
+              {onDuplicate && <button type="button" onClick={() => onDuplicate(record)} className="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-[var(--surface-muted)]">Duplicar</button>}
+              {onExport && <button type="button" onClick={() => onExport(record)} className="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-[var(--surface-muted)]">Exportar</button>}
+              {onDelete && <button type="button" onClick={() => onDelete(record)} className="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">Eliminar</button>}
+            </div>
+          </details>
         </div>
       )}
       {expanded && <ActivityDetails record={record} />}

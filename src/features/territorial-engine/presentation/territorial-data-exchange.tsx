@@ -12,6 +12,9 @@ export function TerritorialDataExchange() {
   const [issues, setIssues] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
   const [message, setMessage] = useState("");
+  const [sourceName, setSourceName] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [confidence, setConfidence] = useState<"verified" | "high" | "medium" | "low">("medium");
 
   async function parseFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -57,10 +60,14 @@ export function TerritorialDataExchange() {
   }
 
   function confirmImport() {
-    if (!rows.length || issues.length) return;
+    if (!rows.length || issues.length || !sourceName.trim() || !/^https:\/\//.test(sourceUrl)) {
+      setMessage("Completá una fuente y URL HTTPS verificable antes de importar.");
+      return;
+    }
     const current = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as ManagedRecord[];
+    const fingerprints = new Set(current.map((record) => [record.values.name, record.values.latitude, record.values.longitude].join("|").toLocaleLowerCase("es-AR")));
     const now = new Date().toISOString();
-    const imported = rows.map((row) => ({
+    const imported = rows.filter((row) => !fingerprints.has([String(row.name ?? row.nombre ?? ""), String(row.latitude ?? row.latitud ?? ""), String(row.longitude ?? row.longitud ?? "")].join("|").toLocaleLowerCase("es-AR"))).map((row) => ({
       id: `import-${crypto.randomUUID()}`,
       values: {
         name: String(row.name ?? row.nombre ?? ""),
@@ -72,6 +79,10 @@ export function TerritorialDataExchange() {
         latitude: String(row.latitude ?? row.latitud ?? ""),
         longitude: String(row.longitude ?? row.longitud ?? ""),
         description: String(row.description ?? row.descripcion ?? ""),
+        sourceName: sourceName.trim(),
+        sourceUrl,
+        sourceRetrievedAt: now,
+        confidence,
       },
       status: "pending_review",
       attachments: [],
@@ -80,7 +91,7 @@ export function TerritorialDataExchange() {
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...current, ...imported]));
     window.dispatchEvent(new CustomEvent("atiy:operational-records-changed"));
-    setMessage(`${imported.length} registros importados como pendientes de revisión.`);
+    setMessage(`${imported.length} registros únicos importados como pendientes de revisión. ${rows.length - imported.length} duplicados omitidos.`);
     setRows([]);
     setIssues([]);
   }
@@ -109,6 +120,11 @@ export function TerritorialDataExchange() {
           <label className="cursor-pointer rounded-xl bg-[var(--primary)] px-4 py-2.5 text-xs font-extrabold text-white">Seleccionar CSV, Excel, JSON o GeoJSON<input type="file" accept=".csv,.xlsx,.xls,.json,.geojson" onChange={parseFile} className="sr-only" /></label>
           <button type="button" onClick={exportCsv} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-xs font-extrabold">Exportar CSV</button>
           <button type="button" onClick={exportExcel} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-xs font-extrabold">Exportar Excel</button>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1.4fr_0.7fr]">
+          <input value={sourceName} onChange={(event) => setSourceName(event.target.value)} placeholder="Organismo o fuente" aria-label="Nombre de la fuente" className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs" />
+          <input value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://fuente-oficial…" aria-label="URL de la fuente" className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs" />
+          <select value={confidence} onChange={(event) => setConfidence(event.target.value as typeof confidence)} aria-label="Nivel de confianza" className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs"><option value="verified">Verificada</option><option value="high">Alta</option><option value="medium">Media</option><option value="low">Baja</option></select>
         </div>
         {fileName && <p className="mt-3 text-xs font-bold">{fileName} · {rows.length} filas detectadas</p>}
         {issues.length > 0 && <div role="alert" className="mt-3 max-h-32 overflow-y-auto rounded-xl bg-red-50 p-3 text-xs text-red-800">{issues.slice(0, 20).map((issue) => <p key={issue}>{issue}</p>)}</div>}

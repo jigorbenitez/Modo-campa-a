@@ -17,6 +17,7 @@ import { useStopwatch } from "@/hooks/use-stopwatch";
 import { CaptureDock } from "./capture-dock";
 import { QuickCaptureSheet } from "./quick-capture-sheet";
 import { TourSummary } from "./tour-summary";
+import type { VoiceRecording } from "./voice-recorder";
 
 type Stage = "setup" | "running" | "summary";
 
@@ -60,9 +61,9 @@ export function TourMode() {
 
   const neighborhood = territoryNeighborhoods.find((item) => item.id === neighborhoodId);
 
-  function addCapture(kind: CaptureKind, label: string) {
+  function addCapture(kind: CaptureKind, label: string, recording?: VoiceRecording) {
     setCaptures((current) => [
-      { id: crypto.randomUUID(), kind, label, createdAt: new Date().toISOString() },
+      { id: crypto.randomUUID(), kind, label, createdAt: new Date().toISOString(), audioDataUrl: recording?.dataUrl, mimeType: recording?.mimeType, durationMs: recording?.durationMs },
       ...current,
     ]);
     setActiveCapture(undefined);
@@ -269,10 +270,15 @@ export function TourMode() {
           </header>
 
           <main className="mx-auto max-w-5xl px-4 py-5">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+              <StatusItem label="GPS" value={coordinates ? `±${Math.round(coordinates.accuracy)} m` : "Sin señal"} tone={coordinates ? "good" : "warning"} />
               <StatusItem label={online ? "Online" : "Offline"} value={online ? "Conectado" : "En cola"} tone={online ? "good" : "warning"} />
               <StatusItem label="Sincronización" value={online ? "Al día" : "Pendiente"} tone={online ? "good" : "warning"} />
-              <StatusItem label="Batería" value={battery ? `${battery.level}%${battery.charging ? " ⚡" : ""}` : "No disponible"} />
+              <StatusItem label="Registros" value={String(captures.length)} />
+              <StatusItem label="Fotos" value={String(captures.filter((item) => item.kind === "photo").length)} />
+              <StatusItem label="Videos / audios" value={`${captures.filter((item) => item.kind === "video").length} / ${captures.filter((item) => item.kind === "voice").length}`} />
+              <StatusItem label="Batería" value={battery ? `${battery.level}%${battery.charging ? " ⚡" : ""}` : "N/D"} />
+              <StatusItem label="Duración" value={stopwatch.formatted} />
             </div>
 
             <section className="mt-5 rounded-[1.75rem] bg-[var(--brand-primary)] p-5 text-white shadow-xl">
@@ -295,12 +301,16 @@ export function TourMode() {
               </div>
               <div className="mt-3 space-y-2">
                 {captures.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-black/10 p-8 text-center text-sm text-black/45 dark:border-white/10 dark:text-white/45">Usá el panel inferior para registrar el primer aporte.</div>
+                  <div className="rounded-2xl border border-dashed border-black/10 p-6 text-center dark:border-white/10">
+                    <p className="text-sm font-black">Todavía no registraste ningún aporte.</p>
+                    <p className="mt-2 text-xs text-black/45 dark:text-white/45">Podés comenzar con Foto · Voz · Nota · Problema · Oportunidad · Compromiso · Institución.</p>
+                  </div>
                 ) : captures.map((capture) => (
                   <article key={capture.id} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-white/5">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-sm font-black text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-300">{captureLabels[capture.kind].slice(0, 1)}</span>
                     <div className="min-w-0 flex-1"><p className="text-xs font-black">{captureLabels[capture.kind]}</p><p className="mt-1 truncate text-xs text-black/50 dark:text-white/50">{capture.label}</p></div>
-                    <time className="text-[10px] font-bold text-black/35 dark:text-white/35">{new Date(capture.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}</time>
+                    {capture.audioDataUrl && <audio controls src={capture.audioDataUrl} className="h-9 max-w-40" aria-label={capture.label} />}
+                    <button type="button" onClick={() => setCaptures((items) => items.filter((item) => item.id !== capture.id))} className="text-xs font-bold text-rose-600" aria-label={`Eliminar ${captureLabels[capture.kind]}`}>×</button>
                   </article>
                 ))}
               </div>
@@ -311,7 +321,7 @@ export function TourMode() {
           <input ref={videoInput} className="hidden" type="file" accept="video/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("video", file.name || "Video capturado"); event.currentTarget.value = ""; }} />
           <input ref={documentInput} className="hidden" type="file" accept=".pdf,.doc,.docx,image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) addCapture("document", file.name || "Documento adjunto"); event.currentTarget.value = ""; }} />
           <CaptureDock onCapture={handleAction} />
-          <QuickCaptureSheet kind={activeCapture} onClose={() => setActiveCapture(undefined)} onSave={(label) => activeCapture && addCapture(activeCapture, label)} />
+          <QuickCaptureSheet kind={activeCapture} onClose={() => setActiveCapture(undefined)} onSave={(label, recording) => activeCapture && addCapture(activeCapture, label, recording)} />
         </>
       )}
     </div>
