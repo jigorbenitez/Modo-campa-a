@@ -9,6 +9,7 @@ import { rolePermissions } from "@/application/auth";
 import type { UserRole } from "@/domain/entities";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { TerritorialDataExchange } from "@/features/territorial-engine/presentation";
+import { DataHub } from "@/features/data-hub";
 
 const roleLabels: Record<UserRole, string> = {
   administrator: "Administrador",
@@ -148,6 +149,7 @@ export function AdminPanel({
           </section>
         </div>
       </div>
+      <DataHub municipalityId={context.user.municipioId} />
       <section className="mt-8 border-t border-[var(--border)] pt-2">
         <TerritorialDataExchange />
       </section>
