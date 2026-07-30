@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
 import type { FilterDefinition, FilterState } from "@/application/shared/filters";
 import { ReusableFilterBar } from "@/components/ui/reusable-filter-bar";
+import { normalizeIdentityName } from "@/features/identity-resolution";
 import type { TerritorialEntity } from "../domain";
 import { TerritorialMapProjectionService, territorialMapLayers } from "../application";
 import { territorialTypeLabels } from "./territorial-presentation-config";
@@ -20,20 +21,28 @@ export function TerritorialDirectory({
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase("es"));
   const mapPoints = useMemo(() => new TerritorialMapProjectionService().project(entities), [entities]);
 
-  const filteredEntities = useMemo(
-    () =>
-      entities.filter((entity) => {
+  const filteredEntities = useMemo(() => {
+      const queryIdentity = normalizeIdentityName(deferredSearch);
+      const exactIdentityMatches = deferredSearch ? new Set(entities.filter((entity) =>
+        [entity.name, ...(entity.alternateNames ?? [])]
+          .some((name) => normalizeIdentityName(name) === queryIdentity),
+      ).map((entity) => entity.id)) : new Set<string>();
+      return entities.filter((entity) => {
         const matchesText =
           !deferredSearch ||
-          [entity.name, entity.category, territorialTypeLabels[entity.type], entity.neighborhoodName, entity.localityName, entity.description]
+          (exactIdentityMatches.size > 0
+            ? exactIdentityMatches.has(entity.id)
+            :
+          [entity.name, ...(entity.alternateNames ?? []), entity.category, territorialTypeLabels[entity.type], entity.neighborhoodName, entity.localityName, entity.description]
             .filter(Boolean)
-            .some((value) => value?.toLocaleLowerCase("es").includes(deferredSearch));
+            .some((value) => value?.toLocaleLowerCase("es").includes(deferredSearch)));
         const matchesType = !filterState.type || entity.type === filterState.type;
         const matchesCategory = !filterState.category || entity.category === filterState.category;
         const matchesLocality = !filterState.localityId || entity.localityId === filterState.localityId;
         const matchesNeighborhood = !filterState.neighborhoodId || entity.neighborhoodId === filterState.neighborhoodId;
         return matchesText && matchesType && matchesCategory && matchesLocality && matchesNeighborhood;
-      }),
+      });
+    },
     [deferredSearch, entities, filterState],
   );
 

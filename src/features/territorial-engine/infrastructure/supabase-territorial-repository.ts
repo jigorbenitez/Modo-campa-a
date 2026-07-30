@@ -28,9 +28,8 @@ export class SupabaseTerritorialRepository implements TerritorialEntityRepositor
   constructor(private readonly client: SupabaseClient) {}
 
   async findById(municipalityId: string, id: string) {
-    const { data, error } = await this.baseQuery(municipalityId).eq("external_id", id).maybeSingle();
-    if (error) throw error;
-    return data ? this.toEntity(data as FeatureRow, municipalityId) : null;
+    const result = await this.search(municipalityId, { pageSize: 5000 });
+    return result.items.find((entity) => entity.id === id || entity.externalIds?.includes(id)) ?? null;
   }
 
   async search(municipalityId: string, query: TerritorialEntityQuery): Promise<TerritorialEntityPage> {

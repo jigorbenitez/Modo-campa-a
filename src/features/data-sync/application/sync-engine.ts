@@ -69,6 +69,7 @@ export class TerritorialDataSyncEngine {
   private readonly territorialFilter: TerritorialFilter;
   private readonly repository: SyncRepository;
   private readonly now: () => Date;
+  private readonly identityResolver?: { resolve(municipalityId: string): Promise<void> };
 
   constructor(
     connectors: TerritorialDatasetConnector[],
@@ -77,6 +78,7 @@ export class TerritorialDataSyncEngine {
     territorialFilter: TerritorialFilter,
     repository: SyncRepository,
     now: () => Date = () => new Date(),
+    identityResolver?: { resolve(municipalityId: string): Promise<void> },
   ) {
     this.connectors = connectors;
     this.downloader = downloader;
@@ -84,6 +86,7 @@ export class TerritorialDataSyncEngine {
     this.territorialFilter = territorialFilter;
     this.repository = repository;
     this.now = now;
+    this.identityResolver = identityResolver;
   }
 
   async synchronize(selection: MunicipalitySelection, signal?: AbortSignal): Promise<TerritorialSyncRun> {
@@ -134,6 +137,7 @@ export class TerritorialDataSyncEngine {
       coverage: coverage(results, finishedAt),
     };
     await this.repository.saveRun(run);
+    await this.identityResolver?.resolve(selection.municipalityId);
     return run;
   }
 

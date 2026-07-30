@@ -39,6 +39,12 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
         <div className="space-y-5">
           <DetailSection title="Información">
             <p>{entity.description || "Sin descripción."}</p>
+            {!!entity.alternateNames?.length && <div className="mt-5">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide">Nombres alternativos</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {entity.alternateNames.map((name) => <span key={name} className="rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-bold text-[var(--foreground)]">{name}</span>)}
+              </div>
+            </div>}
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
               <DetailValue label="Categoría" value={entity.category} />
               <DetailValue label="Subcategoría" value={entity.subcategory ?? "Sin definir"} />
@@ -51,6 +57,14 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
           <DetailSection title="Notas">
             <p>{entity.notes.length ? entity.notes.join(" · ") : "Todavía no hay notas incorporadas."}</p>
           </DetailSection>
+          {!!entity.sources?.length && <DetailSection title="Fuentes e identificadores">
+            <div className="space-y-3">
+              {entity.sources.map((source) => <div key={source.externalId} className="rounded-xl bg-[var(--surface-muted)] p-3">
+                <p className="font-extrabold text-[var(--foreground)]">{source.name}</p>
+                <p className="mt-1 break-all text-xs">{source.externalId}</p>
+              </div>)}
+            </div>
+          </DetailSection>}
         </div>
         <div className="space-y-5">
           <DetailSection title="Ubicación">

@@ -1,4 +1,5 @@
 import synchronizedData from "@/data/san-fernando-official-sync.json";
+import { IdentityResolutionEngine } from "@/features/identity-resolution";
 import type {
   TerritorialEntity,
   TerritorialEntityPage,
@@ -77,52 +78,8 @@ export function synchronizedRecordToEntity(record: SynchronizedRecord): Territor
   };
 }
 
-function normalizedIdentity(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLocaleLowerCase("es-AR")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function distanceInMeters(left: TerritorialEntity, right: TerritorialEntity) {
-  if (
-    left.latitude === undefined || left.longitude === undefined
-    || right.latitude === undefined || right.longitude === undefined
-  ) return Number.POSITIVE_INFINITY;
-  const latitude = (left.latitude + right.latitude) / 2;
-  const y = (left.latitude - right.latitude) * 111_320;
-  const x = (left.longitude - right.longitude) * 111_320 * Math.cos(latitude * Math.PI / 180);
-  return Math.hypot(x, y);
-}
-
-function sourcePriority(entity: TerritorialEntity) {
-  const source = String(entity.metadata.source ?? "");
-  if (source.includes("Datos Abiertos PBA")) return 3;
-  if (source.includes("GeoRef")) return 2;
-  if (source.includes("OpenStreetMap")) return 1;
-  return 0;
-}
-
-/**
- * Resuelve la identidad entre fuentes sin colapsar sedes homónimas:
- * mismo tipo, mismo nombre normalizado y distancia máxima de 120 metros.
- */
 export function canonicalizeTerritorialEntities(entities: TerritorialEntity[]) {
-  const canonical: TerritorialEntity[] = [];
-  for (const entity of entities) {
-    const duplicateIndex = canonical.findIndex((candidate) =>
-      candidate.category === entity.category
-      && normalizedIdentity(candidate.name) === normalizedIdentity(entity.name)
-      && distanceInMeters(candidate, entity) <= 120
-    );
-    if (duplicateIndex < 0) canonical.push(entity);
-    else if (sourcePriority(entity) > sourcePriority(canonical[duplicateIndex])) {
-      canonical[duplicateIndex] = entity;
-    }
-  }
-  return canonical;
+  return new IdentityResolutionEngine().resolve(entities).entities;
 }
 
 export const verifiedTerritorialEntities = canonicalizeTerritorialEntities(
@@ -136,14 +93,14 @@ export const verifiedTerritorialEntities = canonicalizeTerritorialEntities(
 /** Caché verificada para PWA y desarrollo sin infraestructura; nunca genera datos. */
 export class VerifiedTerritorialRepository implements TerritorialEntityRepository {
   async findById(municipalityId: string, id: string) {
-    const entity = verifiedTerritorialEntities.find((item) => item.id === id);
+    const entity = verifiedTerritorialEntities.find((item) => item.id === id || item.externalIds.includes(id));
     return entity ? { ...entity, municipalityId } : null;
   }
 
   async search(municipalityId: string, query: TerritorialEntityQuery): Promise<TerritorialEntityPage> {
     const normalized = query.search?.trim().toLocaleLowerCase("es-AR");
     const filtered = verifiedTerritorialEntities.filter((entity) =>
-      (!normalized || `${entity.name} ${entity.category} ${entity.description}`.toLocaleLowerCase("es-AR").includes(normalized))
+      (!normalized || `${entity.name} ${entity.alternateNames.join(" ")} ${entity.category} ${entity.description}`.toLocaleLowerCase("es-AR").includes(normalized))
       && (!query.types?.length || query.types.includes(entity.type))
       && (!query.categories?.length || query.categories.includes(entity.category))
       && (!query.statuses?.length || query.statuses.includes(entity.status)),

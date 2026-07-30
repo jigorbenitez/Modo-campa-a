@@ -53,6 +53,15 @@ export interface TerritorialEntity {
   id: string;
   municipalityId: string;
   name: string;
+  alternateNames?: string[];
+  externalIds?: string[];
+  sources?: Array<{ name: string; url?: string; license?: string; externalId: string }>;
+  identityHistory?: Array<{
+    at: string;
+    action: "created" | "automatic_merge" | "manual_merge" | "ignored";
+    entityIds: string[];
+    score?: number;
+  }>;
   type: TerritorialEntityType;
   category: string;
   subcategory?: string;

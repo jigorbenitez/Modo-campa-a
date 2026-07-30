@@ -41,6 +41,17 @@ export function DataSyncPanel({
     [new GeoJsonParser(), new CsvParser(), new ShapefileParser(), new KmlParser(), new OsmJsonParser()],
     new BoundsTerritorialFilter(),
     repository,
+    () => new Date(),
+    {
+      resolve: async (municipalityId) => {
+        const response = await fetch("/api/identity-resolution/run", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ municipalityId }),
+        });
+        if (!response.ok && response.status !== 503) throw new Error("No se pudo ejecutar la resolución de identidades.");
+      },
+    },
   ), [repository]);
   const [frequency, setFrequency] = useState<SyncFrequency>(() => {
     if (typeof window === "undefined") return "manual";

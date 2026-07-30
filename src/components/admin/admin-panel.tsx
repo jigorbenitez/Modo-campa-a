@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type {
   AdminOverview,
   PlatformContext,
@@ -150,6 +151,18 @@ export function AdminPanel({
         </div>
       </div>
       <DataHub municipalityId={context.user.municipioId} municipalityName={context.municipalityName} />
+      <section className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Link href="/admin/data-sync" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--accent)]">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Datos públicos</p>
+          <h2 className="mt-2 text-lg font-black">Sincronizar Datos Públicos</h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">Ejecutar conectores, revisar progreso e historial.</p>
+        </Link>
+        <Link href="/admin/data-quality" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--accent)]">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Auditor territorial</p>
+          <h2 className="mt-2 text-lg font-black">Calidad de Datos</h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">Resolver identidades, revisar coincidencias y detectar faltantes.</p>
+        </Link>
+      </section>
       <section className="mt-8 border-t border-[var(--border)] pt-2">
         <TerritorialDataExchange />
       </section>

@@ -67,7 +67,7 @@ export function territorialEntityToMapFeature(
     kind: "institution",
     subtype: subtypeByCategory[entity.category] ?? entity.category,
     title: entity.name,
-    description: entity.description ?? "",
+    description: [entity.description, ...(entity.alternateNames ?? [])].filter(Boolean).join(" · "),
     point,
     barrioId: area?.id ?? entity.municipalityId,
     circuitId: circuit?.id,

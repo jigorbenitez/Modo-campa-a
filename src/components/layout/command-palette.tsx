@@ -6,7 +6,7 @@ import { territorialBaseSnapshot } from "@/data/territorial-base";
 import { useTerritorialEntities } from "@/features/territorial-engine";
 import { territorialTypeLabels } from "@/features/territorial-engine/presentation/territorial-presentation-config";
 
-type Result = { id: string; title: string; context: string; href: string };
+type Result = { id: string; title: string; context: string; href: string; searchText?: string };
 
 export function CommandPalette() {
   const router = useRouter();
@@ -37,9 +37,10 @@ export function CommandPalette() {
         title: entity.name,
         context: territorialTypeLabels[entity.type],
         href: `/territorio/entidades/${encodeURIComponent(entity.id)}`,
+        searchText: entity.alternateNames?.join(" "),
       })),
     ];
-    return territory.filter((item) => `${item.title} ${item.context}`.toLocaleLowerCase("es-AR").includes(term)).slice(0, 1000);
+    return territory.filter((item) => `${item.title} ${item.context} ${item.searchText ?? ""}`.toLocaleLowerCase("es-AR").includes(term)).slice(0, 1000);
   }, [entities, query]);
 
   function choose(result: Result) {
