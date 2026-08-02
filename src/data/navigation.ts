@@ -10,3 +10,9 @@ export const navigation: NavItem[] = [
   { href: "/agenda", label: "Agenda", shortLabel: "Agenda", icon: "□" },
   { href: "/admin", label: "Administración", shortLabel: "Admin", icon: "⚙" },
 ];
+
+export function activeNavigationHref(pathname: string) {
+  return navigation
+    .filter((item) => pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`)))
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
+}

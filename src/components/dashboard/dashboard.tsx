@@ -26,10 +26,9 @@ export function Dashboard() {
   const [referenceTime] = useState(() => new Date());
   const today = referenceTime.toISOString().slice(0, 10);
   const weekStart = referenceTime.getTime() - 7 * 86_400_000;
-  const activities = useMemo(() => [
-    ...records.map((record) => ({ title: record.activity.title, date: record.activity.date, neighborhood: record.activity.barrioIds[0] ?? "Sin barrio" })),
-    ...tours.map((tour) => ({ title: tour.title, date: tour.finishedAt.slice(0, 10), neighborhood: tour.neighborhoodName })),
-  ].sort((a, b) => b.date.localeCompare(a.date)), [records, tours]);
+  const activities = useMemo(() => records
+    .map((record) => ({ title: record.activity.title, date: record.activity.date, neighborhood: record.activity.barrioIds[0] ?? "Sin barrio" }))
+    .sort((a, b) => b.date.localeCompare(a.date)), [records]);
   const institutions = territorialEntities.filter((entity) =>
     !["municipality", "locality", "neighborhood"].includes(entity.category),
   );
@@ -53,11 +52,14 @@ export function Dashboard() {
       </header>
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores principales">
-        <MetricCard label="Actividad de hoy" value={String(activities.filter((item) => item.date === today).length)} note="registros operativos" accent />
-        <MetricCard label="Actividad semanal" value={String(weekly)} note="últimos siete días" />
+        <MetricCard label="Actividad de hoy" value={String(activities.filter((item) => item.date === today).length)} note="actividades únicas del Diario" accent />
+        <MetricCard label="Actividad semanal" value={String(weekly)} note="actividades únicas · últimos 7 días" />
         <MetricCard label="Compromisos próximos" value={String(upcoming.filter((item) => item.values.view === "commitment").length)} note="en agenda" />
-        <MetricCard label="Entidades territoriales" value={String(territorialEntities.length)} note="repositorio canónico" />
+        <MetricCard label="Entidades territoriales" value={String(territorialEntities.length)} note="lugares e instituciones del repositorio canónico" />
       </section>
+      <p className="mt-3 text-[10px] leading-5 text-[var(--muted)]">
+        Actividades contabiliza registros únicos del Diario; recorridas describe únicamente sesiones de campo; compromisos proviene de Agenda y entidades territoriales del repositorio canónico.
+      </p>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
         <section className="premium-card p-5 sm:p-6">

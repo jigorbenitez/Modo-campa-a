@@ -8,7 +8,7 @@ test("Administración navega a /admin y mantiene activas sus rutas hijas", async
   const navigation = await read("../src/data/navigation.ts");
   const sidebar = await read("../src/components/layout/sidebar.tsx");
   assert.match(navigation, /href: "\/admin", label: "Administración"/);
-  assert.match(sidebar, /pathname\.startsWith\(`\$\{item\.href\}\/`\)/);
+  assert.match(sidebar, /activeNavigationHref\(pathname\)/);
 });
 
 test("el centro de sincronización posee ruta principal y alias compatible", async () => {

@@ -8,10 +8,12 @@ import { ActivityTimeline } from "./activity-timeline";
 import { ActivityWizard } from "./activity-wizard";
 import { useTerritorialEntities } from "@/features/territorial-engine";
 
+const emptyActivityRecords: ActivityRecord[] = [];
+
 export function CampaignDiary() {
   const searchParams = useSearchParams();
   const territorialEntities = useTerritorialEntities();
-  const { records, replace } = useActivityJournal([]);
+  const { records, replace } = useActivityJournal(emptyActivityRecords);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<ActivityRecord>();
   const [newestId, setNewestId] = useState<string>();

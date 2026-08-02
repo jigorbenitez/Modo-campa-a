@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navigation } from "@/data/navigation";
+import { activeNavigationHref, navigation } from "@/data/navigation";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const activeHref = activeNavigationHref(pathname);
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/8 bg-[var(--sidebar)] px-4 py-6 text-white lg:flex">
       <Link href="/" className="atiy-logo-crop mb-9 h-16 w-full shrink-0" aria-label="ATIY — Inicio">
@@ -15,11 +16,12 @@ export function Sidebar() {
       </Link>
       <nav aria-label="Navegación principal" className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
         {navigation.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+          const active = activeHref === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
                 active

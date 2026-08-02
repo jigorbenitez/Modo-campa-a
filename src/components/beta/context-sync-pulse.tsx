@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import type { ActivityRecord } from "@/features/diario";
+import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { useBetaActivities } from "@/hooks/use-beta-activities";
+
+const emptyActivityRecords: ActivityRecord[] = [];
 
 const moduleCopy = {
   diary: ["Actividad incorporada", "Ya forma parte de la cronología del Diario."],
@@ -12,7 +16,9 @@ const moduleCopy = {
 
 export function ContextSyncPulse({ module }: { module: keyof typeof moduleCopy }) {
   const activities = useBetaActivities();
-  const latest = activities[0];
+  const { records } = useActivityJournal(emptyActivityRecords);
+  const journalIds = new Set(records.map((record) => record.activity.id));
+  const latest = activities.find((activity) => journalIds.has(activity.id));
   if (!latest) return null;
   const [title, description] = moduleCopy[module];
 
