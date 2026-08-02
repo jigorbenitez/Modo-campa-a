@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { territorialBaseSnapshot } from "@/data/territorial-base";
 import { useTerritorialEntities } from "@/features/territorial-engine";
-import { territorialTypeLabels } from "@/features/territorial-engine/presentation/territorial-presentation-config";
+import { categoryLabel, categorySearchTerms } from "@/features/territorial-quality";
 
 type Result = { id: string; title: string; context: string; href: string; searchText?: string };
 
@@ -35,9 +35,9 @@ export function CommandPalette() {
       ...entities.map((entity) => ({
         id: entity.id,
         title: entity.name,
-        context: territorialTypeLabels[entity.type],
+        context: categoryLabel(entity.category),
         href: `/territorio/entidades/${encodeURIComponent(entity.id)}`,
-        searchText: entity.alternateNames?.join(" "),
+        searchText: `${entity.alternateNames?.join(" ") ?? ""} ${categorySearchTerms(entity.category)}`,
       })),
     ];
     return territory.filter((item) => `${item.title} ${item.context} ${item.searchText ?? ""}`.toLocaleLowerCase("es-AR").includes(term)).slice(0, 1000);

@@ -5,6 +5,7 @@ import type { KnowledgeEntityType } from "@/features/relaciones";
 import { RelationshipEngine } from "@/features/relaciones";
 import { useTerritorialEntities } from "@/features/territorial-engine";
 import { territorialTypeLabels } from "@/features/territorial-engine/presentation/territorial-presentation-config";
+import { categoryLabel } from "@/features/territorial-quality";
 import { ContextSummary } from "./context-summary";
 import { EntityCard } from "./entity-card";
 import { EntityHeader } from "./entity-header";
@@ -44,7 +45,7 @@ export function RelationshipExplorer({ initialEntityId }: { initialEntityId?: st
       barrioIds: entity.neighborhoodId ? [entity.neighborhoodId] : [],
       institutionIds: [],
       personIds: [],
-      tags: [...entity.tags, territorialTypeLabels[entity.type]],
+      tags: [...entity.tags, territorialTypeLabels[entity.type], categoryLabel(entity.category)],
       metadata: {
         ...Object.fromEntries(
           Object.entries(entity.metadata).filter((entry): entry is [string, string | number | boolean | string[]] =>

@@ -41,10 +41,14 @@ function distance(left: TerritorialEntity, right: TerritorialEntity) {
 
 function categorySimilarity(left: TerritorialEntity, right: TerritorialEntity) {
   if (left.category === right.category) return 1;
-  const education = new Set(["school", "kindergarten", "university"]);
-  const health = new Set(["hospital", "primary_care_center", "health_center"]);
-  if (education.has(left.category) && education.has(right.category)) return 0.65;
-  if (health.has(left.category) && health.has(right.category)) return 0.65;
+  const education = new Set(["school", "kindergarten", "university", "education_school", "education_kindergarten", "education_primary", "education_secondary", "education_technical", "education_university"]);
+  const health = new Set(["hospital", "primary_care_center", "health_center", "health_hospital", "health_caps", "health_clinic"]);
+  const sport = new Set(["club", "sport_club", "sport_sports_center", "sport_municipal_field"]);
+  const publicSpace = new Set(["square", "park", "public_square", "public_park", "public_waterfront"]);
+  if (education.has(left.category) && education.has(right.category)) return 1;
+  if (health.has(left.category) && health.has(right.category)) return 0.8;
+  if (sport.has(left.category) && sport.has(right.category)) return 0.5;
+  if (publicSpace.has(left.category) && publicSpace.has(right.category)) return 0.5;
   return 0;
 }
 

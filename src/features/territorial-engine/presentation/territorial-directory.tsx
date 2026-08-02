@@ -5,9 +5,9 @@ import { useDeferredValue, useMemo, useState } from "react";
 import type { FilterDefinition, FilterState } from "@/application/shared/filters";
 import { ReusableFilterBar } from "@/components/ui/reusable-filter-bar";
 import { normalizeIdentityName } from "@/features/identity-resolution";
+import { categoryLabel, categorySearchTerms } from "@/features/territorial-quality";
 import type { TerritorialEntity } from "../domain";
 import { TerritorialMapProjectionService, territorialMapLayers } from "../application";
-import { territorialTypeLabels } from "./territorial-presentation-config";
 
 export function TerritorialDirectory({
   entities,
@@ -33,7 +33,7 @@ export function TerritorialDirectory({
           (exactIdentityMatches.size > 0
             ? exactIdentityMatches.has(entity.id)
             :
-          [entity.name, ...(entity.alternateNames ?? []), entity.category, territorialTypeLabels[entity.type], entity.neighborhoodName, entity.localityName, entity.description]
+          [entity.name, ...(entity.alternateNames ?? []), entity.category, categorySearchTerms(entity.category), entity.neighborhoodName, entity.localityName, entity.description]
             .filter(Boolean)
             .some((value) => value?.toLocaleLowerCase("es").includes(deferredSearch)));
         const matchesType = !filterState.type || entity.type === filterState.type;
@@ -95,7 +95,7 @@ export function TerritorialDirectory({
         <section className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filteredEntities.map((entity) => (
             <Link key={entity.id} href={`/territorio/entidades/${entity.id}`} className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow)]">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">{territorialTypeLabels[entity.type]}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">{categoryLabel(entity.category)}</p>
               <h2 className="mt-2 text-lg font-black">{entity.name}</h2>
               <p className="mt-2 text-xs text-[var(--muted)]">{entity.neighborhoodName ?? entity.localityName ?? "Ubicación pendiente"}</p>
             </Link>

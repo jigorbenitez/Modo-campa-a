@@ -1,5 +1,6 @@
 import synchronizedData from "@/data/san-fernando-official-sync.json";
 import { IdentityResolutionEngine } from "@/features/identity-resolution";
+import { categorySearchTerms, TerritorialClassificationEngine } from "@/features/territorial-quality";
 import type {
   TerritorialEntity,
   TerritorialEntityPage,
@@ -44,7 +45,7 @@ function stringProperty(properties: Record<string, unknown>, ...keys: string[]) 
 }
 
 export function synchronizedRecordToEntity(record: SynchronizedRecord): TerritorialEntity {
-  return {
+  const entity: TerritorialEntity = {
     id: record.id,
     municipalityId: synchronizedData.municipality.id,
     name: record.name,
@@ -74,8 +75,10 @@ export function synchronizedRecordToEntity(record: SynchronizedRecord): Territor
       license: record.license,
       confidence: record.confidence,
       sourceProperties: record.properties,
+      sourceCategory: record.category,
     },
   };
+  return new TerritorialClassificationEngine().apply(entity);
 }
 
 export function canonicalizeTerritorialEntities(entities: TerritorialEntity[]) {
@@ -100,7 +103,7 @@ export class VerifiedTerritorialRepository implements TerritorialEntityRepositor
   async search(municipalityId: string, query: TerritorialEntityQuery): Promise<TerritorialEntityPage> {
     const normalized = query.search?.trim().toLocaleLowerCase("es-AR");
     const filtered = verifiedTerritorialEntities.filter((entity) =>
-      (!normalized || `${entity.name} ${entity.alternateNames.join(" ")} ${entity.category} ${entity.description}`.toLocaleLowerCase("es-AR").includes(normalized))
+      (!normalized || `${entity.name} ${entity.alternateNames.join(" ")} ${entity.category} ${categorySearchTerms(entity.category)} ${entity.description}`.toLocaleLowerCase("es-AR").includes(normalized))
       && (!query.types?.length || query.types.includes(entity.type))
       && (!query.categories?.length || query.categories.includes(entity.category))
       && (!query.statuses?.length || query.statuses.includes(entity.status)),

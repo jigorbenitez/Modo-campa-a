@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { TerritorialEntity } from "../domain";
-import { territorialTypeLabels } from "./territorial-presentation-config";
+import { categoryLabel } from "@/features/territorial-quality";
 
 const placeholderSections = [
   ["Documentos", "Los documentos relacionados aparecerán aquí."],
@@ -30,7 +30,7 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
       <Link href="/territorio/entidades" className="text-xs font-extrabold text-[var(--accent)]">← Territorio</Link>
       <header className="mt-6 border-b border-[var(--border)] pb-8">
-        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">{territorialTypeLabels[entity.type]}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--accent)]">{categoryLabel(entity.category)}</p>
         <h1 className="mt-3 text-4xl font-black tracking-[-0.04em]">{entity.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">{location || "Ubicación pendiente"}</p>
       </header>
@@ -46,7 +46,7 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
               </div>
             </div>}
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-              <DetailValue label="Categoría" value={entity.category} />
+              <DetailValue label="Categoría" value={categoryLabel(entity.category)} />
               <DetailValue label="Subcategoría" value={entity.subcategory ?? "Sin definir"} />
               <DetailValue label="Teléfono" value={entity.phone ?? "Sin registrar"} />
               <DetailValue label="Email" value={entity.email ?? "Sin registrar"} />
@@ -71,6 +71,10 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
             <p>{location || "Dirección no disponible."}</p>
             <p className="mt-3 text-xs">{entity.latitude === undefined ? "Coordenadas pendientes." : `${entity.latitude}, ${entity.longitude}`}</p>
             <Link href="/territorio" className="mt-4 inline-flex text-xs font-extrabold text-[var(--accent)]">Abrir en Mapa Vivo →</Link>
+          </DetailSection>
+          <DetailSection title="Cobertura">
+            <p>Identidad, coordenadas, fuente y categoría verificables dentro del repositorio territorial.</p>
+            <p className="mt-2 text-xs">Clasificación: {String((entity.metadata.classification as { confidence?: number } | undefined)?.confidence ? `${Math.round(((entity.metadata.classification as { confidence: number }).confidence) * 100)}% de confianza` : "sin score")}</p>
           </DetailSection>
           {placeholderSections.map(([title, description]) => (
             <DetailSection key={title} title={title}><p>{description}</p></DetailSection>
