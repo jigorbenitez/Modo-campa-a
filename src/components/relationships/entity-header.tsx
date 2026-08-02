@@ -1,4 +1,5 @@
 import type { EntityContext } from "@/features/relaciones";
+import Link from "next/link";
 
 const typeLabels = {
   municipality: "Municipio",
@@ -36,6 +37,7 @@ export function EntityHeader({ context }: { context: EntityContext }) {
         <span><strong className="text-[var(--foreground)]">{context.groups.length}</strong> tipos de contexto</span>
         <span><strong className="text-[var(--foreground)]">{context.timeline.length}</strong> eventos en memoria</span>
       </div>
+      {entity.type === "institution" && <Link href={`/territorio/entidades/${encodeURIComponent(entity.id)}`} className="mt-5 inline-flex rounded-xl border border-[var(--border)] px-4 py-2.5 text-xs font-extrabold text-[var(--accent-strong)]">Abrir ficha territorial</Link>}
     </header>
   );
 }

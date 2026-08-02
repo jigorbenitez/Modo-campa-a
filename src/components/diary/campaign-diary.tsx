@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { ActivityRecord } from "@/features/diario";
 import { useActivityJournal } from "@/hooks/use-activity-journal";
 import { ActivityTimeline } from "./activity-timeline";
@@ -8,6 +9,7 @@ import { ActivityWizard } from "./activity-wizard";
 import { useTerritorialEntities } from "@/features/territorial-engine";
 
 export function CampaignDiary() {
+  const searchParams = useSearchParams();
   const territorialEntities = useTerritorialEntities();
   const { records, replace } = useActivityJournal([]);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -19,6 +21,16 @@ export function CampaignDiary() {
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
   const [order, setOrder] = useState<"desc" | "asc">("desc");
+  const requestedActivityId = searchParams.get("activity");
+  const visibleRequestedActivityId = requestedActivityId && records.some((record) => record.activity.id === requestedActivityId)
+    ? requestedActivityId
+    : undefined;
+
+  useEffect(() => {
+    if (!visibleRequestedActivityId) return;
+    const frame = requestAnimationFrame(() => document.getElementById(`activity-${visibleRequestedActivityId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    return () => cancelAnimationFrame(frame);
+  }, [visibleRequestedActivityId]);
 
   const areaOptions = useMemo(
     () => [...new Set(records.flatMap((record) => record.barrioNames))].sort(),
@@ -198,7 +210,7 @@ export function CampaignDiary() {
           {visibleRecords.length ? (
             <ActivityTimeline
               records={visibleRecords}
-              newestId={newestId}
+              newestId={newestId ?? visibleRequestedActivityId}
               onEdit={(record) => { setEditing(record); setWizardOpen(true); }}
               onDelete={deleteRecord}
               onDuplicate={duplicateRecord}

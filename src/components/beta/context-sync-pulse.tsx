@@ -26,7 +26,7 @@ export function ContextSyncPulse({ module }: { module: keyof typeof moduleCopy }
             <p className="mt-1 text-[11px] text-[var(--muted)]">{description} {latest.captures.length} aportes registrados.</p>
           </div>
         </div>
-        <Link href="/recorrido" className="shrink-0 text-xs font-extrabold text-[var(--accent)]">Abrir registro →</Link>
+        <Link href={`/diario?activity=${encodeURIComponent(latest.id)}`} className="shrink-0 text-xs font-extrabold text-[var(--accent)]">Abrir registro →</Link>
       </div>
     </div>
   );

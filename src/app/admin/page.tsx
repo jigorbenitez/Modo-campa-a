@@ -9,7 +9,7 @@ import {
 export default async function AdminPage() {
   const context = await getPlatformContext();
   if (!context) redirect("/login");
-  if (!canUser(context.user.role, "users:read")) redirect("/");
+  if (!canUser(context.user.role, "users:read")) redirect("/mi-cuenta");
 
   const overview = await getAdminOverview(context);
   return <AdminPanel context={context} overview={overview} />;

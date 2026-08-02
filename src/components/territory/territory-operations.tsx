@@ -54,10 +54,7 @@ export function TerritoryOperations() {
   const requestedAreaId = searchParams.get("area");
   const requestedCircuitId = searchParams.get("circuit");
   const { records: journalRecords } = useActivityJournal(emptyActivityRecords);
-  const [customFeatures, setCustomFeatures] = useState<TerritoryFeature[]>(() => {
-    if (typeof window === "undefined") return [];
-    return JSON.parse(window.localStorage.getItem(CUSTOM_FEATURES_KEY) ?? "[]") as TerritoryFeature[];
-  });
+  const [customFeatures, setCustomFeatures] = useState<TerritoryFeature[]>([]);
   const snapshot = useMemo(() => {
     const journalFeatures = journalRecords
       .map((record) =>
@@ -81,20 +78,12 @@ export function TerritoryOperations() {
       ],
     };
   }, [customFeatures, journalRecords, territorialEntities]);
-  const [cartographicMode, setCartographicMode] = useState<CartographicMode>(() => {
-    if (requestedCircuitId) return "electoral";
-    if (typeof window === "undefined") return "territorial";
-    const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
-    return stored && stored in cartographicModes ? stored as CartographicMode : "territorial";
-  });
+  const [cartographicMode, setCartographicMode] = useState<CartographicMode>(requestedCircuitId ? "electoral" : "territorial");
   const [enabledLayers, setEnabledLayers] = useState<Set<TerritoryLayerId>>(
     () => {
       const defaults = [...cartographicModes[cartographicMode].layers];
       if (requestedCircuitId && !defaults.includes("circuits")) defaults.push("circuits");
-      if (typeof window === "undefined") return new Set(defaults);
-      const stored = window.localStorage.getItem(LAYERS_STORAGE_KEY);
-      const valid = new Set(defaults);
-      return new Set(stored ? (JSON.parse(stored) as TerritoryLayerId[]).filter((id) => valid.has(id)) : defaults);
+      return new Set(defaults);
     },
   );
   const [periodIndex, setPeriodIndex] = useState(territorialBaseSnapshot.periods.length - 1);
@@ -114,11 +103,35 @@ export function TerritoryOperations() {
   const [newPointArea, setNewPointArea] = useState("");
   const [activePanel, setActivePanel] = useState<MapPanel>(null);
   const [contextPanelOpen, setContextPanelOpen] = useState(Boolean(requestedActivityId || requestedEntityId || requestedAreaId || requestedCircuitId));
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        setCustomFeatures(JSON.parse(window.localStorage.getItem(CUSTOM_FEATURES_KEY) ?? "[]") as TerritoryFeature[]);
+        const storedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
+        const nextMode = requestedCircuitId
+          ? "electoral"
+          : storedMode && storedMode in cartographicModes ? storedMode as CartographicMode : "territorial";
+        setCartographicMode(nextMode);
+        const defaults = [...cartographicModes[nextMode].layers];
+        if (requestedCircuitId && !defaults.includes("circuits")) defaults.push("circuits");
+        const storedLayers = window.localStorage.getItem(LAYERS_STORAGE_KEY);
+        const valid = new Set(defaults);
+        setEnabledLayers(new Set(storedLayers ? (JSON.parse(storedLayers) as TerritoryLayerId[]).filter((id) => valid.has(id)) : defaults));
+      } catch {
+        setCustomFeatures([]);
+      } finally {
+        setPreferencesLoaded(true);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [requestedCircuitId]);
 
   const periodId = snapshot.periods[periodIndex]?.id ?? "today";
   const requestedFeature = useMemo(
     () =>
-      requestedSelectionDismissed || !requestedActivityId
+      requestedSelectionDismissed || (!requestedActivityId && !requestedEntityId)
         ? undefined
         : snapshot.features.find(
             (feature) => feature.id === requestedEntityId || feature.id === `journal-${requestedActivityId}`,
@@ -157,11 +170,13 @@ export function TerritoryOperations() {
       ? (selectedCircuitId ?? requestedCircuitId ?? undefined)
       : undefined;
   useEffect(() => {
+    if (!preferencesLoaded) return;
     window.localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...enabledLayers]));
-  }, [enabledLayers]);
+  }, [enabledLayers, preferencesLoaded]);
   useEffect(() => {
+    if (!preferencesLoaded) return;
     window.localStorage.setItem(MODE_STORAGE_KEY, cartographicMode);
-  }, [cartographicMode]);
+  }, [cartographicMode, preferencesLoaded]);
 
   const searchResults = useMemo<TerritorySearchResult[]>(() => {
     const term = search.trim().toLocaleLowerCase("es-AR");

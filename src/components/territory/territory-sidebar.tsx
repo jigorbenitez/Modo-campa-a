@@ -6,6 +6,7 @@ import type {
   TerritoryNeighborhood,
 } from "@/features/territorio-map";
 import { TerritoryOverview } from "./territory-overview";
+import Link from "next/link";
 
 const kindLabels = {
   activity: "Actividad",
@@ -72,6 +73,7 @@ function FeatureDetails({ feature, onClose }: { feature: TerritoryFeature; onClo
       </div>
 
       <div className="space-y-6 p-5">
+        {feature.kind === "institution" && <Link href={`/territorio/entidades/${encodeURIComponent(feature.id)}`} className="flex w-full items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-3 text-xs font-extrabold text-white">Abrir ficha territorial</Link>}
         {feature.participants.length > 0 && (
           <section>
             <h3 className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">Participantes</h3>
