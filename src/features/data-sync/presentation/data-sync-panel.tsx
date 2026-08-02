@@ -50,6 +50,12 @@ export function DataSyncPanel({
           body: JSON.stringify({ municipalityId }),
         });
         if (!response.ok && response.status !== 503) throw new Error("No se pudo ejecutar la resolución de identidades.");
+        const enrichment = await fetch("/api/territorial-enrichment", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "run", municipalityId }),
+        });
+        if (!enrichment.ok && enrichment.status !== 503) throw new Error("No se pudo ejecutar el enriquecimiento territorial.");
       },
     },
   ), [repository]);

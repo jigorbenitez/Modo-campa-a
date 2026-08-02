@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { TerritorialEntity } from "../domain";
 import { categoryLabel } from "@/features/territorial-quality";
+import { calculateEnrichmentCoverage } from "@/features/territorial-enrichment/application";
 
 const placeholderSections = [
   ["Documentos", "Los documentos relacionados aparecerán aquí."],
@@ -25,6 +26,7 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
   }
 
   const location = [entity.address?.formatted, entity.neighborhoodName, entity.localityName].filter(Boolean).join(" · ");
+  const enrichment = calculateEnrichmentCoverage(entity);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
@@ -51,6 +53,8 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
               <DetailValue label="Teléfono" value={entity.phone ?? "Sin registrar"} />
               <DetailValue label="Email" value={entity.email ?? "Sin registrar"} />
               <DetailValue label="Sitio web" value={entity.website ?? "Sin registrar"} />
+              <DetailValue label="Organismo responsable" value={String(entity.metadata.responsibleOrganization ?? "Sin registrar")} />
+              <DetailValue label="Circuito electoral" value={String(entity.metadata.electoralCircuit ?? "Sin registrar")} />
               <DetailValue label="Estado" value={entity.status} />
             </dl>
           </DetailSection>
@@ -73,8 +77,8 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
             <Link href="/territorio" className="mt-4 inline-flex text-xs font-extrabold text-[var(--accent)]">Abrir en Mapa Vivo →</Link>
           </DetailSection>
           <DetailSection title="Cobertura">
-            <p>Identidad, coordenadas, fuente y categoría verificables dentro del repositorio territorial.</p>
-            <p className="mt-2 text-xs">Clasificación: {String((entity.metadata.classification as { confidence?: number } | undefined)?.confidence ? `${Math.round(((entity.metadata.classification as { confidence: number }).confidence) * 100)}% de confianza` : "sin score")}</p>
+            <div className="grid grid-cols-2 gap-3"><div className="rounded-xl bg-[var(--surface-muted)] p-3"><p className="text-[10px] font-extrabold uppercase">Calidad</p><strong className="mt-1 block text-2xl text-[var(--foreground)]">{enrichment.quality}%</strong></div><div className="rounded-xl bg-[var(--surface-muted)] p-3"><p className="text-[10px] font-extrabold uppercase">Completitud</p><strong className="mt-1 block text-2xl text-[var(--foreground)]">{enrichment.completeness}%</strong></div></div>
+            <p className="mt-3 text-xs">Falta: {enrichment.missing.length ? enrichment.missing.join(" · ") : "ningún campo prioritario"}.</p>
           </DetailSection>
           {placeholderSections.map(([title, description]) => (
             <DetailSection key={title} title={title}><p>{description}</p></DetailSection>

@@ -23,6 +23,7 @@ type FeatureRow = {
   license?: string;
   confidence?: string;
 };
+type EnrichmentRow = { entity_external_id: string; field: string; proposed_value: unknown };
 
 export class SupabaseTerritorialRepository implements TerritorialEntityRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -40,10 +41,13 @@ export class SupabaseTerritorialRepository implements TerritorialEntityRepositor
     if (query.categories?.length) request = request.in("category", query.categories);
     if (query.statuses?.length) request = request.in("status", query.statuses);
     const start = (page - 1) * pageSize;
-    const { data, error, count } = await request.order("name").range(start, start + pageSize - 1);
+    const [{ data, error, count }, { data: enrichmentRows }] = await Promise.all([
+      request.order("name").range(start, start + pageSize - 1),
+      this.client.from("territorial_enrichment_candidates").select("entity_external_id,field,proposed_value").eq("municipality_id", municipalityId).eq("status", "applied"),
+    ]);
     if (error) throw error;
     const items = canonicalizeTerritorialEntities(
-      ((data ?? []) as FeatureRow[]).map((row) => this.toEntity(row, municipalityId)),
+      ((data ?? []) as FeatureRow[]).map((row) => this.applyEnrichments(this.toEntity(row, municipalityId), (enrichmentRows ?? []) as EnrichmentRow[])),
     );
     return {
       items,
@@ -93,6 +97,27 @@ export class SupabaseTerritorialRepository implements TerritorialEntityRepositor
         properties: row.properties,
       }),
       municipalityId,
+    };
+  }
+
+  private applyEnrichments(entity: TerritorialEntity, rows: EnrichmentRow[]): TerritorialEntity {
+    const values = new Map(rows.filter((row) => row.entity_external_id === entity.id).map((row) => [row.field, row.proposed_value]));
+    const string = (field: string) => typeof values.get(field) === "string" ? values.get(field) as string : undefined;
+    return {
+      ...entity,
+      address: {
+        ...entity.address,
+        formatted: entity.address?.formatted ?? string("address"),
+        street: entity.address?.street ?? string("street"),
+        number: entity.address?.number ?? string("number"),
+        postalCode: entity.address?.postalCode ?? string("postalCode"),
+      },
+      localityName: entity.localityName ?? string("locality"),
+      neighborhoodName: entity.neighborhoodName ?? string("neighborhood"),
+      phone: entity.phone ?? string("phone"),
+      email: entity.email ?? string("email"),
+      website: entity.website ?? string("website"),
+      metadata: { ...entity.metadata, electoralCircuit: entity.metadata.electoralCircuit ?? values.get("electoralCircuit"), responsibleOrganization: entity.metadata.responsibleOrganization ?? values.get("responsibleOrganization"), photo: entity.metadata.photo ?? values.get("photo"), socialProfiles: entity.metadata.socialProfiles ?? values.get("socialProfiles"), institutionalDetails: entity.metadata.institutionalDetails ?? values.get("institutionalDetails"), enrichmentHistoryAvailable: rows.some((row) => row.entity_external_id === entity.id) },
     };
   }
 }

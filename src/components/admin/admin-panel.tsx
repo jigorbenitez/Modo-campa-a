@@ -151,7 +151,7 @@ export function AdminPanel({
         </div>
       </div>
       <DataHub municipalityId={context.user.municipioId} municipalityName={context.municipalityName} />
-      <section className="mt-6 grid gap-4 sm:grid-cols-2">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Link href="/admin/data-sync" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--accent)]">
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Datos públicos</p>
           <h2 className="mt-2 text-lg font-black">Sincronizar Datos Públicos</h2>
@@ -161,6 +161,11 @@ export function AdminPanel({
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Auditor territorial</p>
           <h2 className="mt-2 text-lg font-black">Calidad de Datos</h2>
           <p className="mt-1 text-xs text-[var(--muted)]">Resolver identidades, revisar coincidencias y detectar faltantes.</p>
+        </Link>
+        <Link href="/admin/enrichment" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--accent)]">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Gemelo Digital</p>
+          <h2 className="mt-2 text-lg font-black">Enriquecimiento Territorial</h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">Completar datos públicos, revisar conflictos y medir completitud.</p>
         </Link>
       </section>
       <section className="mt-8 border-t border-[var(--border)] pt-2">
