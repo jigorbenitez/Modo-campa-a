@@ -110,6 +110,13 @@ export class BuenosAiresOpenDataConnector extends CkanConnector {
   protected query() { return "establecimientos-educativos"; }
 }
 
+export class BuenosAiresHealthConnector extends CkanConnector {
+  readonly id = "buenos-aires-health-data";
+  protected readonly catalogUrl = "https://catalogo.datos.gba.gob.ar/api/3/action";
+  protected readonly publisher = "Ministerio de Salud de la Provincia de Buenos Aires";
+  protected query() { return '"establecimientos de salud" OR "centros de salud"'; }
+}
+
 export class DatosArgentinaConnector extends CkanConnector {
   readonly id = "datos-argentina-ckan";
   protected readonly catalogUrl = "https://datos.gob.ar/api/3/action";
@@ -164,7 +171,7 @@ export class OpenStreetMapConnector implements TerritorialDatasetConnector {
   async discover(selection: MunicipalitySelection): Promise<DiscoveredDataset[]> {
     if (!selection.bounds) return [];
     const [west, south, east, north] = selection.bounds;
-    const query = `[out:json][timeout:90];(nwr["amenity"](${south},${west},${north},${east});nwr["leisure"](${south},${west},${north},${east});nwr["tourism"](${south},${west},${north},${east});nwr["railway"="station"](${south},${west},${north},${east}););out center tags;`;
+    const query = `[out:json][timeout:90];(nwr["amenity"](${south},${west},${north},${east});nwr["leisure"](${south},${west},${north},${east});nwr["tourism"](${south},${west},${north},${east});nwr["railway"="station"](${south},${west},${north},${east});nwr["office"="government"](${south},${west},${north},${east});nwr["emergency"="fire_station"](${south},${west},${north},${east});nwr["boundary"="protected_area"](${south},${west},${north},${east}););out center tags;`;
     return [dataset(selection, this.id, {
       id: "osm-poi", name: `Equipamiento y puntos de interés de ${selection.municipalityName}`,
       category: "point_of_interest",
@@ -193,6 +200,7 @@ export class BundledVerifiedTerritoryConnector implements TerritorialDatasetConn
 export const officialTerritorialConnectors = () => [
   new GeoRefConnector(),
   new BuenosAiresOpenDataConnector(),
+  new BuenosAiresHealthConnector(),
   new DatosArgentinaConnector(),
   new CompatibleCkanConnector(),
   new ArcGisRestConnector(),

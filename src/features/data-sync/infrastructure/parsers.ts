@@ -44,13 +44,13 @@ function classify(properties: Record<string, unknown>, fallback: DatasetCategory
   if (level === "locality" || level === "localidad") return "locality";
   if (level === "neighborhood" || level === "barrio") return "neighborhood";
   if (level === "electoral_circuit" || level === "circuito") return "electoral_circuit";
-  const terms = `${properties.amenity ?? ""} ${properties.leisure ?? ""} ${properties.tipo ?? ""} ${properties.nivel ?? ""} ${properties.establecimiento_nombre ?? ""}`.toLowerCase();
+  const terms = `${properties.amenity ?? ""} ${properties.healthcare ?? ""} ${properties.leisure ?? ""} ${properties.office ?? ""} ${properties.emergency ?? ""} ${properties.boundary ?? ""} ${properties.tipo ?? ""} ${properties.cat ?? ""} ${properties.nor ?? ""} ${properties.nivel ?? ""} ${properties.establecimiento_nombre ?? ""}`.toLowerCase();
   if (terms.includes("jardín") || terms.includes("jardin") || terms.includes("nivel inicial")) return "kindergarten";
   if (terms.includes("school")) return "school";
   if (terms.includes("kindergarten")) return "kindergarten";
   if (terms.includes("university")) return "university";
   if (terms.includes("hospital")) return "hospital";
-  if (terms.includes("clinic") || terms.includes("doctors")) return "primary_care_center";
+  if (terms.includes("clinic") || terms.includes("doctors") || terms.includes("centro de salud") || terms.includes("caps") || terms.includes("atencion primaria") || terms.includes("unidad sanitaria")) return "primary_care_center";
   if (terms.includes("police")) return "police";
   if (terms.includes("fire_station")) return "fire_station";
   if (terms.includes("park")) return "park";

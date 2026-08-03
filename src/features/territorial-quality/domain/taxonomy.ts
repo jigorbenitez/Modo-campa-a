@@ -25,6 +25,13 @@ export const territorialTaxonomy = {
   transport_station: { family: "Transporte", label: "Estación", synonyms: ["estacion", "estaciones", "terminal"] },
   religious_place: { family: "Comunidad", label: "Lugar religioso", synonyms: ["iglesia", "parroquia", "capilla", "templo"] },
   organization: { family: "Comunidad", label: "Organización", synonyms: ["organizacion", "ong", "asociacion", "sociedad de fomento"] },
+  community_library: { family: "Comunidad", label: "Biblioteca", synonyms: ["biblioteca", "bibliotecas"] },
+  community_cultural_center: { family: "Comunidad", label: "Centro cultural", synonyms: ["centro cultural", "casa de la cultura", "museo", "teatro"] },
+  community_senior_center: { family: "Comunidad", label: "Centro de jubilados", synonyms: ["centro de jubilados", "jubilados", "adultos mayores"] },
+  organization_neighborhood_association: { family: "Comunidad", label: "Sociedad de fomento", synonyms: ["sociedad de fomento", "asociacion vecinal", "centro vecinal"] },
+  government_provincial_office: { family: "Estado", label: "Oficina provincial", synonyms: ["oficina provincial", "dependencia provincial", "provincia"] },
+  government_national_office: { family: "Estado", label: "Oficina nacional", synonyms: ["oficina nacional", "dependencia nacional", "nacion"] },
+  public_reserve: { family: "Espacio Público", label: "Reserva", synonyms: ["reserva", "reserva natural", "area protegida"] },
   commerce: { family: "Economía", label: "Comercio", synonyms: ["comercio", "comercios", "local"] },
   point_of_interest: { family: "Otros", label: "Punto de interés", synonyms: ["punto de interes", "lugar"] },
 } as const;
@@ -39,4 +46,3 @@ export function categorySearchTerms(category: string) {
   const item = territorialTaxonomy[category as TerritorialCategoryId];
   return item ? [item.family, item.label, ...item.synonyms].join(" ") : category;
 }
-

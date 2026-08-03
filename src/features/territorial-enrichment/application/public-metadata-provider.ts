@@ -39,6 +39,9 @@ export class PublicMetadataEnrichmentProvider implements EnrichmentProvider {
       ["website", entity.website, text(properties, "contact:website", "website", "url"), "Sitio web público"],
       ["openingHours", entity.openingHours, text(properties, "opening_hours", "horarios"), "Horario publicado"],
       ["responsibleOrganization", entity.metadata.responsibleOrganization, text(properties, "operator", "operator:type", "gestion", "dependencia"), "Organismo responsable publicado"],
+      ["alternateNames", entity.alternateNames, [text(properties, "alt_name", "alternate_name", "nombre_alternativo"), text(properties, "short_name"), text(properties, "official_name")].filter(Boolean), "Alias publicados por la fuente"],
+      ["sourceUpdatedAt", entity.metadata.sourceUpdatedAt, text(properties, "updated_at", "fecha_actualizacion", "last_updated"), "Fecha de actualización declarada por la fuente"],
+      ["metadata", entity.metadata.publicMetadata, Object.keys(properties).length ? properties : undefined, "Metadatos originales preservados sin modificación"],
     ];
     const license = String(entity.metadata.license ?? "");
     const photo = text(properties, "image", "wikimedia_commons", "photo");

@@ -35,6 +35,13 @@ const mapping: Array<{ category: TerritorialCategoryId; type: TerritorialEntityT
   { category: "municipality_delegation", type: "municipal_office", terms: ["delegacion"] },
   { category: "municipality_secretariat", type: "municipal_office", terms: ["secretaria", "municipalidad", "dependencia"], source: ["municipal_office"] },
   { category: "transport_station", type: "station", terms: ["estacion", "terminal"], source: ["station"] },
+  { category: "community_library", type: "institution", terms: ["biblioteca", "library"] },
+  { category: "community_cultural_center", type: "institution", terms: ["centro cultural", "casa cultura", "museo", "teatro", "community centre", "community_centre"] },
+  { category: "community_senior_center", type: "organization", terms: ["centro jubilados", "adultos mayores", "senior centre", "social facility"] },
+  { category: "organization_neighborhood_association", type: "organization", terms: ["sociedad fomento", "asociacion vecinal", "centro vecinal"] },
+  { category: "government_provincial_office", type: "institution", terms: ["oficina provincial", "dependencia provincial", "gobierno provincia"] },
+  { category: "government_national_office", type: "institution", terms: ["oficina nacional", "dependencia nacional", "anses", "pami", "afip", "renaper"] },
+  { category: "public_reserve", type: "public_space", terms: ["reserva natural", "area protegida", "protected area"] },
   { category: "religious_place", type: "religious_place", terms: ["iglesia", "parroquia", "capilla", "templo"] },
   { category: "organization", type: "organization", terms: ["ong", "asociacion", "sociedad fomento", "fundacion"] },
 ];

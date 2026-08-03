@@ -40,12 +40,12 @@ function normalizeText(value) {
 }
 
 function categoryOf(tags = {}) {
-  const text = normalizeText(`${tags.amenity} ${tags.leisure} ${tags.tourism} ${tags.railway} ${tags.nivel} ${tags.establecimiento_nombre}`);
+  const text = normalizeText(`${tags.amenity} ${tags.healthcare} ${tags.leisure} ${tags.tourism} ${tags.railway} ${tags.office} ${tags.emergency} ${tags.boundary} ${tags.cat} ${tags.nor} ${tags.nivel} ${tags.establecimiento_nombre}`);
   if (text.includes("kindergarten") || text.includes("jardin") || text.includes("nivel inicial")) return "kindergarten";
   if (text.includes("school") || text.includes("escuela") || text.includes("educacion primaria") || text.includes("educacion secundaria")) return "school";
   if (text.includes("university") || text.includes("universidad")) return "university";
   if (text.includes("hospital")) return "hospital";
-  if (text.includes("clinic") || text.includes("doctors") || text.includes("centro de salud")) return "primary_care_center";
+  if (text.includes("clinic") || text.includes("doctors") || text.includes("centro de salud") || text.includes("caps") || text.includes("atencion primaria") || text.includes("unidad sanitaria")) return "primary_care_center";
   if (text.includes("police")) return "police";
   if (text.includes("fire_station")) return "fire_station";
   if (text.includes("club") || text.includes("sports_centre") || text.includes("stadium")) return "club";
@@ -81,13 +81,15 @@ async function fetchChecked(url, options = {}) {
 
 function csvRows(text) {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+  const firstLine = lines[0] ?? "";
+  const delimiter = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
   const parse = (line) => {
     const values = []; let value = ""; let quoted = false;
     for (let index = 0; index < line.length; index += 1) {
       const character = line[index];
       if (character === '"' && quoted && line[index + 1] === '"') { value += '"'; index += 1; }
       else if (character === '"') quoted = !quoted;
-      else if (character === "," && !quoted) { values.push(value); value = ""; }
+      else if (character === delimiter && !quoted) { values.push(value); value = ""; }
       else value += character;
     }
     values.push(value); return values;
@@ -135,6 +137,37 @@ await runSource({
 });
 
 await runSource({
+  id: "pba-health-2025", name: "Establecimientos de salud públicos 2025", publisher: "Ministerio de Salud de la Provincia de Buenos Aires",
+  license: "CC BY 4.0", url: "https://catalogo.datos.gba.gob.ar/dataset/establecimientos-salud",
+}, async (discard) => {
+  const catalog = await (await fetchChecked("https://catalogo.datos.gba.gob.ar/api/3/action/package_show?id=establecimientos-salud")).json();
+  const csvResources = (catalog.result?.resources ?? []).filter((item) => normalizeText(item.format) === "csv");
+  const resource = csvResources.find((item) => /2025/.test(`${item.name ?? ""} ${item.description ?? ""}`)) ?? csvResources.at(-1);
+  if (!resource?.url) throw new Error("El catálogo no publicó un recurso CSV 2025 utilizable.");
+  const rows = csvRows(await (await fetchChecked(resource.url, { headers: { Accept: "text/csv" } })).text());
+  for (const row of rows) {
+    const municipality = normalizeText(row.nde || row.Nde || row.partido || row.municipio || row.municipio_nombre);
+    if (municipality !== "san fernando") { discard("other_municipality"); continue; }
+    const healthTerms = normalizeText(`${row.cat ?? ""} ${row.nor ?? ""}`);
+    const category = healthTerms.includes("hospital")
+      ? "hospital"
+      : ["centro de salud", "atencion primaria", "unidad sanitaria", "caps"].some((term) => healthTerms.includes(term))
+        ? "primary_care_center"
+        : "public_institution";
+    const reason = addRecord({
+      id: `pba-health-${row.cnr || row.cpd || row.id}`,
+      name: row.nor || row.nombre || row.establecimiento_nombre,
+      category,
+      latitude: Number(row.lat || row.latitud), longitude: Number(row.long || row.lon || row.longitud),
+      source: "Datos Abiertos PBA · Salud 2025", sourceUrl: resource.url,
+      license: catalog.result.license_title || "CC BY 4.0", confidence: "verified", properties: row,
+    });
+    if (reason) discard(reason);
+  }
+  return { resourceVersion: resource.last_modified ?? catalog.result.metadata_modified, resource: resource.name };
+});
+
+await runSource({
   id: "pba-education", name: "Establecimientos educativos", publisher: "Dirección General de Cultura y Educación PBA",
   license: "CC BY 4.0", url: "https://catalogo.datos.gba.gob.ar/dataset/establecimientos-educativos",
 }, async (discard) => {
@@ -166,7 +199,7 @@ await runSource({
   license: "ODbL 1.0", url: "https://www.openstreetmap.org/copyright",
 }, async (discard) => {
   const [west, south, east, north] = bounds;
-  const query = `[out:json][timeout:90];(nwr["amenity"](${south},${west},${north},${east});nwr["leisure"](${south},${west},${north},${east});nwr["tourism"](${south},${west},${north},${east});nwr["railway"="station"](${south},${west},${north},${east}););out center tags;`;
+  const query = `[out:json][timeout:90];(nwr["amenity"](${south},${west},${north},${east});nwr["leisure"](${south},${west},${north},${east});nwr["tourism"](${south},${west},${north},${east});nwr["railway"="station"](${south},${west},${north},${east});nwr["office"="government"](${south},${west},${north},${east});nwr["emergency"="fire_station"](${south},${west},${north},${east});nwr["boundary"="protected_area"](${south},${west},${north},${east}););out center tags;`;
   let data;
   let lastError;
   for (const endpoint of ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]) {

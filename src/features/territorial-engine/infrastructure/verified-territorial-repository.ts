@@ -45,25 +45,33 @@ function stringProperty(properties: Record<string, unknown>, ...keys: string[]) 
 }
 
 export function synchronizedRecordToEntity(record: SynchronizedRecord): TerritorialEntity {
+  const aliases = [
+    stringProperty(record.properties, "alt_name", "alternate_name", "nombre_alternativo"),
+    stringProperty(record.properties, "short_name"),
+    stringProperty(record.properties, "official_name"),
+  ].filter((value): value is string => Boolean(value && value !== record.name));
   const entity: TerritorialEntity = {
     id: record.id,
     municipalityId: synchronizedData.municipality.id,
     name: record.name,
+    alternateNames: [...new Set(aliases.flatMap((value) => value.split(";").map((item) => item.trim()).filter(Boolean)))],
+    sources: [{ name: record.source, url: record.sourceUrl, license: record.license, externalId: record.id }],
     type: asType(record.category),
     category: record.category,
     subcategory: stringProperty(record.properties, "amenity", "leisure", "nivel"),
     description: `Registro público sincronizado desde ${record.source}.`,
     address: {
-      formatted: stringProperty(record.properties, "address", "direccion", "addr:full"),
-      street: stringProperty(record.properties, "addr:street"),
-      number: stringProperty(record.properties, "addr:housenumber"),
+      formatted: stringProperty(record.properties, "address", "direccion", "dom", "domicilio", "addr:full"),
+      street: stringProperty(record.properties, "addr:street", "calle"),
+      number: stringProperty(record.properties, "addr:housenumber", "altura"),
+      postalCode: stringProperty(record.properties, "addr:postcode", "cp1", "codigo_postal"),
     },
     latitude: record.latitude,
     longitude: record.longitude,
     localityName: stringProperty(record.properties, "localidad", "locality"),
-    phone: stringProperty(record.properties, "phone", "contact:phone"),
-    email: stringProperty(record.properties, "email", "contact:email"),
-    website: stringProperty(record.properties, "website", "contact:website"),
+    phone: stringProperty(record.properties, "phone", "contact:phone", "tel", "telefono"),
+    email: stringProperty(record.properties, "email", "contact:email", "mai", "correo"),
+    website: stringProperty(record.properties, "website", "contact:website", "web", "sitio_web"),
     notes: [],
     tags: [record.category, record.source],
     status: "active",
@@ -76,6 +84,9 @@ export function synchronizedRecordToEntity(record: SynchronizedRecord): Territor
       confidence: record.confidence,
       sourceProperties: record.properties,
       sourceCategory: record.category,
+      sourceUpdatedAt: record.syncedAt,
+      responsibleOrganization: stringProperty(record.properties, "operator", "dependencia", "dep", "Dep", "gestion"),
+      openingHours: stringProperty(record.properties, "opening_hours", "horarios"),
     },
   };
   return new TerritorialClassificationEngine().apply(entity);

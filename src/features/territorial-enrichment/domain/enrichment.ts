@@ -3,7 +3,7 @@ import type { TerritorialEntity } from "@/features/territorial-engine/domain";
 export const enrichmentFields = [
   "address", "street", "number", "postalCode", "locality", "neighborhood", "electoralCircuit",
   "phone", "email", "website", "openingHours", "responsibleOrganization", "photo", "socialProfiles",
-  "institutionalDetails",
+  "institutionalDetails", "alternateNames", "sourceUpdatedAt", "metadata",
 ] as const;
 
 export type EnrichmentField = (typeof enrichmentFields)[number];

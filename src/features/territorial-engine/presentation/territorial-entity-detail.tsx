@@ -53,6 +53,7 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
               <DetailValue label="Teléfono" value={entity.phone ?? "Sin registrar"} />
               <DetailValue label="Email" value={entity.email ?? "Sin registrar"} />
               <DetailValue label="Sitio web" value={entity.website ?? "Sin registrar"} />
+              <DetailValue label="Horarios" value={String(entity.metadata.openingHours ?? "Sin registrar")} />
               <DetailValue label="Organismo responsable" value={String(entity.metadata.responsibleOrganization ?? "Sin registrar")} />
               <DetailValue label="Circuito electoral" value={String(entity.metadata.electoralCircuit ?? "Sin registrar")} />
               <DetailValue label="Estado" value={entity.status} />
@@ -66,8 +67,11 @@ export function TerritorialEntityDetail({ entity }: { entity: TerritorialEntity 
               {entity.sources.map((source) => <div key={source.externalId} className="rounded-xl bg-[var(--surface-muted)] p-3">
                 <p className="font-extrabold text-[var(--foreground)]">{source.name}</p>
                 <p className="mt-1 break-all text-xs">{source.externalId}</p>
+                {source.url && <a href={source.url} target="_blank" rel="noreferrer" className="mt-1 block break-all text-xs font-bold text-[var(--accent)]">Abrir fuente pública</a>}
+                {source.license && <p className="mt-1 text-[10px]">Licencia: {source.license}</p>}
               </div>)}
             </div>
+            <p className="mt-4 text-xs">Última actualización de fuente: {String(entity.metadata.sourceUpdatedAt ?? entity.updatedAt)}</p>
           </DetailSection>}
         </div>
         <div className="space-y-5">

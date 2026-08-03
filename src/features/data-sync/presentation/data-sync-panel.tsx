@@ -71,8 +71,21 @@ export function DataSyncPanel({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    repository.listRuns(municipalityId).then(setRuns);
-    repository.listFeatures(municipalityId).then(setFeatures);
+    let active = true;
+    Promise.all([
+      repository.listRuns(municipalityId),
+      repository.listFeatures(municipalityId),
+    ]).then(([storedRuns, storedFeatures]) => {
+      if (!active) return;
+      setRuns(storedRuns);
+      setFeatures(storedFeatures);
+    }).catch((error: unknown) => {
+      if (!active) return;
+      setMessage(error instanceof Error
+        ? `No se pudo consultar el repositorio territorial: ${error.message}`
+        : "No se pudo consultar el repositorio territorial.");
+    });
+    return () => { active = false; };
   }, [municipalityId, repository]);
 
   useEffect(() => {

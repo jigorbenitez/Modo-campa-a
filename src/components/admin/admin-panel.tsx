@@ -11,6 +11,7 @@ import type { UserRole } from "@/domain/entities";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { TerritorialDataExchange } from "@/features/territorial-engine/presentation";
 import { DataHub } from "@/features/data-hub";
+import { FeedbackPanel } from "./feedback-panel";
 
 const roleLabels: Record<UserRole, string> = {
   administrator: "Administrador",
@@ -151,6 +152,7 @@ export function AdminPanel({
         </div>
       </div>
       <DataHub municipalityId={context.user.municipioId} municipalityName={context.municipalityName} />
+      <FeedbackPanel user={{ id: context.user.id, name: `${context.user.firstName} ${context.user.lastName}`.trim(), email: context.user.email }} />
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Link href="/admin/data-sync" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--accent)]">
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Datos públicos</p>

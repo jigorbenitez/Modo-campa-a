@@ -17,11 +17,12 @@ const selection = {
   bounds: [-58.65, -34.52, -58.45, -34.37],
 };
 
-test("el registro oficial incluye las siete familias de conectores requeridas", () => {
+test("el registro oficial conserva las familias requeridas y suma salud bonaerense", () => {
   const ids = officialTerritorialConnectors().map((connector) => connector.id);
   assert.deepEqual(ids, [
     "georef-argentina",
     "buenos-aires-open-data",
+    "buenos-aires-health-data",
     "datos-argentina-ckan",
     "ckan-compatible",
     "arcgis-rest",
